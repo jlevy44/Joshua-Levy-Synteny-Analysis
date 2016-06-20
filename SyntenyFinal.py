@@ -1,31 +1,40 @@
-from pyfaidx import Fasta
-import pandas as pd
-import numpy as np
 import os, sys
+# in order to run on the server, list path of installed modules
+sys.path.append('/global/u2/j/jlevy/python_modules')
+from pyfaidx import Fasta
 from pybedtools import *
 
-"""Initialize the syntenic structure; return is the initialized structure..."""
+"""Creates Fasta object structure of genomes and multiple bedtools files/objects for each pairwise comparison
+(another structure created for this. The bedtool object structure of pairwise comparison is merged to stitch together
+all of these comparisons to create syntenies between more than two species. The resulting BedTool object is parsed and
+referenced to access the Fasta structure to pull information/sequences from the genomes themselves and export to
+fasta files to be used by a MSA such as Cactus."""
 
 def generateFastaObjectStructure(listOfGenomeFiles,genomePath):
-    """Generates dictionary of different species that contains a list of chromosomes for that species and a fasta object
-    for that species"""
+    """Generates dictionary of different species that contains a fasta object (genome) for that species
+    Inputs list of genome files in .fa format and the path to find them. Outputs fasta object structure, dictionary of
+    Fasta objects that will be referenced in final analysis"""
     fastaObjectStructure={}
 
     for genomeFile in listOfGenomeFiles:
         #generate a fasta object for given genome
         fastaGenome=Fasta(genomePath+genomeFile)
+        # find species name (species number)
         speciesName = genomeFile[genomeFile.find('_') + 1:genomeFile.rfind('_')]
-        # access list of chromosomes and write them to dictionary listing for species...
-        genomeFile2=genomeFile+'.fai'
-        #faiOpenFile=open(genomePath+genomeFile2,'r')
-        genomeNameFind=genomeFile2.split('_')
+        # access add fasta genome object to fasta object structure, searchable under species name
         fastaObjectStructure[speciesName] = fastaGenome
+
+        # removed code
+        #genomeFile2=genomeFile+'.fai'
+        #faiOpenFile=open(genomePath+genomeFile2,'r')
+        #genomeNameFind=genomeFile2.split('_')
         # add list of different chromosomes for species
         #for line in faiOpenFile:
         #    lineList=line.split()
         #    fastaObjectStructure[genomeNameFind[0]][1]+=[lineList[0]]
     return fastaObjectStructure
 
+# irrelevant code that was originally used to try to stitch together syntenic sequences
 def isbetween(start_coord_query,end_coord_query,start_coord_higherlvl,end_coord_higherlvl):
     """Compare function for if the query start or end coordinate is between the higher level start/end coordinates"""
     if start_coord_higherlvl <= start_coord_query <= end_coord_higherlvl or \
@@ -37,10 +46,17 @@ def isbetween(start_coord_query,end_coord_query,start_coord_higherlvl,end_coord_
 
 
 def pairComparisonSynteny(syntenicInputFiles,pathUnOut,pathSort):
-    """Creates a list of syntenies for a specific pair wise comparison from the .unout files and .sort files.
-    Syntenies are of form [(species1chromosome,start_coord,end_coord),(species2chromosome,start_coord,end_coord)]"""
+    """Creates a list of syntenies for a specific pair wise comparison from the .unout files and .sort2 files and turns
+    this list into a bedfile.
+    Inputs paired comparison files in the form of a syntenic tuple (.unout file, species 1 sort2 file, species2 sort2)
+    and the unout and sort path locations.
+    Outputs a BedTool object created from the paired comparison that lists all of the syntenies for the paired
+    comparison with formatting for each line: Chr is chromosome
+    'Species1Name_Species1Chr startCoordSyntenicSeq endCoordSynSeq species2Name_Chr_startCoord_endCoord'
+    Bed files that are converted into BedTool objects were created from
+    syntenies of form [[species1chromosome,start_coord,end_coord],[species2chromosome,start_coord,end_coord]]"""
 
-    # NOTE: syntenicInputTuple=(SyntenicFile,species1SortFile,species2SortFile)
+    # NOTE: syntenicInputTuple=(SyntenicFileUnOut,species1SortFile,species2SortFile)
     Syntenies=[]
     # now lets try to parse the .unout...
     syntenyFile = open(pathUnOut+syntenicInputFiles[0], 'r')
@@ -49,19 +65,26 @@ def pairComparisonSynteny(syntenicInputFiles,pathUnOut,pathSort):
     speciesName = [syntenicInputFiles[0][syntenicInputFiles[0].find('.')+1:syntenicInputFiles[0].find('-')],
                    syntenicInputFiles[0][syntenicInputFiles[0].find('PAC2'):syntenicInputFiles[0].find('_5')][7:]]
 
+    # unused code below
     # read the line that has the proper header to be parsed
-    reading = 1
+    #reading = 1
     """
     lines=[]
     for line in syntenyFile:
         if '[' in line:
             lines+=[line]
     """
-    # the following will grab start and end genes for each species for each synteny
+
+    # the following will grab start and end genes for each species for each syntenic block in the unout
+    # Unout file is the syntenyFile object listed below
     chunkList = []
     newChunk=[0,0,0,0]
     grabLine = ['$', '$','$','$']
-    # find lines that match description of syntenic sequences
+    # find lines that match description of syntenic sequences in the unout file
+    # a Chunk is a list of lines read from the the unout file
+    # newChunk contains list of [line containing species 1 start gene, line containing species 1 end gene, line
+    #containing species 2 start gene, line contain species 2 end ]
+    # first it parses the header line containing a '[' to find which lines to grab...
     for line in syntenyFile:
         for i in range(4):
             if grabLine[i] in line:
@@ -73,7 +96,10 @@ def pairComparisonSynteny(syntenicInputFiles,pathUnOut,pathSort):
         if '[' in line:
             lineList = line.split()
             if int(lineList[-6]) >= 4: # if number loci greater than or equal to 4
+                # parsing to find the start/end genes in the genes listed under each header in unout file
                 grabLine = [lineList[2], lineList[4],lineList[-11],lineList[-9]]
+
+                # removed code that attempted to deal with gene ordering
                 #if 'Minus' in line:
                 #    grabLine[2],grabLine[3] = grabLine[3],grabLine[2]
                 #if 'Plus' in line:
@@ -83,31 +109,51 @@ def pairComparisonSynteny(syntenicInputFiles,pathUnOut,pathSort):
                 #else: tag=''
 
     syntenyFile.seek(0)
-    global syntenicSequences
+
+
+    global syntenicSequences # creating syntenic sequences as aformentioned
+    # [[species1chromosome,start_gene,end_gene],[species2chromosome,start_gene,end_gene]]
+    # the genes will later be turned into their corresponding coordinates as the mutable list of syntenic sequence
+    # is accessed through the sort2 file
+
     syntenicSequences = []
-    # Bd2,510683,Bradi2g41430.1,Chr1,2751500,LOC_Os01g38960.1
+
+    # example line from a Chunk
+    # Bd2,510683,Bradi2g41430.1,Chr1,2751500,LOC_Os01g38960.1   other stuff over here
+
     # list of all of the genes in all syntenies for pair; used to speed up processing time when adding coord for gene
     geneListSpecies = [[],[]] #species 1 and 2 gene lists respecitvely
+    # the above is just a list of genes found in the unout files so when we open the sort2 files, we can know what we
+    # are looking for and can speed up processing
+
     # adding start and end genes here to particular synteny (will add coords later)
     for chunk in chunkList:
-        #lineList=range(4)
+
+        # Bd2,510683,Bradi2g41430.1,Chr1,2751500,LOC_Os01g38960.1
+        # each lineImportant info will contain above info, gets rid of other stuff from a line in chunk and splits
+        # above info into a list
         lineImportantInfo=range(4)
         for i in range(4):
-            #lineList[i] = chunk[i].split()
             lineImportantInfo[i] = chunk[i].split()[0].split(',')
+
+        # unused code
         #if 0 in speciesName:
         #    speciesName[0], speciesName[1] = line.split()
 
-
-
+        # this is a syntenic sequence here, derived from parsing through the line of important info and retaining
+        # species names
         startEndGenes =[[speciesName[0]+'_'+lineImportantInfo[0][0], lineImportantInfo[0][2], lineImportantInfo[1][2]],
                        [speciesName[1]+'_'+lineImportantInfo[0][3], lineImportantInfo[2][5], lineImportantInfo[3][5]]]
+
+        # Removed code that tried to deal with gene ordering
         #for i in range(2):
             #if startEndGenes[i][1] > startEndGenes[i][2]: #if gene1 is ordered after gene2, switch genes....
              #   startEndGenes[i][1],startEndGenes[i][2] = startEndGenes[i][2],startEndGenes[i][1]
 
-        # now switch order of genes according to plus or minus rules
+        # added a syntenic sequence to the list of syntenic sequences, keeping gene names/IDs for now but will find
+        # coords for the gene IDs later
         syntenicSequences += [startEndGenes]
+        # adding to list of genes for a species to speed up processing later on when finding start/end coords for gene
         geneListSpecies[0] += [lineImportantInfo[0][2], lineImportantInfo[1][2]] #species 1 specific genes....
         geneListSpecies[1] += [lineImportantInfo[2][5], lineImportantInfo[3][5]] # species 2
 
@@ -115,6 +161,7 @@ def pairComparisonSynteny(syntenicInputFiles,pathUnOut,pathSort):
 
     syntenyFile.close()
 
+    # obsolete code, dealt with gene ordering and titling of species/chromosome names, no longer to be used
     def removePlusMinus(speciesChromosomeName):
         # GET RID OF PLUS OR MINUS... FOR NOW keeping it!!!
         if 'Plus' in speciesChromosomeName:
@@ -123,7 +170,7 @@ def pairComparisonSynteny(syntenicInputFiles,pathUnOut,pathSort):
             speciesChromosomeName = speciesChromosomeName[:speciesChromosomeName.find('Minus')-1]
         return speciesChromosomeName
 
-    # import the sorted file to find start and end locations of each gene
+    # import the sorted file to find start and end locations/coordinates of each gene in syntenic sequence
     sortFiles = [syntenicInputFiles[1],syntenicInputFiles[2]]
     # open species file to find positions in the genome where syntenic sequence is located in between
     sortFileOpen = [open(pathSort+sortFiles[0], 'r'), open(pathSort+sortFiles[1], 'r')]
@@ -140,15 +187,30 @@ def pairComparisonSynteny(syntenicInputFiles,pathUnOut,pathSort):
 
     def checkForGene(geneLine,speciesNumber):
         """Checks particular line of sort file and searches through syntenic sequence list structure and outputs start
-        or end coordinate of gene"""
+        or end coordinate of gene. Will turn:
+        [[species1chromosome,start_gene,end_gene],[species2chromosome,start_gene,end_gene]]
+        into: (start_coord is start coordinate of the starting gene/ first gene of syntenic sequence)
+        [[species1chromosome,start_coord,end_coord],[species2chromosome,start_coord,end_coord]]
+
+        Inputs a specified line from the sort2 and speciesNumber (first/second species represented by [0] or [1] index
+        and replaces in the global variable syntenicSequences the start/end gene with its corresponding start/end coord
+        in the sort2 file. Searches the syntenic sequences structure to find start/end coord referenced in the sort2."""
         global syntenicSequences
-        geneCoordInfos = []
+
+        # searching each syntenic sequence (ith) in the structure, only for speciesNumber (species 1 or 2) specified
+        # searches 'k', the species start (1) or end (2) gene and replaces it with start/end coordinate
         for i in range(len(syntenicSequences)):
             for k in [1,2]:
+                # unused code testing purposes
                 #if findGenes[i][speciesNumber][k] == 'Pavir.9KG291000.1' and geneLine.split()[0] == 'Pavir.9KG291000.1': #REMOVE
                  #   a=1
+
+                # if the gene found matches gene in sort2 file
                 if str(syntenicSequences[i][speciesNumber][k]) == geneLine.split()[0]:
+                    # replace start/end gene with corresponding start/end coordinate
                     syntenicSequences[i][speciesNumber][k] = int(geneLine.split()[k+1])
+
+                # removed code, additional checks on gene ordering...
                 """   if type(syntenicSequences[i][speciesNumber][1]) == \
                             type(syntenicSequences[i][speciesNumber][2]) and \
                                     syntenicSequences[i][speciesNumber][2] < \
@@ -156,22 +218,26 @@ def pairComparisonSynteny(syntenicInputFiles,pathUnOut,pathSort):
                         # check if end coordinate less than start coord (find out why??)
                 """
 
-                    #geneCoordInfos += [(i, k, geneLine.split()[k+1])]
+        # unused code
+        #geneCoordInfos += [(i, k, geneLine.split()[k+1])]
         #if geneCoordInfos == []:
         #    return [('NaN', 'NaN', 'NaN')]
         #else:
         #    return geneCoordInfos
 
 
-# species 1 and 2
+# for species 1 and 2
     for speciesNumber in range(2):
         # check each line in sort file and..
         for line in sortFileOpen[speciesNumber]:
-            # see if gene is a gene in a list of all syntenic genes
+            # see if gene is a gene in a list of all syntenic genes found from unout file "chunk" analysis above
             if line.split()[0] in geneListSpecies[speciesNumber]:
-                # if so, replace gene with its corresponding start/stop coordinate in the genome
+                # if so, replace gene with its corresponding start/stop coordinate in the genome using check for gene
                 # note: output multiple gene coords!!!!
                 checkForGene(line,speciesNumber)
+
+                #Removed code below, algorithm that did not get the job done using local variables, created global
+                # variables for ease of access to structure... some genes were found multiple times
                 #geneCoordInfos=checkForGene(line,syntenicSequences,speciesNumber)
                 """
                 for geneCoord in geneCoordInfos:
@@ -186,7 +252,8 @@ def pairComparisonSynteny(syntenicInputFiles,pathUnOut,pathSort):
         #comment and read into greater detail!!!!!
                 """
 
-
+    # obsolete/removed method of finding start/end coordinates that required a lot of processing time and kept opening
+    # and rereading the sort2 file
     #for syntenySequence in syntenicSequences:
         """
         string1list = line[line.find('[') + 1:line.find(']')].split(' ')
@@ -202,7 +269,7 @@ def pairComparisonSynteny(syntenicInputFiles,pathUnOut,pathSort):
         speciesChr2 = removePlusMinus(speciesChr2)
         """
         #PLEASE CHANGE THIS... WILL TAKE TOO LONG TO READ THROUGH FILES
-
+        # this was changed..., code below is also removed
         """
         j = 0
         genePositionList = [[], []]
@@ -224,13 +291,11 @@ def pairComparisonSynteny(syntenicInputFiles,pathUnOut,pathSort):
                     del genePositionList[i][1]
                     break
             """
-                #if i == 0:
-                    ########$^#$%^#$%&#^ AND HERE!!!
-
+            # unused code
             # read again from the top (FOR NOW)
             #sortFileOpen[i].seek(0)
 
-        #START HERE!!!!
+        #old structure created, code removed/unused...
         """
         try:
             Syntenies+=[[(speciesChr1,genePositionList[0][0],genePositionList[0][1]),
@@ -249,128 +314,182 @@ def pairComparisonSynteny(syntenicInputFiles,pathUnOut,pathSort):
 
     ###########
 
-    # create bedtool files for AB and AC pairwise analysis to test intersections...
+    # create bedtool file from the syntenicSequences structure
     open('%s.bed'%(syntenicInputFiles[0][:syntenicInputFiles[0].rfind('.')]),'w').close()
     bedoutfile = open('%s.bed'%(syntenicInputFiles[0][:syntenicInputFiles[0].rfind('.')]),'w')
     for syntenicSequence in syntenicSequences:
-        if int(syntenicSequence[1][2])<int(syntenicSequence[1][1]): #FIXME
-            print syntenicSequence[1]
+        # once again, code commented out below was used to check gene/gene coordinate ordering and make sure start coord
+        # is less than end coord for syntenic sequence
+        #if int(syntenicSequence[1][2])<int(syntenicSequence[1][1]):
+        #    print syntenicSequence[1]
+
+        # write each sequence to bed file, A/query species will be accessed by BedTools, B/C/D/etc target species is
+        # added on as a feature to be preserved when the bedtool objects are merged
         bedoutfile.write('%s\t%s\t%s\t%s_%s_%s \n' %tuple(syntenicSequence[0]+syntenicSequence[1]))
     bedoutfile.close()
+    # convert the pairwise comparison bed file into BedTool object to be manipulated when BedTool obj structure created
     bedAnalyze = BedTool('%s.bed'%(syntenicInputFiles[0][:syntenicInputFiles[0].rfind('.')])).sort()
 
-
-    stop=1 #pause here and drag bed file to new location
+    # old debug method...
+    #stop=1 #pause here and drag bed file to new location
 
     ###########
-    return bedAnalyze
+    return bedAnalyze # this is our BedTool object
 
 
 
-def syntenicStructure(subgenome): #input N or K for subgenome
+def syntenicStructure(subgenome): #input N or K for subgenome, will generalize later
+    """Input 'N' or 'K' for now in oder to perform a synteny analysis on either the N or K subgenome. This will compare
+    the subgenome to its closest species relatives and builds a Fasta object structure and a BedTool Object structure to
+    access the Fasta structure, which accesses the genomes themselves.
+    Fasta files are outputted from each analysis that contain information about each merged syntenic sequence and the
+    actual basepairs written to the fasta files from the genome .fa files. Synthesizes multiple pairwise comparisons
+    between species and creates syntenies between more than 2 species..."""
 
     # NOTE: FASTA structures must match syntenies!!! ~~~~~~~
     # generate the fasta data structure
     listOfGenomeFiles=[]
-    fastaFindFile = open('syntenicTuplesList.txt','r')
+    # open config file to grab list of genomes to access
+    fastaFindFile = open('syntenicTuplesList.txt','r') # keep config in running directory
     readFasta = 0 # so far do not input
     for line in fastaFindFile:
         if 'genomePath' in line:
+            # grabs path of genome files locations
             genomePath = line.split()[-1]
         if readFasta == 1:
+            # if reading lines in config, pull the genome file names out to be used in setting up fasta structure
+            # will generate .fai files in the genome path if not already created...
             if 'Stop' in line:
-                break
+                break # stop reading file
             listOfGenomeFiles += [line.strip('\n')]
         if 'listOfGenomeFiles:' in line:
+            # begin reading lines to pull genome file names
             readFasta = 1
-    fastaFindFile.seek(0)
+    fastaFindFile.seek(0) # reset where reading config file to beginning
     fastaFindFile.close()
+
+    # generate the Fasta Object structure, a dictionary of Fasta objects referenced by species names
     fastaObjectStructure = generateFastaObjectStructure(listOfGenomeFiles,genomePath)
 
 
 
-    # generate all of the syntenies from the following input tuples 'PAC2_0.283-PAC2_0.323_5.unout'
-    # generate list of SyntenicTuples from unout files (in correct order for analysis)... will change!
+    # generate all of the syntenies from the following input tuples (unout file, species1 sort2, species2 sort2)
+    # generate list of SyntenicTuples from config file 'SyntenicInputTuples.txt'
     # do analysis on N subgenome for now...
     listOfSyntenicTuples = []
 
-    #let's create syntenic tuples list from file
+    #let's create syntenic tuples list from file, read config file
     synTupFile = open('syntenicTuplesList.txt','r')
     read = 0 # so far, not reading lines to create tuples
     for line in synTupFile:
-        if 'pathUnOut' in line:
+        if 'pathUnOut' in line: # pull path of unout synteny comparison file
             pathUnOut = line.split()[-1]
-        if 'pathSort' in line:
+        if 'pathSort' in line: # pull path of sort2 files
             pathSort = line.split()[-1]
         if read == 1:
             if 'Stop' in line:
-                break
-            syntenicList = line.split('   ')
-            syntenicList[2] = syntenicList[2][:-1]
+                break # read lines until stop
+            # PAC4GC.524-PAC2_0.383_5.unout   q.PAC4GC.524.sort2   t.PAC2_0.383.sort2
+            syntenicList = line.split('   ') # not tab delimited, may change, but read syntenic tuples in this manner
+            syntenicList[2] = syntenicList[2].strip('\n') # remove end line for last entry
             listOfSyntenicTuples += [tuple(syntenicList)]
-        if '%s Test'%subgenome in line: # if performing N or K Test analysis
+        if '%s Test'%subgenome in line: # if performing N or K Test analysis, find in line and read lines until stop
             read = 1
-            pathFastaOutput = line.split()[-1].strip('\n')
+            pathFastaOutput = line.split()[-1].strip('\n') # add output path for fasta files
 
     #for file in os.listdir(pathUnOut):
 
-    listOfPairedComparisonSyntenies=[]
-    #^^^ add more above! Species A and B first
-    # analyze pairwise comparison of syntenies
+    listOfPairedComparisonSyntenies=[] # this is out BEDTool object structure which contains bed objects that are pair-
+    #wise comparisons
     # each of these pairwise comparison syntenies are bedtools
+    # generate structure (list of bedtool objects) by going through each paired syntenic comparison
     for syntenicInputTuple in listOfSyntenicTuples:
         listOfPairedComparisonSyntenies+=[pairComparisonSynteny(syntenicInputTuple,pathUnOut,pathSort)]
 
+    # initialize the final synteny structure (just a bed object that will be concatenated and merged with other beds)
+    # first paired comparison bed is initial bed object
     finalSyntenyStructureBed = listOfPairedComparisonSyntenies[0]
 
+    # concatenate remaining paired comparison bed objects together
     for pairwiseComparison in listOfPairedComparisonSyntenies[1:]:
         finalSyntenyStructureBed = finalSyntenyStructureBed.cat(pairwiseComparison,postmerge=False)
 
+    # merge these concatenated bed objects and format, query species do not have to overlap, can be 100000 BPs apart...
+    # one line should look like:
+    # 523_Chr09N	118260675	118632318	308_Chr07_33574614_33759677|308_Chr09_1325484_1436481| ...etc
+    # SpeciesA_Chrom xi xf     SpeciesB_Chr_xi_xf|SpeciesC_Chr_xi_xf|SpeciesC#2_Chr_xi_xf...etc
     finalSyntenyStructureBed = finalSyntenyStructureBed.sort().merge(o='distinct',c=4,delim='|',d=100000)
 
-    print finalSyntenyStructureBed
+    # hide for now
+    #print finalSyntenyStructureBed
 
+    # there exists an error file to make sure program runs to end, output errors onto this file, and search the sort2
+    # files for faulty genes
+    # error file will contain species_chr, xi, xf for all bad outputs, can look them up in sort and match to unout
     count = 1
     open('ERRTEST.txt', 'w').close()
     errorFile = open('ERRTEST.txt', 'w')
     # OUTPUTTING TO FASTA FILES!!!
+    # for each merged syntenic sequence (according to final structure bed object), each line corresponds to one sequence
     for line in str(finalSyntenyStructureBed).split('\n'):
+        # if line exists
         if line:
-            open(pathFastaOutput+'FastaOut%d.fasta'%count,'w').close()
+            open(pathFastaOutput+'FastaOut%d.fasta'%count,'w').close() # create new fasta output file
+
+            # open for writing
             fastaOutFile = open(pathFastaOutput+'FastaOut%d.fasta'%count,'w')
+            # parse sequence line bed object eg.
+            # 523_Chr09N	118260675	118632318	308_Chr07_33574614_33759677|308_Chr09_1325484_1436481|
+            # split into [523_Chr09N, 118260675, 118632318,308_Chr07_33574614_33759677|308_Chr09_1325484_1436481|..]
             syntenicSequenceParseList = line.split('\t')
+            #speciesAOut would look like [523_Chr09N, 118260675, 118632318]
             speciesAOut = syntenicSequenceParseList[0:3]
+            # if the speciesName (523 in above example) is either 523 or 524 species Name, change name to 383 for naming
             if speciesAOut[0].split('_')[0] in ['523','524']:
-                speciesAName = '383'
+                speciesAName = '383' # P.virgatum if query species
             else:
-                speciesAName = speciesAOut[0].split('_')[0]
+                speciesAName = speciesAOut[0].split('_')[0] # hold old naming convention
             #Target and query A species have tuples that describe syntenic sequence (Species, chromosome, xi, xf)
             speciesAOutTuple = (speciesAName,speciesAOut[0].split('_')[1],speciesAOut[1],speciesAOut[2])
+            # initialize final output structure for fasta file, which uses list of output tuples
             fastaOutputTuples = [speciesAOutTuple]
+            # split up the last entry of the syntenicSequenceParseList by the delimiter, these create outputs for
+            # bed features/ more distant species relatives (target species)
             if '|' in syntenicSequenceParseList[3]:
                 listOfParseTargetSpecies = syntenicSequenceParseList[3].split('|')
             else:
                 listOfParseTargetSpecies = [syntenicSequenceParseList[3]]
+            # for each of the target species (not species A) found from splitting delimiter into list, create similar
+            # output tuples as those used for species A output and add all of them to the fastaOutputTuples
             for targetSpecies in listOfParseTargetSpecies:
                 outputTargetList = targetSpecies.split('_')
                 fastaOutputTuples += [(outputTargetList[0],
                                targetSpecies[targetSpecies.find('_')+1:targetSpecies.find(outputTargetList[-2])-1],
                                outputTargetList[-2], outputTargetList[-1])]
-                if targetSpecies[targetSpecies.find('_')+1:targetSpecies.find(outputTargetList[-2])-1]=='scaffold_':
-                    a=1
+                # removed code for testing
+                #if targetSpecies[targetSpecies.find('_')+1:targetSpecies.find(outputTargetList[-2])-1]=='scaffold_':
+                #    a=1
+            # for each output tuple for one Synteny across the merged comparison final bed structure, output info/
+            # actual DNA sequence to fasta under appropriate header
             for fastaOutputTuple in fastaOutputTuples:
                 try:
-                    if int(fastaOutputTuple[2]) > int(fastaOutputTuple[3]): #FIXME!!!
-                        print fastaOutputTuple
-                        fastaOutputTuple[2],fastaOutputTuple[3] = fastaOutputTuple[3],fastaOutputTuple[2]
+                    # eliminate reordering of gene coordinates for now... unless drawing error file and need debug
+                    #if int(fastaOutputTuple[2]) > int(fastaOutputTuple[3]): #FIXME!!!
+                    #    print fastaOutputTuple
+                    #    fastaOutputTuple[2],fastaOutputTuple[3] = fastaOutputTuple[3],fastaOutputTuple[2]
+                    # header to outputted sequence > Species Chromosome start coord (xi) end coord xf
                     fastaOutFile.write('> %s %s %s %s\n' %fastaOutputTuple)
-                    fastaOutFile.write(str(fastaObjectStructure[fastaOutputTuple[0]][fastaOutputTuple[1]][int(fastaOutputTuple[2])-1:int(fastaOutputTuple[3])])+'\n')
-                except:
-                    errorFile.write(str(fastaOutputTuple) + ('\n'))
+                    # writing the actual sequence
+                    fastaOutFile.write(str(fastaObjectStructure[fastaOutputTuple[0]][fastaOutputTuple[1]]
+                                           [int(fastaOutputTuple[2])-1:int(fastaOutputTuple[3])])+'\n')
+                except: # if not able to write
+                    errorFile.write(str(fastaOutputTuple) + ('\n')) # search through sort2 file to debug error
             fastaOutFile.close()
-        count += 1
+        count += 1 # change cound to change title of fasta out file
     errorFile.close()
 
+
+    # old code, removed, does not work!! prior attempt without bedtools
     """
     # first generate list of syntenic dictionaries from species A&B from the first synteny
     # create initial synteny dictionary structure from species A & B
@@ -424,20 +543,20 @@ def syntenicStructure(subgenome): #input N or K for subgenome
     a=1
     """
 
+# run K and N subgenome analysis
 syntenicStructure('K')
 syntenicStructure('N')
+
+
+
+
+
+
+
+#MISC notes/concerns that may or may not have been addressed
 # maybe input inputSyntenicFilesTuples and genome .fa file list.... not sure
-
 # repair process that looks for start and end coordinates
-
 # output syntenic files to new folder!
-
-
-
-
-
-
-
 #fastaObjectStructure['Bdistachyon'][0]['Bd2'][0:10] indexes like python... Take this into account!!!!
 #listOfGenomeFiles=['Bdistachyon_314_v3.0.softmasked.fa','Osativa_323_v7.0.softmasked.fa']
 #generateFastaObjectStructure(listOfGenomeFiles)
