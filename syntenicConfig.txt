@@ -1,7 +1,9 @@
+NameAnalysis = K
+pathPythonModules = /global/u2/j/jlevy/python_modules
 pathUnOut = /Users/jlevy/Documents/Joshua_Research_JGI/Joshua_Levy_Research_Outputs/DNA_Segment_Extraction/UnOutFiles/
 pathSort = /Users/jlevy/Documents/Joshua_Research_JGI/Joshua_Levy_Research_Outputs/DNA_Segment_Extraction/SortFiles/
 N Test Analysis path = /Users/jlevy/Documents/Joshua_Research_JGI/Joshua_Levy_Research_Outputs/DNA_Segment_Extraction/FastaFileOutputsNAnalysis/
-PAC4GC.523-PAC2_0.383_5.unout   q.PAC4GC.523.sort2   t.PAC2_0.383.sort2
+PAC4GC.523-PAC4GC.524_5.unout   q.PAC4GC.523.sort2   q.PAC4GC.524.sort2
 PAC4GC.523-PAC2_0.308_5.unout   q.PAC4GC.523.sort2   t.PAC2_0.308.sort2
 PAC4GC.523-PAC2_0.312_5.unout   q.PAC4GC.523.sort2   t.PAC2_0.312.sort2
 PAC4GC.523-PAC2_0.313_5.unout   q.PAC4GC.523.sort2   t.PAC2_0.313.sort2
@@ -10,7 +12,7 @@ PAC4GC.523-PAC2_0.314_5.unout   q.PAC4GC.523.sort2   t.PAC2_0.314.sort2
 PAC4GC.523-PAC2_0.316_5.unout   q.PAC4GC.523.sort2   t.PAC2_0.316.sort2
 Stop
 K Test Analysis path = /Users/jlevy/Documents/Joshua_Research_JGI/Joshua_Levy_Research_Outputs/DNA_Segment_Extraction/FastaFileOutputsKAnalysis/
-PAC4GC.524-PAC2_0.383_5.unout   q.PAC4GC.524.sort2   t.PAC2_0.383.sort2
+PAC4GC.524-PAC4GC.523_5.unout   q.PAC4GC.524.sort2   q.PAC4GC.523.sort2
 PAC4GC.524-PAC2_0.308_5.unout   q.PAC4GC.524.sort2   t.PAC2_0.308.sort2
 PAC4GC.524-PAC2_0.312_5.unout   q.PAC4GC.524.sort2   t.PAC2_0.312.sort2
 PAC4GC.524-PAC2_0.313_5.unout   q.PAC4GC.524.sort2   t.PAC2_0.313.sort2

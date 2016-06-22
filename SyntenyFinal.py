@@ -1,6 +1,4 @@
 import os, sys
-# in order to run on the server, list path of installed modules
-sys.path.append('/global/u2/j/jlevy/python_modules')
 from pyfaidx import Fasta
 from pybedtools import *
 
@@ -61,9 +59,8 @@ def pairComparisonSynteny(syntenicInputFiles,pathUnOut,pathSort):
     # now lets try to parse the .unout...
     syntenyFile = open(pathUnOut+syntenicInputFiles[0], 'r')
 
-    # Find species Names (numbers)
-    speciesName = [syntenicInputFiles[0][syntenicInputFiles[0].find('.')+1:syntenicInputFiles[0].find('-')],
-                   syntenicInputFiles[0][syntenicInputFiles[0].find('PAC2'):syntenicInputFiles[0].find('_5')][7:]]
+    # Find species Names (numbers) #FIXME
+    speciesName = [syntenicInputFiles[1].split('.')[-2],syntenicInputFiles[2].split('.')[-2]]
 
     # unused code below
     # read the line that has the proper header to be parsed
@@ -338,7 +335,7 @@ def pairComparisonSynteny(syntenicInputFiles,pathUnOut,pathSort):
 
 
 
-def syntenicStructure(subgenome): #input N or K for subgenome, will generalize later
+def syntenicStructure(): #input N or K for subgenome, will generalize later
     """Input 'N' or 'K' for now in oder to perform a synteny analysis on either the N or K subgenome. This will compare
     the subgenome to its closest species relatives and builds a Fasta object structure and a BedTool Object structure to
     access the Fasta structure, which accesses the genomes themselves.
@@ -346,13 +343,20 @@ def syntenicStructure(subgenome): #input N or K for subgenome, will generalize l
     actual basepairs written to the fasta files from the genome .fa files. Synthesizes multiple pairwise comparisons
     between species and creates syntenies between more than 2 species..."""
 
+
     # NOTE: FASTA structures must match syntenies!!! ~~~~~~~
     # generate the fasta data structure
     listOfGenomeFiles=[]
     # open config file to grab list of genomes to access
-    fastaFindFile = open('syntenicTuplesList.txt','r') # keep config in running directory
+    fastaFindFile = open('syntenicConfig.txt','r') # keep config in running directory
     readFasta = 0 # so far do not input
     for line in fastaFindFile:
+        # Reads the type of Analysis to be performed; modify config file. this name must match name used for output path
+        if 'NameAnalysis' in line:
+            nameAnalysis = line.split()[-1].strip('\n')
+        if 'pathPythonModules' in line:
+            sys.path.append(line.split()[-1].strip('\n'))
+        # in order to run on the server, list path of installed modules^^^
         if 'genomePath' in line:
             # grabs path of genome files locations
             genomePath = line.split()[-1]
@@ -379,7 +383,7 @@ def syntenicStructure(subgenome): #input N or K for subgenome, will generalize l
     listOfSyntenicTuples = []
 
     #let's create syntenic tuples list from file, read config file
-    synTupFile = open('syntenicTuplesList.txt','r')
+    synTupFile = open('syntenicConfig.txt','r')
     read = 0 # so far, not reading lines to create tuples
     for line in synTupFile:
         if 'pathUnOut' in line: # pull path of unout synteny comparison file
@@ -393,7 +397,7 @@ def syntenicStructure(subgenome): #input N or K for subgenome, will generalize l
             syntenicList = line.split('   ') # not tab delimited, may change, but read syntenic tuples in this manner
             syntenicList[2] = syntenicList[2].strip('\n') # remove end line for last entry
             listOfSyntenicTuples += [tuple(syntenicList)]
-        if '%s Test'%subgenome in line: # if performing N or K Test analysis, find in line and read lines until stop
+        if '%s Test'%nameAnalysis in line: # if performing N or K Test analysis, find in line and read lines until stop
             read = 1
             pathFastaOutput = line.split()[-1].strip('\n') # add output path for fasta files
 
@@ -463,7 +467,11 @@ def syntenicStructure(subgenome): #input N or K for subgenome, will generalize l
             # output tuples as those used for species A output and add all of them to the fastaOutputTuples
             for targetSpecies in listOfParseTargetSpecies:
                 outputTargetList = targetSpecies.split('_')
-                fastaOutputTuples += [(outputTargetList[0],
+                if outputTargetList[0] in ['523','524']: #SPECIFIC TO N OR K ANALYSIS... MAY NEED TO CHANGE
+                    speciesBName = '383'
+                else:
+                    speciesBName = outputTargetList[0]
+                fastaOutputTuples += [(speciesBName,
                                targetSpecies[targetSpecies.find('_')+1:targetSpecies.find(outputTargetList[-2])-1],
                                outputTargetList[-2], outputTargetList[-1])]
                 # removed code for testing
@@ -544,8 +552,8 @@ def syntenicStructure(subgenome): #input N or K for subgenome, will generalize l
     """
 
 # run K and N subgenome analysis
-syntenicStructure('K')
-syntenicStructure('N')
+syntenicStructure()
+
 
 
 
