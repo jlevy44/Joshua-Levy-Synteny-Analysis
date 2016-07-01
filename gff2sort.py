@@ -2,26 +2,34 @@
 #Chr1	phytozomev11	mRNA	2903	10817	.	+	.	ID=LOC_Os01g01010.1.MSUv7.0;Name=LOC_Os01g01010.1;pacid=33123311;longest=1;Parent=LOC_Os01g01010.MSUv7.0
 #Pahal.C01314.1	Chr03	7436628	7436867	80	1	U	1007309
 
-#gffFiles= ['t.PAC2_0.313.gff3',	't.PAC2_0.323.gff3', 't.PAC2_0.308.gff3',
-           #'t.PAC2_0.314.gff3', 't.PAC2_0.312.gff3',	't.PAC2_0.316.gff3']
+gffFiles= ['t.PAC2_0.313.gff3',	't.PAC2_0.323.gff3', 't.PAC2_0.308.gff3',
+           't.PAC2_0.314.gff3', 't.PAC2_0.312.gff3',	't.PAC2_0.316.gff3']
 
-gffFiles = ['t.PAC2_0.189.gff3','t.PAC2_0.296.gff3','t.PAC2_0.311.gff3'] #189 311 296
+#gffFiles = ['q.PAC4GC.524.gff3','q.PAC4GC.523.gff3'] #189 311 296
+# Rename files like Phallii_308_v2.0.gene.gff3 to 't.PAC2_0.308.gff3' <---Target species
+# if original gff file is query species, rename to q.PAC4GC.xxx.gff or ...xxx.gff3 instead of t.PAC2_0.308...etc
+def gff2sort2(gffFiles):
+    """Takes a list of gffFiles and converts them to sort2 files to use in the final synteny analysis.
+    Please let Joshua Levy know if there are any errors or have problems!"""
+    for gff in gffFiles:
+        outFileName = gff[:gff.rfind('.')]+'.sort2'
+        inputFile = open(gff, 'r')
+        open(outFileName, 'w').close()
+        outputFile = open(outFileName, 'w')
+        for line in inputFile:
+            if 'mRNA' in line and 'longest=1' in line:
+                lineInList = line.split()
+                parserList = lineInList[-1].split(';')
+                lineOutputList = [parserList[1].strip('Name='), lineInList[0], lineInList[3], lineInList[4]]
+                outputFile.write('%s    %s   %s   %s\n' % tuple(lineOutputList))
 
+        inputFile.close()
+        outputFile.close()
 
-for gff in gffFiles:
-    outFileName = gff[:gff.rfind('.')]+'.sort2'
-    inputFile = open(gff, 'r')
-    open(outFileName, 'w').close()
-    outputFile = open(outFileName, 'w')
-    for line in inputFile:
-        if 'mRNA' in line and 'longest=1' in line:
-            lineInList = line.split()
-            parserList = lineInList[-1].split(';')
-            lineOutputList = [parserList[1].strip('Name='), lineInList[0], lineInList[3], lineInList[4]]
-            outputFile.write('%s    %s   %s   %s\n' % tuple(lineOutputList))
+gff2sort2(gffFiles)
 
-    inputFile.close()
-    outputFile.close()
+    # code used specifically for polyploid sequencing
+    # please email Joshua Levy for more info
 """
 
 outFileNameN='q.PAC4GC.523.sort'
