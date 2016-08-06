@@ -128,6 +128,11 @@ def pairComparisonSynteny(syntenicInputFiles,pathUnOut,pathSort,Loci_Threshold):
     # the above is just a list of genes found in the unout files so when we open the sort2 files, we can know what we
     # are looking for and can speed up processing
 
+    #FIXME
+    def endsWithM(gene):
+        if gene.endswith('m'):
+            return gene[:-1]
+
     # adding start and end genes here to particular synteny (will add coords later)
     for chunk in chunkList:
 
@@ -144,9 +149,9 @@ def pairComparisonSynteny(syntenicInputFiles,pathUnOut,pathSort,Loci_Threshold):
 
         # this is a syntenic sequence here, derived from parsing through the line of important info and retaining
         # species names
-        if 'Brsylv' in chunk[0] and 'Brsylv' in chunk[1]: # fix output for bad naming for this new species FIXME future
-            for i in range(2):
-                lineImportantInfo[i][2] = lineImportantInfo[i][2][:-1]
+        #if 'Brsylv' in chunk[0] and 'Brsylv' in chunk[1]: # fix output for bad naming for this new species FIXME future
+        #    for i in range(2):
+        #        lineImportantInfo[i][2] = lineImportantInfo[i][2][:-1]
         startEndGenes =[[speciesName[0]+'-'+lineImportantInfo[0][0].replace('-','~'), lineImportantInfo[0][2], lineImportantInfo[1][2]],
                     [speciesName[1]+'-'+lineImportantInfo[0][3].replace('-','~'), lineImportantInfo[2][5], lineImportantInfo[3][5]]]
 
@@ -318,7 +323,8 @@ def pairComparisonSynteny(syntenicInputFiles,pathUnOut,pathSort,Loci_Threshold):
         sortFileOpen[i].close()
 
     ###########
-
+    open(pathUnOut[:-1][:pathUnOut[:-1].rfind('/')+1]+'ErrorFiles/ErrFile%s.txt'%speciesName[1],'w').close()
+    errfile = open(pathUnOut[:-1][:pathUnOut[:-1].rfind('/') + 1] + 'ErrorFiles/ErrFile%s.txt' % speciesName[1], 'w')
     # create bedtool file from the syntenicSequences structure
     open('%s.bed'%(syntenicInputFiles[0][:syntenicInputFiles[0].rfind('.')]),'w').close()
     bedoutfile = open('%s.bed'%(syntenicInputFiles[0][:syntenicInputFiles[0].rfind('.')]),'w')
@@ -327,14 +333,23 @@ def pairComparisonSynteny(syntenicInputFiles,pathUnOut,pathSort,Loci_Threshold):
         # is less than end coord for syntenic sequence
         #if int(syntenicSequence[1][2])<int(syntenicSequence[1][1]):
         #    print syntenicSequence[1]
-        for i in range(2):
-            syntenicSequence[i][1] = str(int(syntenicSequence[i][1])-1)
-            syntenicSequence[i][2] = str(syntenicSequence[i][2])
+        try:
+            anyWrong = 0
+            for i in range(2):
+                syntenicSequence[i][1] = str(int(syntenicSequence[i][1])-1)
+                syntenicSequence[i][2] = str(syntenicSequence[i][2])
+                if int(syntenicSequence[i][1]) > int(syntenicSequence[i][2]):
+                    errfile.write(str(syntenicSequence[i]) + '\n')
+                    anyWrong += 1
 
-        # write each sequence to bed file, A/query species will be accessed by BedTools, B/C/D/etc target species is
-        # added on as a feature to be preserved when the bedtool objects are merged
-        bedoutfile.write('%s\t%s\t%s\t%s-%s-%s \n' %tuple(syntenicSequence[0]+syntenicSequence[1]))
+            # write each sequence to bed file, A/query species will be accessed by BedTools, B/C/D/etc target species is
+            # added on as a feature to be preserved when the bedtool objects are merged
+            if anyWrong == 0:
+                bedoutfile.write('%s\t%s\t%s\t%s-%s-%s \n' %tuple(syntenicSequence[0]+syntenicSequence[1]))
+        except:
+            errfile.write(str(tuple(syntenicSequence[0]+syntenicSequence[1]))+'\n')
     bedoutfile.close()
+    errfile.close()
     # convert the pairwise comparison bed file into BedTool object to be manipulated when BedTool obj structure created
     bedAnalyze = BedTool('%s.bed'%(syntenicInputFiles[0][:syntenicInputFiles[0].rfind('.')])).sort()
 
@@ -362,28 +377,36 @@ def syntenicStructure(): #input N or K for subgenome, will generalize later
     fastaFindFile = open('syntenicConfig.txt','r') # keep config in running directory
     readFasta = 0 # so far do not input
     for line in fastaFindFile:
-        # Reads the type of Analysis to be performed; modify config file. this name must match name used for output path
-        if 'NameAnalysis' in line:
-            nameAnalysis = line.split()[-1].strip('\n')
-        if 'pathPythonModules' in line:
-            sys.path.append(line.split()[-1].strip('\n'))
-        if 'Loci' in line: # establish loci threshold
-            Loci_Threshold = int(line.split()[-1].strip('\n'))
-        # in order to run on the server, list path of installed modules^^^
-        if 'genomePath' in line:
-            # grabs path of genome files locations
-            genomePath = line.split()[-1]
-        if readFasta == 1:
-            # if reading lines in config, pull the genome file names out to be used in setting up fasta structure
-            # will generate .fai files in the genome path if not already created...
-            if 'Stop' in line:
-                break # stop reading file
-            listOfGenomeFiles += [line.strip('\n')]
-        if 'listOfGenomeFiles:' in line:
-            # begin reading lines to pull genome file names
-            readFasta = 1
+        if line:
+            # Reads the type of Analysis to be performed; modify config file. this name must match name used for output path
+            if 'NameAnalysis' in line:
+                nameAnalysis = line.split()[-1].strip('\n')
+            if 'writeFastaOut' in line:
+                writeFastaOut = line.split()[-1].strip('\n')
+            if 'pathPythonModules' in line:
+                sys.path.append(line.split()[-1].strip('\n'))
+            if 'Loci' in line: # establish loci threshold
+                Loci_Threshold = int(line.split()[-1].strip('\n'))
+            # in order to run on the server, list path of installed modules^^^
+            if 'genomePath' in line:
+                # grabs path of genome files locations
+                genomePath = line.split()[-1]
+            if readFasta == 1:
+                # if reading lines in config, pull the genome file names out to be used in setting up fasta structure
+                # will generate .fai files in the genome path if not already created...
+                if 'Stop' in line:
+                    break # stop reading file
+                listOfGenomeFiles += [line.strip('\n')]
+            if 'listOfGenomeFiles:' in line:
+                # begin reading lines to pull genome file names
+                readFasta = 1
     fastaFindFile.seek(0) # reset where reading config file to beginning
     fastaFindFile.close()
+
+    try:
+        int(writeFastaOut)
+    except:
+        writeFastaOut = 1
 
     # generate the Fasta Object structure, a dictionary of Fasta objects referenced by species names
     fastaObjectStructure = generateFastaObjectStructure(listOfGenomeFiles,genomePath)
@@ -399,20 +422,21 @@ def syntenicStructure(): #input N or K for subgenome, will generalize later
     synTupFile = open('syntenicConfig.txt','r')
     read = 0 # so far, not reading lines to create tuples
     for line in synTupFile:
-        if 'pathUnOut' in line: # pull path of unout synteny comparison file
-            pathUnOut = line.split()[-1]
-        if 'pathSort' in line: # pull path of sort2 files
-            pathSort = line.split()[-1]
-        if read == 1:
-            if 'Stop' in line:
-                break # read lines until stop
-            # PAC4GC.524-PAC2_0.383_5.unout   q.PAC4GC.524.sort2   t.PAC2_0.383.sort2
-            syntenicList = line.split('   ') # not tab delimited, may change, but read syntenic tuples in this manner
-            syntenicList[2] = syntenicList[2].strip('\n') # remove end line for last entry
-            listOfSyntenicTuples += [tuple(syntenicList)]
-        if '%s Test'%nameAnalysis in line: # if performing N or K Test analysis, find in line and read lines until stop
-            read = 1
-            pathFastaOutput = line.split()[-1].strip('\n') # add output path for fasta files
+        if line:
+            if 'pathUnOut' in line: # pull path of unout synteny comparison file
+                pathUnOut = line.split()[-1]
+            if 'pathSort' in line: # pull path of sort2 files
+                pathSort = line.split()[-1]
+            if read == 1:
+                if 'Stop' in line:
+                    break # read lines until stop
+                # PAC4GC.524-PAC2_0.383_5.unout   q.PAC4GC.524.sort2   t.PAC2_0.383.sort2
+                syntenicList = line.split('   ') # not tab delimited, may change, but read syntenic tuples in this manner
+                syntenicList[2] = syntenicList[2].strip('\n') # remove end line for last entry
+                listOfSyntenicTuples += [tuple(syntenicList)]
+            if '%s Test'%nameAnalysis in line: # if performing N or K Test analysis, find in line and read lines until stop
+                read = 1
+                pathFastaOutput = line.split()[-1].strip('\n') # add output path for fasta files
 
     # if a loci threshold does not exist, set the loci threshold = 4
     try:
@@ -427,105 +451,105 @@ def syntenicStructure(): #input N or K for subgenome, will generalize later
     # generate structure (list of bedtool objects) by going through each paired syntenic comparison
     for syntenicInputTuple in listOfSyntenicTuples:
         listOfPairedComparisonSyntenies+=[pairComparisonSynteny(syntenicInputTuple,pathUnOut,pathSort,Loci_Threshold)]
+    if int(writeFastaOut):
+        # initialize the final synteny structure (just a bed object that will be concatenated and merged with other beds)
+        # first paired comparison bed is initial bed object
+        finalSyntenyStructureBed = listOfPairedComparisonSyntenies[0]
 
-    # initialize the final synteny structure (just a bed object that will be concatenated and merged with other beds)
-    # first paired comparison bed is initial bed object
-    finalSyntenyStructureBed = listOfPairedComparisonSyntenies[0]
+        # concatenate remaining paired comparison bed objects together
+        for pairwiseComparison in listOfPairedComparisonSyntenies[1:]:
+            finalSyntenyStructureBed = finalSyntenyStructureBed.cat(pairwiseComparison,postmerge=False)
 
-    # concatenate remaining paired comparison bed objects together
-    for pairwiseComparison in listOfPairedComparisonSyntenies[1:]:
-        finalSyntenyStructureBed = finalSyntenyStructureBed.cat(pairwiseComparison,postmerge=False)
+        # merge these concatenated bed objects and format, query species do not have to overlap, can be 100000 BPs apart...
+        # one line should look like:
+        # 523-Chr09N	118260675	118632318	308-Chr07-33574614-33759677|308-Chr09-1325484-1436481| ...etc
+        # SpeciesA-Chrom xi xf     SpeciesB-Chr-xi-xf|SpeciesC-Chr-xi-xf|SpeciesC#2-Chr-xi-xf...etc
+        finalSyntenyStructureBed = finalSyntenyStructureBed.sort().merge(o='distinct',c=4,delim='|',d=100000)
 
-    # merge these concatenated bed objects and format, query species do not have to overlap, can be 100000 BPs apart...
-    # one line should look like:
-    # 523-Chr09N	118260675	118632318	308-Chr07-33574614-33759677|308-Chr09-1325484-1436481| ...etc
-    # SpeciesA-Chrom xi xf     SpeciesB-Chr-xi-xf|SpeciesC-Chr-xi-xf|SpeciesC#2-Chr-xi-xf...etc
-    finalSyntenyStructureBed = finalSyntenyStructureBed.sort().merge(o='distinct',c=4,delim='|',d=100000)
+        #output bed object to file
+        open(pathFastaOutput+'finalSyntenyMultipleSpecies.bed','w').close()
+        finalSyntenyBedFile = open(pathFastaOutput+'finalSyntenyMultipleSpecies.bed','w')
+        finalSyntenyBedFile.write(str(finalSyntenyStructureBed))
+        finalSyntenyBedFile.close()
 
-    #output bed object to file
-    open(pathFastaOutput+'finalSyntenyMultipleSpecies.bed','w').close()
-    finalSyntenyBedFile = open(pathFastaOutput+'finalSyntenyMultipleSpecies.bed','w')
-    finalSyntenyBedFile.write(str(finalSyntenyStructureBed))
-    finalSyntenyBedFile.close()
+        # hide for now
+        #print finalSyntenyStructureBed
 
-    # hide for now
-    #print finalSyntenyStructureBed
+        # there exists an error file to make sure program runs to end, output errors onto this file, and search the sort2
+        # files for faulty genes
+        # error file will contain species-chr, xi, xf for all bad outputs, can look them up in sort and match to unout
+        count = 1
+        open('ERRTEST.txt', 'w').close()
+        errorFile = open('ERRTEST.txt', 'w')
+        # OUTPUTTING TO FASTA FILES!!!
+        # for each merged syntenic sequence (according to final structure bed object), each line corresponds to one sequence
 
-    # there exists an error file to make sure program runs to end, output errors onto this file, and search the sort2
-    # files for faulty genes
-    # error file will contain species-chr, xi, xf for all bad outputs, can look them up in sort and match to unout
-    count = 1
-    open('ERRTEST.txt', 'w').close()
-    errorFile = open('ERRTEST.txt', 'w')
-    # OUTPUTTING TO FASTA FILES!!!
-    # for each merged syntenic sequence (according to final structure bed object), each line corresponds to one sequence
+        def softmaskedOutput(synSeqStr): # format softmasked assembly by turning lower case letters to 'N' for Cactus align
+            for ch in ['c','t','a','g']:
+                if ch in synSeqStr:
+                    synSeqStr=synSeqStr.replace(ch,'N')
+            return synSeqStr
 
-    def softmaskedOutput(synSeqStr): # format softmasked assembly by turning lower case letters to 'N' for Cactus align
-        for ch in ['c','t','a','g']:
-            if ch in synSeqStr:
-                synSeqStr=synSeqStr.replace(ch,'N')
-        return synSeqStr
+        for line in str(finalSyntenyStructureBed).split('\n'):
+            # if line exists
+            if line:
+                open(pathFastaOutput+'FastaOut%d.fasta'%count,'w').close() # create new fasta output file
 
-    for line in str(finalSyntenyStructureBed).split('\n'):
-        # if line exists
-        if line:
-            open(pathFastaOutput+'FastaOut%d.fasta'%count,'w').close() # create new fasta output file
-
-            # open for writing
-            fastaOutFile = open(pathFastaOutput+'FastaOut%d.fasta'%count,'w')
-            # parse sequence line bed object eg.
-            # 523-Chr09N	118260675	118632318	308-Chr07-33574614-33759677|308-Chr09-1325484-1436481|
-            # split into [523-Chr09N, 118260675, 118632318,308-Chr07-33574614-33759677|308-Chr09-1325484-1436481|..]
-            syntenicSequenceParseList = line.split('\t')
-            #speciesAOut would look like [523-Chr09N, 118260675, 118632318]
-            speciesAOut = syntenicSequenceParseList[0:3]
-            # if the speciesName (523 in above example) is either 523 or 524 species Name, change name to 383 for naming
-            if speciesAOut[0].split('-')[0] in ['523','524']:
-                speciesAName = '383' # P.virgatum if query species
-            else:
-                speciesAName = speciesAOut[0].split('-')[0] # hold old naming convention
-            #Target and query A species have tuples that describe syntenic sequence (Species, chromosome, xi, xf)
-            speciesAOutTuple =(speciesAName,speciesAOut[0].split('-')[1].replace('~','-'),speciesAOut[1],speciesAOut[2])
-            # initialize final output structure for fasta file, which uses list of output tuples
-            fastaOutputTuples = [speciesAOutTuple]
-            # split up the last entry of the syntenicSequenceParseList by the delimiter, these create outputs for
-            # bed features/ more distant species relatives (target species)
-            if '|' in syntenicSequenceParseList[3]:
-                listOfParseTargetSpecies = syntenicSequenceParseList[3].split('|')
-            else:
-                listOfParseTargetSpecies = [syntenicSequenceParseList[3]]
-            # for each of the target species (not species A) found from splitting delimiter into list, create similar
-            # output tuples as those used for species A output and add all of them to the fastaOutputTuples
-            for targetSpecies in listOfParseTargetSpecies:
-                outputTargetList = targetSpecies.split('-')
-                if outputTargetList[0] in ['523','524']: #SPECIFIC TO N OR K ANALYSIS... MAY NEED TO CHANGE
-                    speciesBName = '383'
+                # open for writing
+                fastaOutFile = open(pathFastaOutput+'FastaOut%d.fasta'%count,'w')
+                # parse sequence line bed object eg.
+                # 523-Chr09N	118260675	118632318	308-Chr07-33574614-33759677|308-Chr09-1325484-1436481|
+                # split into [523-Chr09N, 118260675, 118632318,308-Chr07-33574614-33759677|308-Chr09-1325484-1436481|..]
+                syntenicSequenceParseList = line.split('\t')
+                #speciesAOut would look like [523-Chr09N, 118260675, 118632318]
+                speciesAOut = syntenicSequenceParseList[0:3]
+                # if the speciesName (523 in above example) is either 523 or 524 species Name, change name to 383 for naming
+                if speciesAOut[0].split('-')[0] in ['523','524']:
+                    speciesAName = '383' # P.virgatum if query species
                 else:
-                    speciesBName = outputTargetList[0]
-                fastaOutputTuples += [(speciesBName, targetSpecies[targetSpecies.find('-')+1:
-                                        targetSpecies.find(outputTargetList[-2])-1].replace('~','-'),
-                                        outputTargetList[-2], outputTargetList[-1])]
-                # removed code for testing
-                #if targetSpecies[targetSpecies.find('-')+1:targetSpecies.find(outputTargetList[-2])-1]=='scaffold_':
-                #    a=1
-            # for each output tuple for one Synteny across the merged comparison final bed structure, output info/
-            # actual DNA sequence to fasta under appropriate header
-            for fastaOutputTuple in fastaOutputTuples:
-                try:
-                    # eliminate reordering of gene coordinates for now... unless drawing error file and need debug
-                    #if int(fastaOutputTuple[2]) > int(fastaOutputTuple[3]): #FIXME!!!
-                    #    print fastaOutputTuple
-                    #    fastaOutputTuple[2],fastaOutputTuple[3] = fastaOutputTuple[3],fastaOutputTuple[2]
-                    # header to outputted sequence > Species Chromosome start coord (xi) end coord xf
-                    fastaOutFile.write('> %s %s %s %s\n' %fastaOutputTuple)
-                    # writing the actual sequence
-                    fastaOutFile.write(softmaskedOutput(str(fastaObjectStructure[fastaOutputTuple[0]]
-                                        [fastaOutputTuple[1]][int(fastaOutputTuple[2]):int(fastaOutputTuple[3])]))+'\n')
-                except: # if not able to write
-                    errorFile.write(str(fastaOutputTuple) + ('\n')) # search through sort2 file to debug error
-            fastaOutFile.close()
-        count += 1 # change cound to change title of fasta out file
-    errorFile.close()
+                    speciesAName = speciesAOut[0].split('-')[0] # hold old naming convention
+                #Target and query A species have tuples that describe syntenic sequence (Species, chromosome, xi, xf)
+                speciesAOutTuple =(speciesAName,speciesAOut[0].split('-')[1].replace('~','-'),speciesAOut[1],speciesAOut[2])
+                # initialize final output structure for fasta file, which uses list of output tuples
+                fastaOutputTuples = [speciesAOutTuple]
+                # split up the last entry of the syntenicSequenceParseList by the delimiter, these create outputs for
+                # bed features/ more distant species relatives (target species)
+                if '|' in syntenicSequenceParseList[3]:
+                    listOfParseTargetSpecies = syntenicSequenceParseList[3].split('|')
+                else:
+                    listOfParseTargetSpecies = [syntenicSequenceParseList[3]]
+                # for each of the target species (not species A) found from splitting delimiter into list, create similar
+                # output tuples as those used for species A output and add all of them to the fastaOutputTuples
+                for targetSpecies in listOfParseTargetSpecies:
+                    outputTargetList = targetSpecies.split('-')
+                    if outputTargetList[0] in ['523','524']: #SPECIFIC TO N OR K ANALYSIS... MAY NEED TO CHANGE
+                        speciesBName = '383'
+                    else:
+                        speciesBName = outputTargetList[0]
+                    fastaOutputTuples += [(speciesBName, targetSpecies[targetSpecies.find('-')+1:
+                                            targetSpecies.find(outputTargetList[-2])-1].replace('~','-'),
+                                            outputTargetList[-2], outputTargetList[-1])]
+                    # removed code for testing
+                    #if targetSpecies[targetSpecies.find('-')+1:targetSpecies.find(outputTargetList[-2])-1]=='scaffold_':
+                    #    a=1
+                # for each output tuple for one Synteny across the merged comparison final bed structure, output info/
+                # actual DNA sequence to fasta under appropriate header
+                for fastaOutputTuple in fastaOutputTuples:
+                    try:
+                        # eliminate reordering of gene coordinates for now... unless drawing error file and need debug
+                        #if int(fastaOutputTuple[2]) > int(fastaOutputTuple[3]): #FIXME!!!
+                        #    print fastaOutputTuple
+                        #    fastaOutputTuple[2],fastaOutputTuple[3] = fastaOutputTuple[3],fastaOutputTuple[2]
+                        # header to outputted sequence > Species Chromosome start coord (xi) end coord xf
+                        fastaOutFile.write('> %s %s %s %s\n' %fastaOutputTuple)
+                        # writing the actual sequence
+                        fastaOutFile.write(softmaskedOutput(str(fastaObjectStructure[fastaOutputTuple[0]]
+                                            [fastaOutputTuple[1]][int(fastaOutputTuple[2]):int(fastaOutputTuple[3])]))+'\n')
+                    except: # if not able to write
+                        errorFile.write(str(fastaOutputTuple) + ('\n')) # search through sort2 file to debug error
+                fastaOutFile.close()
+            count += 1 # change cound to change title of fasta out file
+        errorFile.close()
 
 
     # old code, removed, does not work!! prior attempt without bedtools

@@ -13,13 +13,14 @@ def parseConfigFindList(stringFind,configFile):
     read = 0
     listOfItems = []
     for line in configFile:
-        if read == 1:
-            if 'Stop' in line:
-                configFile.seek(0)
-                break # exit the function and return the list of fai or bed files
-            listOfItems.append(line.strip('\n'))
-        if stringFind in line:
-            read = 1 # if find string specified, begin reading lines
+        if line:
+            if read == 1:
+                if 'Stop' in line:
+                    configFile.seek(0)
+                    break # exit the function and return the list of fai or bed files
+                listOfItems.append(line.strip('\n'))
+            if stringFind in line:
+                read = 1 # if find string specified, begin reading lines
     return listOfItems
 
 def parseConfigFindPath(stringFind,configFile):
@@ -84,7 +85,10 @@ for linkFile in linkFiles:
     # generate configuration files for circos plot
     generateConfigs(circosConfigFilesPath,karyotypesFilesPath,LinkPath,KaryotypeFiles,linkFile,subgenomesCheck)
     # create circos plot from the command line and export to specified path
+    print circosConfigFilesPath, speciesList, circosOutPath
     subprocess.call(['circos','-conf',circosConfigFilesPath+'circos.conf','-outputfile',
                      '%s-%s'%(speciesList[0],speciesList[1]),'-outputdir',circosOutPath])
+    #subprocess.call('circos -conf %scircos.conf -outputfile %s-%s -outputdir %s'%(circosConfigFilesPath,speciesList[0],
+     #                                                                             speciesList[1],circosOutPath),shell=True)
     #print '/Applications/circos-0.69/bin/circos -conf %s'%(configPath+'circos.conf')
     #/Applications/circos-0.69/bin/

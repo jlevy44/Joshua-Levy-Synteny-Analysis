@@ -1,0 +1,38 @@
+# will already perform syntenyAnalysis; type 1 or 0 to perform or not perform analyses
+performSynteny = 1
+performCircos = 1
+performALLMAPS = 0
+
+
+# query species Name
+querySpecies = 523
+
+# important info for all configuration Files
+NameAnalysis = 3WayAnalysisN3
+writeFastaOut = 1
+Loci_Threshold = 4
+pathPython = /global/u2/j/jlevy/python_modules
+pathSystem = /global/u2/j/jlevy/virtualBin
+pathALLMAPS = /global/projectb/scratch/jlevy/Synteny/3WayAnalysisN3/allMAPSAnalysis/
+BdPath = /global/projectb/scratch/jlevy/Synteny/3WayAnalysisN3/BdFiles/
+pathUnOut = /global/projectb/scratch/jlevy/Synteny/3WayAnalysisN3/UnOutFiles/
+pathGFF = /global/projectb/scratch/jlevy/Synteny/3WayAnalysisN3/GFFfiles/
+pathSort = /global/projectb/scratch/jlevy/Synteny/3WayAnalysisN3/SortFiles/
+genomePath = /global/projectb/scratch/jlevy/Synteny/3WayAnalysisN3/Genomes/
+karyotypesFilesPath = /global/projectb/scratch/jlevy/Synteny/3WayAnalysisN3/CircosInputs/Data/Karyotypes/
+circosConfigFilesPath = /global/projectb/scratch/jlevy/Synteny/3WayAnalysisN3/CircosInputs/ConfigFiles/
+LinkPath = /global/projectb/scratch/jlevy/Synteny/3WayAnalysisN3/CircosInputs/Data/Links/
+circosOutPath = /global/projectb/scratch/jlevy/Synteny/3WayAnalysisN3/CircosOutputs/
+BPsThreshold = 300000
+multipleSeqAlignFastasPath = /global/projectb/scratch/jlevy/Synteny/3WayAnalysisN3/FastaFileOutputsBdAnalysis/
+fastaOutputName = xxx
+allMAPImageOutputPath = /global/projectb/scratch/jlevy/Synteny/3WayAnalysisN3/allMAPSAnalysis/ALLMAPS_Chromosome_Images/
+online = 1
+projectName = plant-analysis.p
+nerscUsername = jlevy
+nohup = 1
+
+Weights info (assign higher value for closer genetic relative)
+xxxxx
+Stop
+

@@ -1,0 +1,40 @@
+# will already perform syntenyAnalysis; type 1 or 0 to perform or not perform analyses
+performSynteny = 0
+performCircos = 0
+performALLMAPS = 0
+performAltAllMaps = 1
+
+
+# query species Name
+querySpecies = 552
+
+# important info for all configuration Files
+NameAnalysis = ReconstructBhybD
+writeFastaOut = 1
+Loci_Threshold = 4
+pathPython = /global/u2/j/jlevy/python_modules
+pathSystem = /global/u2/j/jlevy/virtualBin
+pathALLMAPS = /global/projectb/scratch/jlevy/Synteny/reconstructBhydD/allMAPSAnalysis/
+BdPath = /global/projectb/scratch/jlevy/Synteny/reconstructBhydD/BdFiles/
+pathUnOut = /global/projectb/scratch/jlevy/Synteny/reconstructBhydD/UnOutFiles/
+pathGFF = /global/projectb/scratch/jlevy/Synteny/reconstructBhydD/GFFfiles/
+pathSort = /global/projectb/scratch/jlevy/Synteny/reconstructBhydD/SortFiles/
+genomePath = /global/projectb/scratch/jlevy/Synteny/reconstructBhydD/Genomes/
+karyotypesFilesPath = /global/projectb/scratch/jlevy/Synteny/reconstructBhydD/CircosInputs/Data/Karyotypes/
+circosConfigFilesPath = /global/projectb/scratch/jlevy/Synteny/reconstructBhydD/CircosInputs/ConfigFiles/
+LinkPath = /global/projectb/scratch/jlevy/Synteny/reconstructBhydD/CircosInputs/Data/Links/
+circosOutPath = /global/projectb/scratch/jlevy/Synteny/reconstructBhydD/CircosOutputs/
+BPsThreshold = 300000
+multipleSeqAlignFastasPath = /global/projectb/scratch/jlevy/Synteny/reconstructBhydD/FastaFileOutputsBdAnalysis/
+fastaOutputName = hybridum_552_Reconstructedv2
+allMAPImageOutputPath = /global/projectb/scratch/jlevy/Synteny/reconstructBhydD/allMAPSAnalysis/ALLMAPS_Chromosome_Images/
+online = 1
+projectName = plant-analysis.p
+nerscUsername = jlevy
+nohup = 1
+
+Weights info (assign higher value for closer genetic relative)
+314 5
+316 1
+Stop
+

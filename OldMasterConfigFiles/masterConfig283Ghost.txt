@@ -1,0 +1,37 @@
+# will already perform syntenyAnalysis; type 1 or 0 to perform or not perform analyses
+performSynteny = 1
+performCircos = 1
+performALLMAPS = 0
+
+
+# query species Name
+querySpecies = 283
+
+# important info for all configuration Files
+NameAnalysis = ghostBd
+writeFastaOut = 0
+Loci_Threshold = 4
+pathPython = /global/u2/j/jlevy/python_modules
+pathSystem = /global/u2/j/jlevy/virtualBin
+pathALLMAPS = /global/projectb/scratch/jlevy/Synteny/BdistachyonGhostSearch/allMAPSAnalysis/
+BdPath = /global/projectb/scratch/jlevy/Synteny/BdistachyonGhostSearch/BdFiles/
+pathUnOut = /global/projectb/scratch/jlevy/Synteny/BdistachyonGhostSearch/UnOutFiles/
+pathGFF = /global/projectb/scratch/jlevy/Synteny/BdistachyonGhostSearch/GFFfiles/
+pathSort = /global/projectb/scratch/jlevy/Synteny/BdistachyonGhostSearch/SortFiles/
+genomePath = /global/projectb/scratch/jlevy/Synteny/BdistachyonGhostSearch/Genomes/
+karyotypesFilesPath = /global/projectb/scratch/jlevy/Synteny/BdistachyonGhostSearch/CircosInputs/Data/Karyotypes/
+circosConfigFilesPath = /global/projectb/scratch/jlevy/Synteny/BdistachyonGhostSearch/CircosInputs/ConfigFiles/
+LinkPath = /global/projectb/scratch/jlevy/Synteny/BdistachyonGhostSearch/CircosInputs/Data/Links/
+circosOutPath = /global/projectb/scratch/jlevy/Synteny/BdistachyonGhostSearch/CircosOutputs/
+BPsThreshold = 300000
+multipleSeqAlignFastasPath = /global/projectb/scratch/jlevy/Synteny/BdistachyonGhostSearch/FastaFileOutputsBdAnalysis/
+fastaOutputName = XXXXXX
+allMAPImageOutputPath = /global/projectb/scratch/jlevy/Synteny/integratedAnalysisTest/allMAPSAnalysis/ALLMAPS_Chromosome_Images/
+online = 1
+projectName = plant-analysis.p
+nerscUsername = jlevy
+
+Weights info (assign higher value for closer genetic relative)
+XXXXX
+Stop
+

@@ -1,0 +1,38 @@
+# will already perform syntenyAnalysis; type 1 or 0 to perform or not perform analyses
+performSynteny = 1
+performCircos = 1
+performALLMAPS = 0
+
+
+# query species Name
+querySpecies = 545
+
+# important info for all configuration Files
+NameAnalysis = analyzeReconstructBd
+writeFastaOut = 0
+Loci_Threshold = 4
+pathPython = /global/u2/j/jlevy/python_modules
+pathSystem = /global/u2/j/jlevy/virtualBin
+pathALLMAPS = /global/projectb/scratch/jlevy/Synteny/analyzeReconstructedBdist/allMAPSAnalysis/
+BdPath = /global/projectb/scratch/jlevy/Synteny/analyzeReconstructedBdist/BdFiles/
+pathUnOut = /global/projectb/scratch/jlevy/Synteny/analyzeReconstructedBdist/UnOutFiles/
+pathGFF = /global/projectb/scratch/jlevy/Synteny/analyzeReconstructedBdist/GFFfiles/
+pathSort = /global/projectb/scratch/jlevy/Synteny/analyzeReconstructedBdist/SortFiles/
+genomePath = /global/projectb/scratch/jlevy/Synteny/analyzeReconstructedBdist/Genomes/
+karyotypesFilesPath = /global/projectb/scratch/jlevy/Synteny/analyzeReconstructedBdist/CircosInputs/Data/Karyotypes/
+circosConfigFilesPath = /global/projectb/scratch/jlevy/Synteny/analyzeReconstructedBdist/CircosInputs/ConfigFiles/
+LinkPath = /global/projectb/scratch/jlevy/Synteny/analyzeReconstructedBdist/CircosInputs/Data/Links/
+circosOutPath = /global/projectb/scratch/jlevy/Synteny/analyzeReconstructedBdist/CircosOutputs/
+BPsThreshold = 300000
+multipleSeqAlignFastasPath = /global/projectb/scratch/jlevy/Synteny/analyzeReconstructedBdist/FastaFileOutputsBdAnalysis/
+fastaOutputName = XXXXXX
+allMAPImageOutputPath = /global/projectb/scratch/jlevy/Synteny/analyzeReconstructedBdist/allMAPSAnalysis/ALLMAPS_Chromosome_Images/
+online = 1
+projectName = plant-analysis.p
+nerscUsername = jlevy
+nohup = 1
+
+Weights info (assign higher value for closer genetic relative)
+XXXXX
+Stop
+
