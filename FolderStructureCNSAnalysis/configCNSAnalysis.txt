@@ -1,0 +1,3 @@
+root_folder =
+pathPython = /global/u2/j/jlevy/python_modules
+pathSystem = /global/u2/j/jlevy/virtualBin

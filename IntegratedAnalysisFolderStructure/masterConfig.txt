@@ -1,0 +1,39 @@
+# will already perform syntenyAnalysis; type 1 or 0 to perform or not perform analyses
+performSynteny = 1
+performCircos = 1
+performALLMAPS = 0
+performAltAllMaps = 0
+
+
+# query species Name
+querySpecies = 554
+
+# important info for all configuration Files
+NameAnalysis = AnalyzehybridD
+writeFastaOut = 1
+Loci_Threshold = 4
+pathPython = /global/u2/j/jlevy/python_modules
+pathSystem = /global/u2/j/jlevy/virtualBin
+pathALLMAPS = /global/projectb/scratch/jlevy/Synteny/BhybridumFinal/D/allMAPSAnalysis/
+BdPath = /global/projectb/scratch/jlevy/Synteny/BhybridumFinal/D/BdFiles/
+pathUnOut = /global/projectb/scratch/jlevy/Synteny/BhybridumFinal/D/UnOutFiles/
+pathGFF = /global/projectb/scratch/jlevy/Synteny/BhybridumFinal/D/GFFfiles/
+pathSort = /global/projectb/scratch/jlevy/Synteny/BhybridumFinal/D/SortFiles/
+genomePath = /global/projectb/scratch/jlevy/Synteny/BhybridumFinal/D/Genomes/
+karyotypesFilesPath = /global/projectb/scratch/jlevy/Synteny/BhybridumFinal/D/CircosInputs/Data/Karyotypes/
+circosConfigFilesPath = /global/projectb/scratch/jlevy/Synteny/BhybridumFinal/D/CircosInputs/ConfigFiles/
+LinkPath = /global/projectb/scratch/jlevy/Synteny/BhybridumFinal/D/CircosInputs/Data/Links/
+circosOutPath = /global/projectb/scratch/jlevy/Synteny/BhybridumFinal/D/CircosOutputs/
+BPsThreshold = 300000
+multipleSeqAlignFastasPath = /global/projectb/scratch/jlevy/Synteny/BhybridumFinal/D/FastaFileOutputsBdAnalysis/
+fastaOutputName = xxx
+allMAPImageOutputPath = /global/projectb/scratch/jlevy/Synteny/BhybridumFinal/D/allMAPSAnalysis/ALLMAPS_Chromosome_Images/
+online = 1
+projectName = plant-analysis.p
+nerscUsername = jlevy
+nohup = 1
+
+Weights info (assign higher value for closer genetic relative)
+xxx
+Stop
+
