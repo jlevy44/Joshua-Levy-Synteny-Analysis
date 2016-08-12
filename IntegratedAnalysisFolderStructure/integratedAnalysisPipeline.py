@@ -21,7 +21,7 @@ except:
 
 def parseConfigFindList(stringFind,configFile):
     """parseConfigFindList inputs a particular string to find and read file after and a configuration file object
-    outputs list of fai files or bed filenames"""
+    outputs list of relevant filenames"""
     read = 0
     listOfItems = []
     for line in configFile:
@@ -29,16 +29,16 @@ def parseConfigFindList(stringFind,configFile):
             if read == 1:
                 if 'Stop' in line:
                     configFile.seek(0)
-                    break # exit the function and return the list of fai or bed files
+                    break # exit the function and return the list of files or list information
                 listOfItems.append(line.strip('\n'))
             if stringFind in line:
                 read = 1 # if find string specified, begin reading lines
     return listOfItems
 
 def parseConfigFindPath(stringFind,configFile):
-    """findPath will find path of associated specified string or info from config file"""
+    """findPath will find path or value of associated specified string or info from config file"""
     for line in configFile:
-        if stringFind in line: # if find string specified, return pathname
+        if stringFind in line: # if find string specified, return pathname or specific value trying to find
             configFile.seek(0)
             return line.split()[-1].strip('\n')
 
@@ -48,8 +48,8 @@ open('masterConfig.txt','r').close()
 masterConfigFile = open('masterConfig.txt','r')
 
 
-
-weightsList = parseConfigFindList('Weights info',masterConfigFile) # bed file list, will turn into link files
+# grab the following information from the configuration file
+weightsList = parseConfigFindList('Weights info',masterConfigFile)
 findInfoList = ['performSynteny','performCircos', 'performALLMAPS', 'querySpecies', 'NameAnalysis','writeFastaOut', 'Loci_Threshold',
                 'pathPython','pathSystem', 'pathALLMAPS', 'BdPath', 'pathUnOut', 'pathGFF', 'pathSort', 'genomePath',
                 'karyotypesFilesPath','circosConfigFilesPath', 'LinkPath', 'circosOutPath', 'BPsThreshold',
@@ -67,7 +67,7 @@ for i in range(len(findInfoList)): # find the paths/info of above queries
 
 
 
-
+# for debugging, see if all of your data has passed through
 print tuple(findInfoList)
 
 # generate weights file for allmaps...
@@ -116,6 +116,7 @@ def gff2sort2(gff, pathgff, pathsort):
     open(outFileName, 'w').close()
     outputFile = open(outFileName, 'w')
     for line in inputFile:
+        # grab gene info from each line if it's longest and mRNA strand and output to sort2 file
         if 'mRNA' in line and 'longest=1' in line:
             lineInList = line.split()
             parserList = lineInList[-1].split(';')
@@ -126,6 +127,8 @@ def gff2sort2(gff, pathgff, pathsort):
     inputFile.close()
     outputFile.close()
 
+# prints True if there are no sortfiles, generally want that for each analysis... for now, is possible to modify code to
+# be more versatile
 print not str(subprocess.Popen(['ls', '%s' % pathSort], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                           .stdout.read())
 
@@ -143,10 +146,13 @@ if not str(subprocess.Popen(['ls', '%s' % pathSort], stdout=subprocess.PIPE, std
 # find sort files
 listPathSort = str(subprocess.Popen(['ls', '%s' % pathSort], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                           .stdout.read()).split('\n')
+
 unoutList = []
 sortFileList = []
 bedList = []
+
 # generate list of bed files for allmaps and circos, and unout and sort files for synteny analysis
+# unouts can also be used alternate allmaps
 for file in listPathUnout:
     if file.endswith('.unout'):
         bedList.append(file[:file.rfind('.')]+'.bed')
@@ -155,7 +161,9 @@ for file in listPathSort:
     if file.endswith('.sort2'):
         sortFileList.append(file)
 
+# make sure all sort files are included
 print sortFileList
+
 # Bedfile text for config files
 bedFilesText = ''.join(file+'\n' for file in bedList)
 
@@ -189,6 +197,8 @@ if int(online):
 generateIntAnalysisConfig('syntenyAnalysis',(NameAnalysis,writeFastaOut,Loci_Threshold,pathPython,pathUnOut,pathSort,
                                              NameAnalysis,multipleSeqAlignFastasPath,syntenicFilesText,genomePath,
                                              genomeFilesText))
+
+# if choosing to perform multiple synteny
 if int(performSynteny):
     # run synteny analysis
     #execfile(os.path.join(os.path.dirname(sys.argv[0]), 'syntenyFinal.py'))
@@ -207,7 +217,6 @@ if int(performSynteny):
         print 'Unable to copy genome to allmaps directory...'
 
 
-print int(performCircos), int(performALLMAPS)
 # generate config files for relevant analyses
 if int(performCircos):
     print 'config circos'
@@ -218,6 +227,7 @@ if int(performALLMAPS):
     generateIntAnalysisConfig('reconstructGenome',(pathALLMAPS,pathPython,pathSystem,BdPath,allMAPImageOutputPath,
                                                    fastaInputName,fastaOutputName,bedFilesText))
 
+# see if will be performing alternate genome reconstruction using syntenic genes, MORE ACCURATE
 try:
     masterConfigFile = open('masterConfig.txt','r')
     masterConfigFile.seek(0)
@@ -236,10 +246,7 @@ except:
     print 'Unable to set up alternate allmaps'
     performAltAllMaps = 0
 
-
-
-
-
+# perform circos analysis but not reconstruction
 if int(performCircos) and not int(performALLMAPS):
     print 'circos'
     # try to run circos online
@@ -250,10 +257,11 @@ if int(performCircos) and not int(performALLMAPS):
         circos.write('#!/bin/bash\npython circosFiguresPipeline.py')
         circos.close()
         try:
+            # try to run circos
             subprocess.call('nohup sh runCircos.sh', shell=True)
         except:
             print 'Unable to run circos via command line..'
-    else:
+    else: # try offline analysis
         try:
             execfile('circosFiguresPipeline.py')
         except:
@@ -262,17 +270,20 @@ if int(performCircos) and not int(performALLMAPS):
     #    print 'Unable to run circos analysis.'
     #    exit()
 
+# perform allmaps but not circos
 elif int(performALLMAPS) and not int(performCircos):
     print 'allmaps'
     #os.chdir(pathALLMAPS)
+    # if online
     if int(online):
+        # try to run allmaps
         allmap = open('runAllmaps.sh', 'w')
         allmap.write( '#!/bin/bash\ncd %s\npython createNewGenome.py'%pathALLMAPS)
         allmap.close()
         try:
-            if int(nohup):
+            if int(nohup): # if using no hangup on a server
                 subprocess.call('nohup sh runAllmaps.sh', shell=True)
-            else:
+            else: # else submit the job to run on the cluster
                 subprocess.call('qsub -P %s -N allmapsAnalyze -cwd -b yes -now no -j yes -m abes -M %s@lbl.gov -w e'
                  ' -l exclusive.c %s%s\n'%(projectName,BdPath[:BdPath.rfind('BdFiles')],nerscUsername,'runAllmaps.sh'),
                             shell=True)
@@ -282,7 +293,7 @@ elif int(performALLMAPS) and not int(performCircos):
                 subprocess.call('nohup sh runAllmaps.sh', shell=True)
             except:
                 print 'Unable to run allmaps via command line..'
-
+    # else run in offline mode
     else:
         try:
             os.chdir(pathALLMAPS)
@@ -290,7 +301,7 @@ elif int(performALLMAPS) and not int(performCircos):
         except:
             print 'Unable to run allmaps analysis.'
             exit()
-
+# perform both allmaps and circos
 elif int(performALLMAPS) and int(performCircos):
     print 'both'
 
@@ -299,6 +310,7 @@ elif int(performALLMAPS) and int(performCircos):
         circos = open('runCircos.sh','w')
         circos.write('#!/bin/bash\npython circosFiguresPipeline.py')
         circos.close()
+        # multiple command line scripts being written to run on the cluster, talk to NERSC about syntax
         lines = ['qsub -P %s -N circosAnalyze -cwd -b yes -now no -j yes -m abes -M %s@lbl.gov -w e'
                  ' -l exclusive.c %s%s\n'%(projectName,BdPath[:BdPath.rfind('BdFiles')],nerscUsername,'runCircos.sh'),
                  'cd %s\n'%pathALLMAPS,
@@ -309,15 +321,15 @@ elif int(performALLMAPS) and int(performCircos):
         allmap.write('#!/bin/bash\n'+lines[1]+'python createNewGenome.py')
         allmap.close()
 
-        try:
+        try: # run circos on nohup
             subprocess.call('nohup sh runCircos.sh', shell=True)
         except:
             print 'Unable to run circos analysis.'
         try:
             #subprocess.call(lines[0],shell=True)
-            if int(nohup):
+            if int(nohup): # run allmaps on nohup
                 subprocess.call('nohup sh runAllmaps.sh', shell=True)
-            else:
+            else: # try submission to cluster if does not work
                 subprocess.call(lines[2],shell=True)
         except:
             print 'Unable to run allmaps via qsub. Set online to 0 and try again. Trying to run via command line..'
@@ -325,7 +337,7 @@ elif int(performALLMAPS) and int(performCircos):
                 subprocess.call('nohup sh runAllmaps.sh',shell=True)
             except:
                 print 'Unable to run allmaps via command line..'
-    else:
+    else: # offline mode, linux preferred
         """
         def runALLMAPS():
             os.chdir(pathALLMAPS)
@@ -354,7 +366,8 @@ elif int(performALLMAPS) and int(performCircos):
             print 'Unable to run allmaps analysis.'
             exit()
 
-if int(performAltAllMaps):
+if int(performAltAllMaps): # if perform alternative ALLMAPS, RECOMMENDED over regular allmaps, similar to allmaps but
+    # not circos code
     if int(online):
         allmap = open('runAllmaps2.sh', 'w')
         allmap.write( '#!/bin/bash\n\ncd %s\npython createNewGenome_vAlternate.py'%pathALLMAPS)

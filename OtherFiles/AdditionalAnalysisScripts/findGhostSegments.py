@@ -1,14 +1,17 @@
 import subprocess, os
 from pybedtools import *
 
+"""findGhostSegments locates the location of ghost Genes in query species, mapped over from nonreference genes in similar
+strains of same species genome... Not enough time to comment code, please talk to Joshua Levy about general idea of how it works..."""
+
 def parseConfigFindPath(stringFind,configFile):
     """findPath will find path of associated specified string"""
     for line in configFile:
-        if stringFind in line: # if find string specified, return pathname
+        if stringFind in line: # if find string specified, return pathname or configuration info
             configFile.seek(0)
             return line.split()[-1].strip('\n')
 
-def printFirst10Lines(bed):
+def printFirst10Lines(bed): # test output of specific bed object created to make sure it's working
     count = 0
     for first10lines in str(bed).split('\n'):
         if first10lines:

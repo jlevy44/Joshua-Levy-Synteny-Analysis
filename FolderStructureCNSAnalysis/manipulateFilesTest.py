@@ -10,19 +10,21 @@ def parseConfigFindPath(stringFind,configFile):
             configFile.seek(0)
             return line.split()[-1].strip('\n')
 configFile = open('configCNSAnalysis.txt','r')
-rootfolder = parseConfigFindPath('root_folder',configFile)
-pathPython = parseConfigFindPath('pathPython',configFile)
+rootfolder = parseConfigFindPath('root_folder',configFile) # grab root folder for analysis
+pathPython = parseConfigFindPath('pathPython',configFile) # grab python path
 configFile.close()
 
-sys.path.append(pathPython)
+sys.path.append(pathPython) # add python modules
 
+# conditionals, will take conditionals in paths, and intersect and differentiate them in different ways to find following combos
+# this can find one or two copy (NK) sequences for intra vs inter genus conservation (DS00 or DS11)
 outFname = ['NKHDS11111.txt','NKHDS01111.txt','NKHDS10111.txt','NKHDS11100.txt','NKHDS01100.txt','NKHDS10100.txt','NKH111.txt','NKH011.txt','NKH101.txt','HDS111.txt']
 paths = ['%s/CS/NKH111/'%rootfolder,
          '%s/CS/NKH011/'%rootfolder,
          '%s/CS/NKH101/'%rootfolder,
          '%s/CS/HDS111/'%rootfolder]
 
-def bed2dict(bedfname):
+def bed2dict(bedfname): # create a dictionary that has MA Segments as keys
     bedDict={}
     for line in open(bedfname,'r'):
         if line:
@@ -33,7 +35,7 @@ def bed2dict(bedfname):
                 bedDict[MASeg] = [tuple(line.split()[0:3])]
     return bedDict
 
-def grabPartMAFSeq(MAFSeq,x_coords):
+def grabPartMAFSeq(MAFSeq,x_coords): # irrelevant script now...
     coordtransform = np.array(range(len(MAFSeq)))
     coordtransform = np.delete(coordtransform,[val.start(0) for val in re.finditer('-',MAFSeq)])
     print coordtransform, coordtransform[x_coords[1]-1], x_coords[1]
@@ -43,13 +45,14 @@ def grabPartMAFSeq(MAFSeq,x_coords):
 listALLFiles = str(subprocess.Popen('ls', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                    .stdout.read()).split('\n')
 
-ultimateBedDicts = {'Conserved_CDS.bed':{},'CS_Minus_CDS.bed':{}}
+ultimateBedDicts = {'Conserved_CDS.bed':{},'CS_Minus_CDS.bed':{}} # split into ~CDS or ~CNS
 
 for file in listALLFiles:
     if file.endswith('Conserved_CDS.bed') or file.endswith('CS_Minus_CDS.bed'):
-        ultimateBedDicts[file[file.find('_')+1:]][file[:file.find('_')]] = bed2dict(file)
+        ultimateBedDicts[file[file.find('_')+1:]][file[:file.find('_')]] = bed2dict(file) # a dictionary with keys [species] and inside a key of MASEG
+        # hierarchy is ultimate[CDS or CNS][species][MASeg]
 
-def concatFastas(fname,HDSPath,NKHPath,FinalPath):
+def concatFastas(fname,HDSPath,NKHPath,FinalPath): # if intergenus conservation, concatenate fastas together and add it to relevant path
     NKHFileStringList = open(NKHPath+fname,'r').read().split('>')
     HDSFileStringList = open(HDSPath+fname,'r').read().split('>')
     outputStringList = list(set(NKHFileStringList+HDSFileStringList))
@@ -57,7 +60,8 @@ def concatFastas(fname,HDSPath,NKHPath,FinalPath):
     outputFile.write('>'.join(seqs for seqs in outputStringList))
     outputFile.close()
 
-def grabConservedSeq(PathAndfname,conservedSeqs):
+def grabConservedSeq(PathAndfname,conservedSeqs): # build a list of conserved sequences that are either Conserved sequence,
+    # protein coding, nonprotein, or mixed and will join list together
     inputFastaReadSegments = open(PathAndfname,'r').read().split('>')
     for sequence in inputFastaReadSegments:
         if sequence:
@@ -67,7 +71,7 @@ def grabConservedSeq(PathAndfname,conservedSeqs):
             if 'N' == sequence.split('_')[0][-1]:
                 speciesName += 'N'
             if conservedSeqs.has_key(speciesName):
-                conservedSeqs[speciesName].append(sequence.split('\n')[1].strip('\n'))
+                conservedSeqs[speciesName].append(sequence.split('\n')[1].strip('\n')) # add sequence to main list to generate main fasta file output
             else:
                 conservedSeqs[speciesName] = [sequence.split('\n')[1].strip('\n')]
     return conservedSeqs
@@ -75,7 +79,8 @@ def grabConservedSeq(PathAndfname,conservedSeqs):
 
 
 
-for analysisType in ['CS','ProteinCoding_CS','Mixed_CS','NonProteinCodingN_CS']:
+for analysisType in ['CS','ProteinCoding_CS','Mixed_CS','NonProteinCodingN_CS']: # run analysis on these types and sort them into relevant conditionals and output fastas for PhyML analysis and conservation ratios
+    # see more details about ratio conservation in various documents...
     TwoCopyStatNumbers = {}
     analysisPath = paths[0][:-1][:paths[0][:-1].rfind('/')+1]#.replace('CS',analysisType)
     outFname = ['NKHDS11111.txt','NKHDS01111.txt','NKHDS10111.txt','NKHDS11100.txt','NKHDS01100.txt','NKHDS10100.txt','NKH111.txt','NKH011.txt','NKH101.txt','HDS111.txt']
@@ -92,15 +97,17 @@ for analysisType in ['CS','ProteinCoding_CS','Mixed_CS','NonProteinCodingN_CS']:
             np.savetxt(analysisPath+outFname[i+6].replace('.txt','_%s.txt'%analysisType),arrayFiles[i],fmt='%s',comments='')
 
         np.savetxt(analysisPath+outFname[9].replace('.txt','_%s.txt'%analysisType),arrayFiles[3],fmt='%s',comments='')
+        # the above script finds the intersection and differences
     else:
         analysisType2 = analysisType
         for fname in outFname[0:6]:
             outFile = open(analysisPath+fname.replace('.txt','_%s.txt'%analysisType),'w')
             outFile.write(str(subprocess.Popen('ls %s/%s/%s | grep "%s"'%(rootfolder,'CS',fname.replace('.txt',''),
                     analysisType),shell=True , stdout=subprocess.PIPE).stdout.read()))
-            outFile.close()
+            outFile.close() # the CS analysis separates NHK files into various NKHDS folders, now they are named according to type of analysis
 
     if analysisType == 'CS':
+        # if in CS, sort NKH files into various NKHDS folders according to conditional statements and which files fall under each conditional
         for fname in outFname[0:6]:
             inputFile = open(analysisPath+fname.replace('.txt','_%s.txt'%analysisType),'r')
             conditionalState = fname.split('.')[0].strip('NKHDS')
@@ -123,7 +130,8 @@ for analysisType in ['CS','ProteinCoding_CS','Mixed_CS','NonProteinCodingN_CS']:
                         shutil.copy(NKHpath+inputNKHDSfname,finalPath)
             inputFile.seek(0)
             inputFile.close()
-    for fname in outFname[0:6]:
+    for fname in outFname[0:6]: # compute twocopy statistics (ratio) between NKHDS, see output text
+        # output final fasta for NKHDS conditional type and analysis type seen above, which generate trees for each
         fileArray2 = open(analysisPath+fname.replace('.txt','_%s.txt'%analysisType),'r').read().splitlines()
         speciesRatios = fname.replace('.txt','')
         TwoCopyStatNumbers[speciesRatios] = float(len(fileArray2))
@@ -189,6 +197,8 @@ for analysisType in ['CS','ProteinCoding_CS','Mixed_CS','NonProteinCodingN_CS']:
                             # print ultimateBedDicts[key][speciesName][MASeg],conservedSeg, len(conservedSeg), xRel,grabPartMAFSeq(conservedSeg,xRel)
                     CDS_conditional = np.vectorize(
                         lambda speciesName: ultimateBedDicts['Conserved_CDS.bed'][speciesName].has_key(MASeg))(speciesList)
+                    # in each folder for the NKHDS conditionals, change file names to match relevant analysis, eg. whether
+                    # sequence intersects a CDS, is not, or some do and some don't between different species
                     if np.all(CDS_conditional):
                         os.rename(path + file, path + file.replace('.fasta', '_ProteinCoding_CS.fasta'))
                     elif np.any(CDS_conditional) and not np.all(CDS_conditional):
