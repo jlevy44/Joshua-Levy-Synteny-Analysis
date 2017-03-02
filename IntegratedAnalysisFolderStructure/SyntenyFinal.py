@@ -1,6 +1,7 @@
 import os, sys
 from pyfaidx import Fasta
 from pybedtools import *
+from collections import defaultdict
 
 """Creates Fasta object structure of genomes and multiple bedtools files/objects for each pairwise comparison
 (another structure created for this. The bedtool object structure of pairwise comparison is merged to stitch together
@@ -81,6 +82,7 @@ def pairComparisonSynteny(syntenicInputFiles,pathUnOut,pathSort,Loci_Threshold):
     # Unout file is the syntenyFile object listed below
     chunkList = []
     newChunk=[0,0,0,0]
+    lineCheck = {0:1,1:1,2:4,3:4}
     grabLine = ['$', '$','$','$']
     # find lines that match description of syntenic sequences in the unout file
     # a Chunk is a list of lines read from the the unout file
@@ -89,7 +91,7 @@ def pairComparisonSynteny(syntenicInputFiles,pathUnOut,pathSort,Loci_Threshold):
     # first it parses the header line containing a '[' to find which lines to grab...
     for line in syntenyFile:
         for i in range(4):
-            if grabLine[i] in line:
+            if ',' in line.split()[0] and grabLine[i] == line.split()[0].split(',')[lineCheck[i]]:
                 newChunk[i] = line
         if 0 not in newChunk:
             chunkList += [newChunk]
@@ -171,29 +173,16 @@ def pairComparisonSynteny(syntenicInputFiles,pathUnOut,pathSort,Loci_Threshold):
 
     syntenyFile.close()
 
-    # obsolete code, dealt with gene ordering and titling of species/chromosome names, no longer to be used
-    def removePlusMinus(speciesChromosomeName):
-        # GET RID OF PLUS OR MINUS... FOR NOW keeping it!!!
-        if 'Plus' in speciesChromosomeName:
-            speciesChromosomeName = speciesChromosomeName[:speciesChromosomeName.find('Plus')-1]
-        if 'Minus' in speciesChromosomeName:
-            speciesChromosomeName = speciesChromosomeName[:speciesChromosomeName.find('Minus')-1]
-        return speciesChromosomeName
-
     # import the sorted file to find start and end locations/coordinates of each gene in syntenic sequence
     sortFiles = [syntenicInputFiles[1],syntenicInputFiles[2]]
-    # open species file to find positions in the genome where syntenic sequence is located in between
-    sortFileOpen = [open(pathSort+sortFiles[0], 'r'), open(pathSort+sortFiles[1], 'r')]
-    """
-    #test code
-    testOut= open('testout.txt','w')
-    for line in lines:
-        testOut.write(line+'\n')
-
-    exit()
-    """
-    # recreate structure here!!!!! START HERE!!!
-    # more parsing, generate syntenies from each line
+    sortDictionary = dict.fromkeys(sortFiles, defaultdict(list))
+    for file in sortFiles:
+        openFile = open(pathSort+file,'r')
+        for line in openFile.read().split('\n'):
+            if line:
+                sortDictionary[file][line.split()[0]] = line.split()[1:]
+        openFile.seek(0)
+        openFile.close()
 
     def checkForGene(geneLine,speciesNumber):
         """Checks particular line of sort file and searches through syntenic sequence list structure and outputs start
@@ -220,107 +209,12 @@ def pairComparisonSynteny(syntenicInputFiles,pathUnOut,pathSort,Loci_Threshold):
                     # replace start/end gene with corresponding start/end coordinate
                     syntenicSequences[i][speciesNumber][k] = int(geneLine.split()[k+1])
 
-                # removed code, additional checks on gene ordering...
-                """   if type(syntenicSequences[i][speciesNumber][1]) == \
-                            type(syntenicSequences[i][speciesNumber][2]) and \
-                                    syntenicSequences[i][speciesNumber][2] < \
-                                    syntenicSequences[i][speciesNumber][1]:
-                        # check if end coordinate less than start coord (find out why??)
-                """
-
-        # unused code
-        #geneCoordInfos += [(i, k, geneLine.split()[k+1])]
-        #if geneCoordInfos == []:
-        #    return [('NaN', 'NaN', 'NaN')]
-        #else:
-        #    return geneCoordInfos
-
-
-# for species 1 and 2
-    for speciesNumber in range(2):
-        # check each line in sort file and..
-        for line in sortFileOpen[speciesNumber]:
-            # see if gene is a gene in a list of all syntenic genes found from unout file "chunk" analysis above
-            if line.split()[0] in geneListSpecies[speciesNumber]:
-                # if so, replace gene with its corresponding start/stop coordinate in the genome using check for gene
-                # note: output multiple gene coords!!!!
-                checkForGene(line,speciesNumber)
-
-                #Removed code below, algorithm that did not get the job done using local variables, created global
-                # variables for ease of access to structure... some genes were found multiple times
-                #geneCoordInfos=checkForGene(line,syntenicSequences,speciesNumber)
-                """
-                for geneCoord in geneCoordInfos:
-                    if geneCoord[0] != 'NaN':
-                        syntenicSequences[geneCoord[0]][speciesNumber][geneCoord[1]]=int(geneCoord[2].strip('\n')) # use int for now
-                        if type(syntenicSequences[geneCoord[0]][speciesNumber][1]) == \
-                            type(syntenicSequences[geneCoord[0]][speciesNumber][2]) and \
-                                syntenicSequences[geneCoord[0]][speciesNumber][2] < \
-                                        syntenicSequences[geneCoord[0]][speciesNumber][1]:
-                            errorFile.write(line.split()[0]+' '+str(syntenicSequences[geneCoord[0]])+('\n')) #check if end coordinate less than start coord (find out why??)
-#Seita.4G005900.1	scaffold_4	406794	407432	213	1	U	1509211
-        #comment and read into greater detail!!!!!
-                """
-
-    # obsolete/removed method of finding start/end coordinates that required a lot of processing time and kept opening
-    # and rereading the sort2 file
-    #for syntenySequence in syntenicSequences:
-        """
-        string1list = line[line.find('[') + 1:line.find(']')].split(' ')
-        string2list = line[line.rfind('[') + 1:line.rfind(']')].split(' ')
-
-        # grabs the beginning and end genes of the syntenic sequence for each species
-        speciesgenes = [[string1list[1], string1list[3]], [string2list[1], string2list[3]]]
-
-        # grabs species+chromosome names
-        speciesChr1 = line[0:line.find('[') - 1]
-        speciesChr2 = line[line.find(':') + 2:line.rfind('[') - 1]
-        speciesChr1 = removePlusMinus(speciesChr1)
-        speciesChr2 = removePlusMinus(speciesChr2)
-        """
-        #PLEASE CHANGE THIS... WILL TAKE TOO LONG TO READ THROUGH FILES
-        # this was changed..., code below is also removed
-        """
-        j = 0
-        genePositionList = [[], []]
+    for j in range(len(syntenicSequences)):
         for i in range(2):
-            # for each line in the sorted file
-            for line2 in sortFileOpen[i]:
-                lineList = line2.split()
-                # determine if there is reverse sequencing in the syntenic sequence
-                if int(lineList[2]) >= int(lineList[3]):
-                    print 'Reverse sequencing found @:', line2
-                # locate the start/end gene within the sorted list of genes, add start and end coordinate info
-                if speciesgenes[i][0] == lineList[7] or speciesgenes[i][1] == lineList[7]:
-                    if speciesChr1 not in lineList[1] and speciesChr2 not in lineList[1]:
-                        print line2, speciesChr1, speciesChr2, speciesgenes #DEBUGGING!!!
-                    genePositionList[i] += [int(lineList[2]), int(lineList[3])]
-                if len(genePositionList[i])==4:
-                    # keep only start coord of first gene and end coord of last gene to capture entire sequence
-                    del genePositionList[i][1]
-                    del genePositionList[i][1]
-                    break
-            """
-            # unused code
-            # read again from the top (FOR NOW)
-            #sortFileOpen[i].seek(0)
+            for k in range(2):
+                syntenicSequences[j][i][k+1]  = sortDictionary[sortFiles[i]][syntenicSequences[j][i][k+1]][k+1]
+                a=1
 
-        #old structure created, code removed/unused...
-        """
-        try:
-            Syntenies+=[[(speciesChr1,genePositionList[0][0],genePositionList[0][1]),
-                        (speciesChr2,genePositionList[1][0],genePositionList[1][1])]]
-        except:
-            print (genePositionList[0][0],genePositionList[0][1],genePositionList,sortFiles,
-                    speciesgenes[1][1])
-            print speciesChr1, speciesChr2, speciesgenes
-            exit()
-        """
-
-    # close sort files...
-    for i in range(2):
-        sortFileOpen[i].seek(0)
-        sortFileOpen[i].close()
 
     ###########
     open(pathUnOut[:-1][:pathUnOut[:-1].rfind('/')+1]+'ErrorFiles/ErrFile%s.txt'%speciesName[1],'w').close()

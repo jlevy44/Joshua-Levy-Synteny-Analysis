@@ -1,3 +1,47 @@
 root_folder =
+checkValidity = 0
 pathPython = /global/u2/j/jlevy/python_modules
 pathSystem = /global/u2/j/jlevy/virtualBin
+conservedFastaPath = /global/projectb/scratch/jlevy/Spring2017/Synteny/Bhybridum/D/CNSAnalysis/ConservedFasta/
+pickleName = MAFWork.p
+ratioCopy = 0
+pickleSkip = 0
+fasta2phylip = 1
+PhyML = 1
+bootstrap = 1
+treeFile = 0
+masterListSpecies =
+Sbicolor_313_Sb
+Osativa_323_Os
+Bdistachyon_314_Bd
+Bstacei_316_Bs
+ABRD_001_BhD
+BdtwD_003_BhtD
+BdTRgD_005_BhTgD
+PobD_007_BhPD
+BhybsixD_009_BhSD
+BhybzeroD_011_BhZD
+BdTRi_348_BdTi
+BdEighteen_362_BdE
+BdTRc_354_BdTc
+Stop
+intragenus =
+BhD
+BhtD
+BhTgD
+BhPD
+BhSD
+BhZD
+BdTi
+BdE
+BdTc
+Stop
+intergenus =
+Os
+Sb
+Stop
+subgenome =
+BhD
+BhtD
+Stop
+Fix the above segment^^^

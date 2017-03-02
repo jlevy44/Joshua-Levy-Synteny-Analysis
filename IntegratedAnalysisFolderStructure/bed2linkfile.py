@@ -3,7 +3,11 @@ def bed2link(listBedFiles,BedInputPath,LinkOutputPath):
     Converts bed files to link.txt files to be used for circos analysis. Files are outputted to specified link out path
     DO NOT USE THIS FOR WHEAT"""
     listLinks = []
+    # if hybridum analysis
+    listHybridumSubgenomes = ['001','002','003','004','005','006','007','008','009','010','011','012']
     for file in listBedFiles: # for each bed file specified
+
+
 
         outputLinkFilename = file.replace('.bed','.link.txt') # link file type
         listLinks.append(outputLinkFilename) # add new file name to list of link files
@@ -26,8 +30,19 @@ def bed2link(listBedFiles,BedInputPath,LinkOutputPath):
             #               lineList2[4])
             #else:
             # proper output, see above^^^^
-            outputTuple = (lineList[0][lineList[0].find('-')+1:].replace('~','-'),lineList[1],lineList[2],
-                           lineList2[1].replace('~','-'),lineList2[2],lineList2[3])
+
+            # for hybridum analysis
+            outTupleChr1 = lineList[0][lineList[0].find('-')+1:].replace('~','-')
+            outTupleChr2 = lineList2[1].replace('~','-')
+            for species in listHybridumSubgenomes:
+                if species in file.split('-')[0]:
+                    outTupleChr1 = outTupleChr1.replace('Bh','Bh%s'%species[1:])
+                if species in file.split('-')[1]:
+                    outTupleChr2 = outTupleChr2.replace('Bh', 'Bh%s' % species[1:])
+
+
+            outputTuple = (outTupleChr1,lineList[1],lineList[2],
+                           outTupleChr2,lineList2[2],lineList2[3])
             outputLinkFile.write('%s %s %s %s %s %s\n'%outputTuple)
 
         inputFile.close()

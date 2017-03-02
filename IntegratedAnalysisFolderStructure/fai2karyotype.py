@@ -8,9 +8,12 @@ def fai2karyotype(faiFilePath,karyotypesFilesPath,convertFiles,mainSpeciesFai,BP
     splitSubgenome = [0,0]
     # list of karyotypes to be used for final analysis
     listKaryotypes = []
+    # if hybridum analysis
+    listHybridumSubgenomes = ['001','002','003','004','005','006','007','008','009','010','011','012']
     #sortFunction = lambda scaffold1, scaffold2: cmp(scaffold1[0], scaffold2[0])
     for file in convertFiles:
-        # for N and K
+        # if hybridum
+        hybridumAnalyze = 0
 
         #import fai file
         inputFile = open(faiFilePath+file,'r')
@@ -27,6 +30,12 @@ def fai2karyotype(faiFilePath,karyotypesFilesPath,convertFiles,mainSpeciesFai,BP
         # count number of chromosomes/scaffolds (helps determine color of chromosomes and scaffolds)
         chrCount = 1
         scaffoldOutList = []
+        # for hybridum Analysis
+        for species in listHybridumSubgenomes:
+            if species in file:
+                hybridumAnalyze = 1
+                replaceChr = species[1:]
+                break
         for line in inputFile:
             # generate output tuple from parsing input from fai
             # Bd2	59130575	76056752	80	81
@@ -36,12 +45,15 @@ def fai2karyotype(faiFilePath,karyotypesFilesPath,convertFiles,mainSpeciesFai,BP
             lineList = line.split()
             # for example, consider line with Bd2
             if int(lineList[1])>int(BPsThreshold): # if length chromosome over certain number BPs specified in config
+                outTup1 = lineList[0]
+                if hybridumAnalyze:
+                    outTup1 = outTup1.replace('Bh','Bh%s'%replaceChr)
                 if '_' in lineList[0]:
                     # output name that takes into account scaffolds
-                    outputTuple = (lineList[0],lineList[0][0]+lineList[0].split('_')[-1],lineList[1],chrCount)
+                    outputTuple = (outTup1,outTup1[0]+outTup1.split('_')[-1],lineList[1],chrCount)
                 else:
                     # output chromosome name, chr name, how large chromosome is, and color of chromosome indicated by %d
-                    outputTuple = (lineList[0], lineList[0], lineList[1], chrCount)
+                    outputTuple = (outTup1, outTup1, lineList[1], chrCount)
                 if 'scaffold_' in line or 'super_' in line or 'ta_' in line:
                     scaffoldOutList += [list(outputTuple)] # separate outputs for scaffolds
                 else:
@@ -114,6 +126,8 @@ def fai2karyotype(faiFilePath,karyotypesFilesPath,convertFiles,mainSpeciesFai,BP
         outputFileN.close()
         outputFileK.close()
         inputFile.close()
+
+
 
     # return a list of the karyotype files
     return listKaryotypes
