@@ -38,7 +38,7 @@ def parseConfigFindList(stringFind,configFile):
                 read = 1 # if find string specified, begin reading lines
     configFile.seek(0)
     return listOfItems
-
+start = time.clock()
 pickleSkip = 0
 print 'Loading CNS configuration file...','time=',time.clock()-start
 configFile = open('configCNSAnalysis.txt','r')
@@ -213,7 +213,6 @@ segmentCount = 0
 
 # check out each MAF
 mafAnalysisStructure = defaultdict(list)
-start = time.clock()
 writeConservedBedFiles = dict.fromkeys(masterListSpecies,)
 
 if pickleSkip == 0:

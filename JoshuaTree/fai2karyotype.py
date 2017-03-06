@@ -9,16 +9,17 @@ def fai2karyotype(faiFilePath,karyotypesFilesPath,convertFiles,mainSpeciesFai,BP
     # list of karyotypes to be used for final analysis
     listKaryotypes = []
     # if hybridum analysis
-    listHybridumSubgenomes = ['001','002','003','004','005','006','007','008','009','010','011','012']
+    listHybridumSubgenomes = ['000']#['001','002','003','004','005','006','007','008','009','010','011','012']
     #sortFunction = lambda scaffold1, scaffold2: cmp(scaffold1[0], scaffold2[0])
     for file in convertFiles:
         # if hybridum
         hybridumAnalyze = 0
-
+        speciesNameId = file[:file.rfind('_')]
+        protId = speciesNameId.split('_')[-1]
         #import fai file
         inputFile = open(faiFilePath+file,'r')
         #output karyotype .txt file name
-        outputFilename = 'karyotype.'+file[:file.rfind('_')]+'.txt'
+        outputFilename = 'karyotype.'+speciesNameId+'.txt'
         # add to list of karyotype files
         listKaryotypes.append(outputFilename)
         # panicum virgatum and subgenomes # better if P. vir is query species, FIXME may need to change if target speci
@@ -50,10 +51,10 @@ def fai2karyotype(faiFilePath,karyotypesFilesPath,convertFiles,mainSpeciesFai,BP
                     outTup1 = outTup1.replace('Bh','Bh%s'%replaceChr)
                 if '_' in lineList[0]:
                     # output name that takes into account scaffolds
-                    outputTuple = (outTup1,outTup1[0]+outTup1.split('_')[-1],lineList[1],chrCount)
+                    outputTuple = (protId+outTup1,protId+outTup1[0]+outTup1.split('_')[-1],lineList[1],chrCount)
                 else:
                     # output chromosome name, chr name, how large chromosome is, and color of chromosome indicated by %d
-                    outputTuple = (outTup1, outTup1, lineList[1], chrCount)
+                    outputTuple = (protId+outTup1, protId+outTup1, lineList[1], chrCount)
                 if 'scaffold_' in line or 'super_' in line or 'ta_' in line:
                     scaffoldOutList += [list(outputTuple)] # separate outputs for scaffolds
                 else:

@@ -4,9 +4,8 @@ def bed2link(listBedFiles,BedInputPath,LinkOutputPath):
     DO NOT USE THIS FOR WHEAT"""
     listLinks = []
     # if hybridum analysis
-    listHybridumSubgenomes = ['001','002','003','004','005','006','007','008','009','010','011','012']
+    listHybridumSubgenomes = ['000']#['001','002','003','004','005','006','007','008','009','010','011','012']
     for file in listBedFiles: # for each bed file specified
-
 
 
         outputLinkFilename = file.replace('.bed','.link.txt') # link file type
@@ -32,8 +31,8 @@ def bed2link(listBedFiles,BedInputPath,LinkOutputPath):
             # proper output, see above^^^^
 
             # for hybridum analysis
-            outTupleChr1 = lineList[0][lineList[0].find('-')+1:].replace('~','-')
-            outTupleChr2 = lineList2[1].replace('~','-')
+            outTupleChr1 = lineList[0].replace('~','-').replace('-','')#[lineList[0].find('-')+1:].replace('~','-').replace('-','')
+            outTupleChr2 = lineList2[0]+lineList2[1].replace('~','-')
             for species in listHybridumSubgenomes:
                 if species in file.split('-')[0]:
                     outTupleChr1 = outTupleChr1.replace('Bh','Bh%s'%species[1:])
