@@ -369,7 +369,7 @@ if pickleSkip == 0:
         CNSOutFiles = [('%s_CNSElements_Intronic.bed'%speciesInfo[species].speciesName,bedCNSIntronic[species]),
                        ('%s_CNSElements_Intergenic.bed'%speciesInfo[species].speciesName,bedCNSIntergenic[species]),
                        ('%s_Conserved_CDS.bed' % speciesInfo[species].speciesName,bedConservedCDS[species]),
-                       ('%s_CS_Minus_CDS.bed' % speciesInfo[species].speciesName,bedCSMinusCDS[species])]
+                       ('%s_AllCNSElements.bed' % speciesInfo[species].speciesName,bedCSMinusCDS[species])]
         for bedOut in CNSOutFiles: # for each of the above described files, append the sequences from the original fastas and include closest gene/ distance information
             open(bedOut[0],'w').close()
 
@@ -383,7 +383,7 @@ if pickleSkip == 0:
                     if len(outputSequence) >= 15 and findBadCharPosition(outputSequence) >= 15:
                         if 'CNSElements_Intronic' in bedOut[0] or 'Conserved_CDS' in bedOut[0]:
                             bedOutFile.write('%s\t%s\t%s\t%s;geneID=%s;%s\n'%(tuple(lineList[0:4])+(lineList[-1],outputSequence)))
-                        elif 'CNSElements_Intergenic' in bedOut[0] or 'CS_Minus_CDS' in bedOut[0]:
+                        elif 'CNSElements_Intergenic' in bedOut[0] or 'AllCNSElements' in bedOut[0]:
                             bedOutFile.write('%s\t%s\t%s\t%s;closestGene=%s;distance=%s;%s\n'%(tuple(lineList[0:4])+(lineList[-2],lineList[-1].strip('\n'),outputSequence)))
 
 
@@ -409,10 +409,10 @@ if pickleSkip == 0:
                     bedDict[MASeg] = [tuple(line.split()[0:3])]
         return bedDict
 
-    ultimateBedDicts = {'Conserved_CDS.bed':{},'CS_Minus_CDS.bed':{}} # split into ~CDS or ~CNS
+    ultimateBedDicts = {'Conserved_CDS.bed':{},'AllCNSElements.bed':{}} # split into ~CDS or ~CNS
     print 'Generating ultimate CNS, CDS structure...','time=',time.clock()-start
     for file in os.listdir('.'): # FIXME for some reason had problem saving
-        if file.endswith('Conserved_CDS.bed') or file.endswith('CS_Minus_CDS.bed'):
+        if file.endswith('Conserved_CDS.bed') or file.endswith('AllCNSElements.bed'):
             ultimateBedDicts[file[file.find('_')+1:]][file[:file.find('_')]] = bed2dict(file) # a dictionary with keys [species] and inside a key of MASEG
         # hierarchy is ultimate[CDS or CNS][species][MASeg]
     print 'Writing data to %s'%pickleName,'time=',time.clock()-start
@@ -531,11 +531,11 @@ if ratioCopy:
     # FIXME add weighted ratio copy analysis, and analyzing how much DNA goes into Synteny and comes out of Cactus or my analysis
 # FIXME why getting same conservation ratios???
 
-conservedFastaPathFiles = str(subprocess.Popen(['ls', conservedFastaPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        .stdout.read()).split('\n')
+conservedFastaPathFiles = os.listdir(conservedFastaPath)#str(subprocess.Popen(['ls', conservedFastaPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        #.stdout.read()).split('\n')
 conservedFastaFiles = [fasta for fasta in conservedFastaPathFiles if fasta.endswith('.fasta')]
 
-
+#FIXME need to be able to run PhyML and tree rendering
 if fasta2phylip:
     print 'Fasta to Phylip conversion...','time=',time.clock()-start
     for fasta in conservedFastaFiles:
@@ -545,13 +545,13 @@ if fasta2phylip:
             subprocess.call(['perl', 'Fasta2Phylip.pl', conservedFastaPath+fasta, conservedFastaPath+fasta.replace('fasta','phylip')])
 if phyML:
     print 'Now running PhyML on working outputs... Producing ancestral trees...','time=',time.clock()-start
-    phylipFiles = [phylip for phylip in conservedFastaPathFiles if phylip.endswith('.phylip')]
-    if treeOut == 0:
-        for phylip in phylipFiles:
-            subprocess.call(['PhyML', '-i', conservedFastaPath+phylip, '-s', 'BEST', '-q', '-b', bootstrap, '-m', 'GTR'])
-    else:
+    phylipFiles = [phylip for phylip in os.listdir(conservedFastaPath) if phylip.endswith('.phylip')]
+    if treeOut == 1:
         for phylip in phylipFiles:
             subprocess.call(['PhyML', '-i', conservedFastaPath+phylip, '-s', 'BEST', '-q', '-b', bootstrap, '-m', 'GTR','-u',treeFile])
+    else:
+        for phylip in phylipFiles:
+            subprocess.call(['PhyML', '-i', conservedFastaPath+phylip, '-s', 'BEST', '-q', '-b', bootstrap, '-m', 'GTR'])
     if outputTreeImages: #FIXME need to install SIP PyQt4
         print "Generating images for produced trees...",'time=',time.clock()-start
         for phylip in phylipFiles:

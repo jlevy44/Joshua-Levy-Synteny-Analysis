@@ -8,8 +8,8 @@ python runcac.py -t 138:59:30 /global/projectb/scratch/jlevy/Spring2017/Synteny/
 """
 
 syn2fasta = '/global/dna/projectdirs/plant/pangenomics/synfasta_scripts/jlphillips_lbl-synfasta_scripts-31de175504f3/syn_fasta_to_cactus.py'
-runcac = 'runcac.py'
+runcac = '/global/dna/projectdirs/plant/pangenomics/synfasta_scripts/jlphillips_lbl-synfasta_scripts-31de175504f3/runcac.py'
 cwd = os.getcwd()+'/'
 
 subprocess.call([syn2fasta,'-n','5','-p','prot_dict',cwd+'FastaFiles',cwd+'output',cwd+'grassnewick.nh'])
-subprocess.call([cwd+runcac,'-t','138:59:30',cwd+'output',cwd+'grassnewick.nh'])
+subprocess.call([runcac,'-t','138:59:30',cwd+'output',cwd+'grassnewick.nh'])
