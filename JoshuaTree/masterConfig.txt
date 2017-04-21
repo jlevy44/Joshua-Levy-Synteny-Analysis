@@ -5,28 +5,29 @@ performALLMAPS = 0
 
 
 # query species Name
-querySpecies = 010
+querySpecies = 316
 
 # important info for all configuration Files
-NameAnalysis = Bhyb36S
-writeFastaOut = 0
+NameAnalysis = Bs316
+writeFastaOut = 1
 Loci_Threshold = 4
 pathPython = /global/u2/j/jlevy/python_modules
 pathSystem = /global/u2/j/jlevy/virtualBin
-pathALLMAPS = /global/projectb/scratch/jlevy/Spring2017/Synteny/Bhybridum/Bhyb36/S/allMAPSAnalysis/
-BdPath = /global/projectb/scratch/jlevy/Spring2017/Synteny/Bhybridum/Bhyb36/S/BdFiles/
-pathUnOut = /global/projectb/scratch/jlevy/Spring2017/Synteny/Bhybridum/Bhyb36/S/UnOutFiles/
-pathGFF = /global/projectb/scratch/jlevy/Spring2017/Synteny/Bhybridum/Bhyb36/S/GFFfiles/
-pathSort = /global/projectb/scratch/jlevy/Spring2017/Synteny/Bhybridum/Bhyb36/S/SortFiles/
-genomePath = /global/projectb/scratch/jlevy/Spring2017/Synteny/Bhybridum/Bhyb36/S/Genomes/
-karyotypesFilesPath = /global/projectb/scratch/jlevy/Spring2017/Synteny/Bhybridum/Bhyb36/S/CircosInputs/Data/Karyotypes/
-circosConfigFilesPath = /global/projectb/scratch/jlevy/Spring2017/Synteny/Bhybridum/Bhyb36/S/CircosInputs/ConfigFiles/
-LinkPath = /global/projectb/scratch/jlevy/Spring2017/Synteny/Bhybridum/Bhyb36/S/CircosInputs/Data/Links/
-circosOutPath = /global/projectb/scratch/jlevy/Spring2017/Synteny/Bhybridum/Bhyb36/S/CircosOutputs/
+pathALLMAPS = /global/projectb/scratch/jlevy/Spring2017/Synteny/BhybridumNew/Bs316/allMAPSAnalysis/
+BdPath = /global/projectb/scratch/jlevy/Spring2017/Synteny/BhybridumNew/Bs316/BdFiles/
+pathUnOut = /global/projectb/scratch/jlevy/Spring2017/Synteny/BhybridumNew/Bs316/UnOutFiles/
+pathGFF = /global/projectb/scratch/jlevy/Spring2017/Synteny/BhybridumNew/Bs316/GFFfiles/
+pathSort = /global/projectb/scratch/jlevy/Spring2017/Synteny/BhybridumNew/Bs316/SortFiles/
+BPsMergeDist = xx
+genomePath = /global/projectb/scratch/jlevy/Spring2017/Synteny/BhybridumNew/Bs316/Genomes/
+karyotypesFilesPath = /global/projectb/scratch/jlevy/Spring2017/Synteny/BhybridumNew/Bs316/CircosInputs/Data/Karyotypes/
+circosConfigFilesPath = /global/projectb/scratch/jlevy/Spring2017/Synteny/BhybridumNew/Bs316/CircosInputs/ConfigFiles/
+LinkPath = /global/projectb/scratch/jlevy/Spring2017/Synteny/BhybridumNew/Bs316/CircosInputs/Data/Links/
+circosOutPath = /global/projectb/scratch/jlevy/Spring2017/Synteny/BhybridumNew/Bs316/CircosOutputs/
 BPsThreshold = 300000
-multipleSeqAlignFastasPath = /global/projectb/scratch/jlevy/Spring2017/Synteny/Bhybridum/Bhyb36/S/FastaOut/
+multipleSeqAlignFastasPath = /global/projectb/scratch/jlevy/Spring2017/Synteny/BhybridumNew/Bs316/FastaOut/
 fastaOutputName = xxx
-allMAPImageOutputPath = /global/projectb/scratch/jlevy/Spring2017/Synteny/Bhybridum/Bhyb36/S/allMAPSAnalysis/ALLMAPS_Chromosome_Images/
+allMAPImageOutputPath = /global/projectb/scratch/jlevy/Spring2017/Synteny/BhybridumNew/Bs316/allMAPSAnalysis/ALLMAPS_Chromosome_Images/
 online = 1
 projectName = plant-analysis.p
 nerscUsername = jlevy

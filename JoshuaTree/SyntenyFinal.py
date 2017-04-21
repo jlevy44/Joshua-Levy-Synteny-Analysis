@@ -321,6 +321,9 @@ def syntenicStructure(): #input N or K for subgenome, will generalize later
                 pathUnOut = line.split()[-1]
             if 'pathSort' in line: # pull path of sort2 files
                 pathSort = line.split()[-1]
+            if 'BPsMergeDist' in line:
+                BPsMergeDist = line.split()[-1]
+                print line
             if read == 1:
                 if 'Stop' in line:
                     break # read lines until stop
@@ -337,6 +340,13 @@ def syntenicStructure(): #input N or K for subgenome, will generalize later
         Loci_Threshold
     except:
         Loci_Threshold = 4
+
+    try:
+        BPsMergeDist = int(BPsMergeDist)
+    except:
+        BPsMergeDist = 100000
+    print BPsMergeDist
+    synTupFile.close()
 
     #for file in os.listdir(pathUnOut):
     listOfPairedComparisonSyntenies=[] # this is out BEDTool object structure which contains bed objects that are pair-
@@ -358,7 +368,7 @@ def syntenicStructure(): #input N or K for subgenome, will generalize later
         # one line should look like:
         # 523-Chr09N	118260675	118632318	308-Chr07-33574614-33759677|308-Chr09-1325484-1436481| ...etc
         # SpeciesA-Chrom xi xf     SpeciesB-Chr-xi-xf|SpeciesC-Chr-xi-xf|SpeciesC#2-Chr-xi-xf...etc
-        finalSyntenyStructureBed = finalSyntenyStructureBed.sort().merge(o='distinct',c=4,delim='|',d=100000)
+        finalSyntenyStructureBed = finalSyntenyStructureBed.sort().merge(o='distinct',c=4,delim='|',d=BPsMergeDist)
 
         #output bed object to file
         open(pathFastaOutput+'finalSyntenyMultipleSpecies.bed','w').close()

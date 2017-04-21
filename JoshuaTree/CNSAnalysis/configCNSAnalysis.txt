@@ -9,6 +9,7 @@ pickleSkip = 0
 fasta2phylip = 1
 PhyML = 1
 bootstrap = 1
+treeOut = 1
 treeFile = 0
 masterListSpecies =
 Sbicolor_313_Sb

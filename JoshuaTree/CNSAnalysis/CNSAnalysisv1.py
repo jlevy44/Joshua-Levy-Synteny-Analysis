@@ -1,15 +1,23 @@
 import re
+import sys
+
+for path in sys.path:
+    if path and 'anaconda' in path:
+        sys.path.remove(path)
+
 import numpy as np
 from pybedtools import *
 from pyfaidx import Fasta
-import subprocess, os, sys, shutil
+import subprocess, os, shutil
 from collections import *
 import time
 import dill as pickle
-from ete3 import Tree
+#from multiprocessing import Pool
 
 
 from difflib import SequenceMatcher
+
+
 
 def similar(a, b):
     return SequenceMatcher(None, a, b).ratio()
@@ -57,6 +65,7 @@ fasta2phylip = parseConfigFindPath('fasta2phylip',configFile)
 phyML = parseConfigFindPath('PhyML',configFile)
 bootstrap = parseConfigFindPath('bootstrap',configFile)
 treeFile = parseConfigFindPath('treeFile',configFile)
+treeOut = parseConfigFindPath('treeOut',configFile)
 ratioCopy = parseConfigFindPath('ratioCopy',configFile)
 outputTreeImages = parseConfigFindPath('outputTreeImages',configFile)
 configFile.close()
@@ -81,7 +90,7 @@ if fasta2phylip == '1':
 else:
     fasta2phylip = 0
 
-if treeFile != '0' or treeFile != '':
+if treeOut == '1':
     treeOut = 1
 else:
     treeOut = 0
@@ -134,8 +143,8 @@ class speciesClass(): # add information about species that stores name and proty
                 #outputFile.write('%s\t%d\t%s\n' % (line.split()[1],int(line.split()[2])-1,line.split()[3]))
         outputFile.close()
         outputFile2.close()
-        self.bedGenes = BedTool(outputfilename).sort()
-        self.bedCDS = BedTool(outputfilename2).sort()
+        self.bedGenes = BedTool(outputfilename).sort().merge(c=4,o='distinct',delim='|')
+        self.bedCDS = BedTool(outputfilename2).sort().merge(c=4,o='distinct',delim='|')
 
 
 def count2Conditional(countSeq,speciesList):
@@ -246,6 +255,8 @@ if pickleSkip == 0:
                             lineList2 = lineList[1].split('.')
                             speciesName = lineList2[0]
                             countSeq[speciesName] += 1
+                            if len(lineList2) > 3:
+                                lineList2 = lineList2[0:1] + ['.'.join(lineList2[2:])]
                             lineList3 = lineList2[-1].split('_')
                             if lineList[4] == '-': # negative orientation of sequence, start and end coordinates found from right end of chromosome
                                 startCoord,endCoord = int(lineList3[-1])-int(lineList[2])-int(lineList[3]),int(lineList3[-1])-int(lineList[2])
@@ -327,33 +338,35 @@ if pickleSkip == 0:
     bedCNSIntergenic = {}
     bedCNSIntronic = {}
     bedConservedCDS = {}
-    bedCSMinusCDS = {}
+    bedCNS = {}
     print 'Sorting sequences into conserved elements, CDS, CNS and intronic/intergenic elements...','time=',time.clock()-start
     for species in masterListSpecies:
 
         conservedElementsBed = open(speciesInfo[species].conservedElementsBed,'r')
 
         # create bed object from conserved elements for each species, conserved elements found from MAF files done above
-        speciesInfo[species].conservedElementsBed = BedTool(conservedElementsBed).sort()
+        speciesInfo[species].conservedElementsBed = BedTool(conservedElementsBed).sort().merge(c=4,o='distinct',delim='|')
         conservedElementsBed.close()
         # generate CDS and gene bed objects for each species
         speciesInfo[species].gff2bedobjs()
 
+        # This is both CNS Intronic + intergenic, [CNS total] = CS-CDS = CS - CDS
+        bedCNS[species] = speciesInfo[species].conservedElementsBed.subtract(speciesInfo[species].bedCDS)\
+            .sort().merge(c=4,o='distinct',delim='|')
+
         #bedCNS = {}
         # find CNS Intronic genes = CS + (genes-CDS)  + is intersection, - is subtraction of sequences
-        bedCNSIntronic[species] = speciesInfo[species].conservedElementsBed.intersect(speciesInfo[species].bedGenes.
-                subtract(speciesInfo[species].bedCDS).sort(),u=True).sort().closest(speciesInfo[species].bedGenes,nonamecheck = True)
+        bedCNSIntronic[species] = bedCNS[species].intersect(speciesInfo[species].bedGenes).sort().merge(c=4,o='distinct',delim='|').closest(speciesInfo[species].bedGenes,nonamecheck = True)
         # CNS intergenic = CS - genes
-        bedCNSIntergenic[species] = speciesInfo[species].conservedElementsBed.subtract(speciesInfo[species].bedGenes).sort()\
-                                                .sort().closest(speciesInfo[species].bedGenes,k=1,d=True,nonamecheck = True)
+        bedCNSIntergenic[species] = speciesInfo[species].conservedElementsBed.subtract(speciesInfo[species].bedGenes).sort() \
+            .merge(c=4, o='distinct', delim='|').closest(speciesInfo[species].bedGenes,k=1,d=True,nonamecheck = True)
 
         # Conserved CDS = CS +CDS
-        bedConservedCDS[species] = speciesInfo[species].conservedElementsBed.intersect(speciesInfo[species].bedCDS,
-                                                u=True).sort().closest(speciesInfo[species].bedGenes,nonamecheck = True)
+        bedConservedCDS[species] = speciesInfo[species].conservedElementsBed.intersect(speciesInfo[species].bedCDS)\
+            .sort().merge(c=4,o='distinct',delim='|').closest(speciesInfo[species].bedGenes,nonamecheck = True)
 
-        # This is both CNS Intronic + intergenic, [CNS total] = CS-CDS = CS - CDS
-        bedCSMinusCDS[species] = speciesInfo[species].conservedElementsBed.subtract(speciesInfo[species].bedCDS,
-                                                u=True).sort().closest(speciesInfo[species].bedGenes,k=1,d=True,nonamecheck = True)
+        bedCNS[species] = bedCNS[species].closest(speciesInfo[species].bedGenes,k=1,d=True,nonamecheck = True)
+
 
 
     # .merge(o='distinct',c=4,delim = '|')
@@ -369,7 +382,7 @@ if pickleSkip == 0:
         CNSOutFiles = [('%s_CNSElements_Intronic.bed'%speciesInfo[species].speciesName,bedCNSIntronic[species]),
                        ('%s_CNSElements_Intergenic.bed'%speciesInfo[species].speciesName,bedCNSIntergenic[species]),
                        ('%s_Conserved_CDS.bed' % speciesInfo[species].speciesName,bedConservedCDS[species]),
-                       ('%s_AllCNSElements.bed' % speciesInfo[species].speciesName,bedCSMinusCDS[species])]
+                       ('%s_AllCNSElements.bed' % speciesInfo[species].speciesName,bedCNS[species])]
         for bedOut in CNSOutFiles: # for each of the above described files, append the sequences from the original fastas and include closest gene/ distance information
             open(bedOut[0],'w').close()
 
@@ -546,18 +559,43 @@ if fasta2phylip:
 if phyML:
     print 'Now running PhyML on working outputs... Producing ancestral trees...','time=',time.clock()-start
     phylipFiles = [phylip for phylip in os.listdir(conservedFastaPath) if phylip.endswith('.phylip')]
-    if treeOut == 1:
-        for phylip in phylipFiles:
-            subprocess.call(['PhyML', '-i', conservedFastaPath+phylip, '-s', 'BEST', '-q', '-b', bootstrap, '-m', 'GTR','-u',treeFile])
-    else:
-        for phylip in phylipFiles:
+    #if treeOut == 0:
+    for phylip in phylipFiles:
+        if phylip:
             subprocess.call(['PhyML', '-i', conservedFastaPath+phylip, '-s', 'BEST', '-q', '-b', bootstrap, '-m', 'GTR'])
+    #else:
+    #    for phylip in phylipFiles:
+    #        if phylip:
+    #            subprocess.call(['PhyML', '-i', conservedFastaPath+phylip, '-s', 'BEST', '-q', '-b', bootstrap, '-m', 'GTR','-u',treeFile])
     if outputTreeImages: #FIXME need to install SIP PyQt4
         print "Generating images for produced trees...",'time=',time.clock()-start
-        for phylip in phylipFiles:
-            with open(conservedFastaPath+phylip+'_phyml_boot_trees.txt','r') as f: #FIXME boot_trees verus phyml_tree
-                t = Tree(f.read())
-                t.render(conservedFastaPath+phylip.replace('.phylip','.png'))
+        with open('runTree.sh','w') as f:
+            f.write('export PATH=~/anaconda_ete/bin:$PATH\npython treeImage.py')
+        with open('treeImage.py','w') as f:
+            f.write("""from ete3 import Tree,TreeStyle,NodeStyle
+import os
+conservedFastaPath = '%s'
+for tree in [file for file in os.listdir(conservedFastaPath) if file and file.endswith('_phyml_tree.txt')]:
+    try:
+        with open(conservedFastaPath + tree, 'r') as f:  # FIXME boot_trees verus phyml_tree
+            t = Tree(open(tree,'r').read())
+            ts = TreeStyle()
+            ns = NodeStyle()
+            ns['size']=0
+            ts.show_leaf_name = True
+            ts.show_branch_length = False
+            ts.show_branch_support = True
+            for n in t.traverse():
+                n.set_style(ns)
+            #t.show(tree_style=ts)
+            t.render( conservedFastaPath+'/'+tree.replace('_phyml_tree.txt', '.png'),tree_style = ts)
+    except:
+        pass"""%(conservedFastaPath))
+        subprocess.call(['sh', 'runTree.sh'])
+
+for path in sys.path:
+    if path and 'anaconda' in path:
+        sys.path.remove(path)
 
 # FIXME add user specified output location
 # FIXME add tree figure generation PDF!!

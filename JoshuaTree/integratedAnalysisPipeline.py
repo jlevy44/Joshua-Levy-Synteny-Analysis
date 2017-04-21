@@ -51,7 +51,7 @@ masterConfigFile = open('masterConfig.txt','r')
 # grab the following information from the configuration file
 weightsList = parseConfigFindList('Weights info',masterConfigFile)
 findInfoList = ['performSynteny','performCircos', 'performALLMAPS', 'querySpecies', 'NameAnalysis','writeFastaOut', 'Loci_Threshold',
-                'pathPython','pathSystem', 'pathALLMAPS', 'BdPath', 'pathUnOut', 'pathGFF', 'pathSort', 'genomePath',
+                'pathPython','pathSystem', 'pathALLMAPS', 'BdPath', 'pathUnOut', 'pathGFF', 'pathSort', 'BPsMergeDist', 'genomePath',
                 'karyotypesFilesPath','circosConfigFilesPath', 'LinkPath', 'circosOutPath', 'BPsThreshold',
                 'multipleSeqAlignFastasPath','fastaOutputName', 'allMAPImageOutputPath', 'online','projectName',
                 'nerscUsername','nohup'] # find the following information
@@ -61,7 +61,7 @@ for i in range(len(findInfoList)): # find the paths/info of above queries
 
 # assign values
 (performSynteny, performCircos, performALLMAPS,querySpecies, NameAnalysis, writeFastaOut, Loci_Threshold, pathPython,
- pathSystem,pathALLMAPS, BdPath, pathUnOut, pathGFF, pathSort, genomePath, karyotypesFilesPath,
+ pathSystem,pathALLMAPS, BdPath, pathUnOut, pathGFF, pathSort, BPsMergeDist , genomePath, karyotypesFilesPath,
  circosConfigFilesPath, LinkPath, circosOutPath, BPsThreshold, multipleSeqAlignFastasPath,
  fastaOutputName, allMAPImageOutputPath, online, projectName, nerscUsername, nohup) = tuple(findInfoList)
 
@@ -193,8 +193,13 @@ if int(online):
     except:
         print 'Unable to load online modules...'
 
+try:
+    int(BPsMergeDist)
+except:
+    BPsMergeDist = '100000'
+
 # write syntenic Config text
-generateIntAnalysisConfig('syntenyAnalysis',(NameAnalysis,writeFastaOut,Loci_Threshold,pathPython,pathUnOut,pathSort,
+generateIntAnalysisConfig('syntenyAnalysis',(NameAnalysis,writeFastaOut,Loci_Threshold,pathPython,pathUnOut,pathSort, BPsMergeDist,
                                              NameAnalysis,multipleSeqAlignFastasPath,syntenicFilesText,genomePath,
                                              genomeFilesText))
 

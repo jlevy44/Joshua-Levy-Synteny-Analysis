@@ -13,6 +13,7 @@ Loci_Threshold = %s
 pathPythonModules = %s
 pathUnOut = %s
 pathSort = %s
+BPsMergeDist = %s
 %s Test Analysis path = %s
 %sStop
 
