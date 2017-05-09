@@ -5,7 +5,8 @@ from pybedtools import BedTool
 import subprocess
 import numpy as np
 import shutil
-
+import operator
+from ete2 import Tree
 def parseConfigFindList(stringFind,configFile):
     """parseConfigFindList inputs a particular string to find and read file after and a configuration file object
     outputs list of relevant filenames"""
@@ -22,6 +23,14 @@ def parseConfigFindList(stringFind,configFile):
                 read = 1 # if find string specified, begin reading lines
     configFile.seek(0)
     return listOfItems
+
+def parseConfigFindPath(stringFind,configFile):
+    """findPath will find path of associated specified string or info from config file"""
+    for line in configFile:
+        if stringFind in line: # if find string specified, return pathname or info
+            configFile.seek(0)
+            return line.split()[-1].strip('\n')
+    configFile.seek(0)
 
 confDict = {'ticks':"""show_ticks          = yes
 show_tick_labels    = yes
@@ -98,9 +107,11 @@ for conf in confDict.keys():
     with open(conf+'.conf','w') as f:
         f.write(confDict[conf])
         f.close()
-
 with open('configCNSAnalysis.txt','r') as f:
     inputSpecies = parseConfigFindList('masterListSpecies', f)
+    inputTree = parseConfigFindPath('inputTree',f)
+
+
 protId = defaultdict(list)
 for line in inputSpecies:
     if line:
@@ -110,6 +121,20 @@ for line in inputSpecies:
 #protId = {'Bdistachyon':'314','Bstacei':'316','Osativa':'323','Phallii':'308','Pvirgatum':'383','Sbicolor':'313','Sitalica':'312'}
 #inputList = sys.argv
 inputList = protId.keys()#['Bdistachyon','Bstacei','Osativa','Phallii','Pvirgatum','Sbicolor','Sitalica']
+
+try:
+    with open(inputTree,'r') as f:
+        speciesTree = Tree(f.read())
+        inputSpecies = [node.name for node in speciesTree.traverse('preorder') if node.name]
+        inputList2 = []
+        for species in inputSpecies:
+            if species in inputList:
+                inputList2.append(species)
+        inputList = inputList2
+except:
+    pass
+
+
 listFiles = os.listdir('.')
 speciesDict = defaultdict(list)
 """files = [[file for file in listFiles if species in file and 'Conserved_CDS' in file][0],
@@ -124,13 +149,17 @@ for species in inputList:
                                 'heatmap.%s.txt'%species,open('heatmap.%s.txt'%species,'w')]
 generateRadii = np.linspace(0.40,0.80,len(speciesDict.keys())+1)
 totalNumberSpecies = float(len(speciesDict.keys()))
-for species in speciesDict.keys():
+for species in inputList:
     histInterval = defaultdict(list)
     with open([file for file in listFiles if protId[species] in file and file.endswith('.fai')][0],'r') as f:
+        chromCount = 0
         for line in f:
+            chromCount+=1
             #bedread = '\n'.join('\t'.join('%s\t%d\t%d'%tuple([line.split('\t')[0]]+sorted(np.vectorize(lambda x: int(x))(line.split('\t')[1:3])))))
             interval = sorted(np.vectorize(lambda x: int(x))(line.split('\t')[1:3]))
             histInterval[line.split('\t')[0]] = list(np.arange(0.,interval[-1],250000.)) + [interval[-1]]
+            if chromCount > 22:
+                break
         bedHist = BedTool('\n'.join('\n'.join('\t'.join([key] + [str(int(x)) for x in [histInterval[key][i],histInterval[key][i+1]]]) for i in range(len(histInterval[key])-1)) for key in histInterval.keys()),from_string=True)
     print speciesDict[species][1]
     with open(speciesDict[species][1],'r') as f:
@@ -141,6 +170,19 @@ for species in speciesDict.keys():
             if line:
                 lineList = line.split('\t')
                 f.write('\t'.join(lineList[0:3])+'\t%f'%(float(lineList[-1])/(float(lineList[2])-float(lineList[1])))+'\n')
+    transposonDensityFile = next((file for file in os.listdir('.') if '%s_transposonDensity' % protId[species] in file and (file.endswith('.gff') or file.endswith('.gff2') or file.endswith('.gff3'))), ['emptyDensity.txt'])
+    if transposonDensityFile != 'emptyDensity.txt': #FIXME start here
+        with open(transposonDensityFile, 'r') as f:
+            #print 'hello'
+            #print '\n'.join('\t'.join(operator.itemgetter(0, 3, 4)(line.split('\t'))) for line in f.readlines())
+            bedTrans = bedHist.intersect(BedTool('\n'.join('\t'.join(operator.itemgetter(0, 3, 4)(line.split('\t'))) for line in f.readlines()),from_string=True).sort().merge(),wao = True).merge(c=7,o='sum',d=-1)
+        with open('%s_transposonDensity.bed'%protId[species],'w') as f:
+            for line in str(bedTrans).split('\n'):
+                if line:
+                    lineList = line.split('\t')
+                    f.write('\t'.join(lineList[0:3])+'\t%f'%(float(lineList[-1])/(float(lineList[2])-float(lineList[1])))+'\n')
+    else:
+        open('%s_transposonDensity.bed' % protId[species],'w').close()
     for species2 in speciesDict.keys():
         speciesDict[species2][-1].close()
         speciesDict[species2][-1] = open(speciesDict[species2][-2],'w')
@@ -168,8 +210,8 @@ for species in speciesDict.keys():
         f.close()
     with open('histogramCount%s.txt'%species,'r') as f:
         bedHist2 = BedTool(f.read(), from_string=True).sort().merge(c=4,o='mean').saveas('histogramCount%s.txt'%species)
-        bedSpeciesHist = bedHist.intersect(bedHist2, wao=True).sort().merge(c=[7,8], o=['sum','sum'], d=-1)
-    with open('histogramCount%s.txt'%species,'w') as f:
+        bedSpeciesHist = bedHist.intersect(bedHist2, wao=True).sort().merge(c=7, o='sum', d=-1).saveas('histogramCount%s.txt'%species)#.merge(c=[7,8], o=['sum','sum'], d=-1)
+    """with open('histogramCount%s.txt'%species,'w') as f:
         for line in str(bedSpeciesHist).split('\n'):
             if line:
                 #if not float(line.split('\t')[3]):
@@ -179,6 +221,7 @@ for species in speciesDict.keys():
                 else:
                     f.write('\t'.join(
                         line.split('\t')[0:3] + [str(float(line.split('\t')[3]))]) + '\n')
+    """
     for species2 in speciesDict.keys():
         speciesDict[species2][-1].close()
         with open(speciesDict[species2][-2],'r') as f:
@@ -238,30 +281,55 @@ show = no
 
 <plot>
 show         = conf(show_histogram)
-type         = histogram
+type         = heatmap
 file         = %s
-thickness    = 2
-#color        = black
-fill_under   = yes
-fill_color   = blue
+min = 0
+max = 0.45
+orientation  = out
+thickness    = 1
+padding = 1
+color        = purples-9-seq
+color_mapping = 1
+#fill_under   = yes
+#fill_color   = green
 r0           = 0.80r
-r1           = 0.90r
-orientation = out
+r1           = 0.85r
 max_gap      = 5u
 z = 10
 </plot>
 
 <plot>
 show         = conf(show_histogram)
-type         = histogram
+type         = heatmap
 file         = %s
 orientation  = out
 thickness    = 1
-#color        = black
-fill_under   = yes
-fill_color   = green
+padding = 1
+color        = reds-9-seq
+color_mapping = 1
+#fill_under   = yes
+#fill_color   = green
+r0           = 0.85r
+r1           = 0.90r
+max_gap      = 5u
+z = 10
+</plot>
+
+<plot>
+show         = conf(show_histogram)
+type         = heatmap
+file         = %s
+min = 0
+max = 0.45
+orientation  = out
+thickness    = 1
+padding = 1
+color        = blues-9-seq
+color_mapping = 1
+#fill_under   = yes
+#fill_color   = green
 r0           = 0.90r
-r1           = 1r
+r1           = 0.95r
 max_gap      = 5u
 z = 10
 </plot>
@@ -271,18 +339,17 @@ z = 10
 data_out_of_range* = trim"""%(os.getcwd()+'/'+speciesDict[species][2],'\n'.join("""<plot>
 show             = conf(show_heatmap)
 type             = heatmap
-layers      = 1
+min = 0
+max = 0.1
 margin      = 0.02u
 #orientation = out
-color = white, spectral-7-div, grey
-color_mapping = 2
+color = white, spectral-11-div, grey
+color_mapping = 1
 thickness   = 1
 padding     = 1
-min = 0
-max = 1
 #color            = black
 #fill_color = yellow
-stroke_thickness = 5
+#stroke_thickness = 5
 #scale_log_base   = 0.25
 #stroke_color     = black
 file             = %s
@@ -299,7 +366,7 @@ r1             = %fr
 #color         = black
 #</rule>
 #</rules>
-</plot>"""%(os.getcwd()+'/'+'heatmap.'+speciesDict.keys()[i]+'.txt',generateRadii[i],generateRadii[i+1]) for i in range(len(speciesDict.keys()))),os.getcwd()+'/'+'histogramCount%s.txt'%(species),os.getcwd()+'/'+species+'_geneDensity.txt')
+</plot>"""%(os.getcwd()+'/'+'heatmap.'+inputList[i]+'.txt',generateRadii[i],generateRadii[i+1]) for i in range(len(speciesDict.keys()))),os.getcwd()+'/'+'%s_transposonDensity.bed'%protId[species],os.getcwd()+'/'+'histogramCount%s.txt'%(species),os.getcwd()+'/'+species+'_geneDensity.txt')
     with open('circos.conf','w') as f:
         f.write(circosconf)
         f.close()
@@ -541,7 +608,55 @@ extend_bin = no
 
 </plots>
 <<include etc/housekeeping.conf>>
-data_out_of_range* = trim"""#%(os.getcwd()+'/'+speciesDict[species][2],'\n'.join("""<plot>
+data_out_of_range* = trim
+
+
+
+
+<plot>
+show         = conf(show_histogram)
+type         = histogram
+file         = %s
+thickness    = 2
+#color        = black
+fill_under   = yes
+fill_color   = blue
+r0           = 0.80r
+r1           = 0.95r
+orientation = out
+max_gap      = 5u
+z = 10
+</plot>
+
+<plot>
+show         = conf(show_histogram)
+type         = histogram
+file         = %s
+thickness    = 2
+#color        = black
+fill_under   = yes
+fill_color   = blue
+r0           = 0.85r
+r1           = 0.90r
+orientation = out
+max_gap      = 5u
+z = 10
+</plot>
+
+<plot>
+show         = conf(show_histogram)
+type         = histogram
+file         = %s
+orientation  = out
+thickness    = 1
+#color        = black
+fill_under   = yes
+fill_color   = green
+r0           = 0.90r
+r1           = 0.95r
+max_gap      = 5u
+z = 10
+</plot>"""#%(os.getcwd()+'/'+speciesDict[species][2],'\n'.join("""<plot>
 #<<include r0r1.conf>>
 #file             = %sheatmap.%s.txt
 #</plot>"""%(os.getcwd()+'/',species2) for species2 in speciesDict.keys()),os.getcwd()+'/'+'histogramCount%s.txt' %species,os.getcwd()+'/'+'%s_geneDensity.txt'%species)

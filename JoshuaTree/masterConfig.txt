@@ -5,32 +5,34 @@ performALLMAPS = 0
 
 
 # query species Name
-querySpecies = 316
+querySpecies = 314
 
 # important info for all configuration Files
-NameAnalysis = Bs316
+NameAnalysis = Bd314noWeird
 writeFastaOut = 1
 Loci_Threshold = 4
 pathPython = /global/u2/j/jlevy/python_modules
 pathSystem = /global/u2/j/jlevy/virtualBin
-pathALLMAPS = /global/projectb/scratch/jlevy/Spring2017/Synteny/BhybridumNew/Bs316/allMAPSAnalysis/
-BdPath = /global/projectb/scratch/jlevy/Spring2017/Synteny/BhybridumNew/Bs316/BdFiles/
-pathUnOut = /global/projectb/scratch/jlevy/Spring2017/Synteny/BhybridumNew/Bs316/UnOutFiles/
-pathGFF = /global/projectb/scratch/jlevy/Spring2017/Synteny/BhybridumNew/Bs316/GFFfiles/
-pathSort = /global/projectb/scratch/jlevy/Spring2017/Synteny/BhybridumNew/Bs316/SortFiles/
+pathALLMAPS = /global/projectb/scratch/jlevy/Spring2017/Synteny/BhybridumNew/Bd314noWeird/allMAPSAnalysis/
+BdPath = /global/projectb/scratch/jlevy/Spring2017/Synteny/BhybridumNew/Bd314noWeird/BdFiles/
+pathUnOut = /global/projectb/scratch/jlevy/Spring2017/Synteny/BhybridumNew/Bd314noWeird/UnOutFiles/
+pathGFF = /global/projectb/scratch/jlevy/Spring2017/Synteny/BhybridumNew/Bd314noWeird/GFFfiles/
+pathSort = /global/projectb/scratch/jlevy/Spring2017/Synteny/BhybridumNew/Bd314noWeird/SortFiles/
 BPsMergeDist = xx
-genomePath = /global/projectb/scratch/jlevy/Spring2017/Synteny/BhybridumNew/Bs316/Genomes/
-karyotypesFilesPath = /global/projectb/scratch/jlevy/Spring2017/Synteny/BhybridumNew/Bs316/CircosInputs/Data/Karyotypes/
-circosConfigFilesPath = /global/projectb/scratch/jlevy/Spring2017/Synteny/BhybridumNew/Bs316/CircosInputs/ConfigFiles/
-LinkPath = /global/projectb/scratch/jlevy/Spring2017/Synteny/BhybridumNew/Bs316/CircosInputs/Data/Links/
-circosOutPath = /global/projectb/scratch/jlevy/Spring2017/Synteny/BhybridumNew/Bs316/CircosOutputs/
+genomePath = /global/projectb/scratch/jlevy/Spring2017/Synteny/BhybridumNew/Bd314noWeird/Genomes/
+karyotypesFilesPath = /global/projectb/scratch/jlevy/Spring2017/Synteny/BhybridumNew/Bd314noWeird/CircosInputs/Data/Karyotypes/
+circosConfigFilesPath = /global/projectb/scratch/jlevy/Spring2017/Synteny/BhybridumNew/Bd314noWeird/CircosInputs/ConfigFiles/
+LinkPath = /global/projectb/scratch/jlevy/Spring2017/Synteny/BhybridumNew/Bd314noWeird/CircosInputs/Data/Links/
+circosOutPath = /global/projectb/scratch/jlevy/Spring2017/Synteny/BhybridumNew/Bd314noWeird/CircosOutputs/
 BPsThreshold = 300000
-multipleSeqAlignFastasPath = /global/projectb/scratch/jlevy/Spring2017/Synteny/BhybridumNew/Bs316/FastaOut/
+multipleSeqAlignFastasPath = /global/projectb/scratch/jlevy/Spring2017/Synteny/BhybridumNew/Bd314noWeird/FastaOut/
 fastaOutputName = xxx
-allMAPImageOutputPath = /global/projectb/scratch/jlevy/Spring2017/Synteny/BhybridumNew/Bs316/allMAPSAnalysis/ALLMAPS_Chromosome_Images/
+allMAPImageOutputPath = /global/projectb/scratch/jlevy/Spring2017/Synteny/BhybridumNew/Bd314noWeird/allMAPSAnalysis/ALLMAPS_Chromosome_Images/
 online = 1
 projectName = plant-analysis.p
 nerscUsername = jlevy
+cactusRun = 1
+cactusFolder = /global/projectb/scratch/jlevy/Spring2017/Synteny/BhybridumNew/Bd314noWeird/CactusRun/
 
 Weights info (assign higher value for closer genetic relative)
 314 15

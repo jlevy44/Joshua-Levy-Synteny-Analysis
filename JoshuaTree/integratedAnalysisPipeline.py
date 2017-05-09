@@ -54,7 +54,7 @@ findInfoList = ['performSynteny','performCircos', 'performALLMAPS', 'querySpecie
                 'pathPython','pathSystem', 'pathALLMAPS', 'BdPath', 'pathUnOut', 'pathGFF', 'pathSort', 'BPsMergeDist', 'genomePath',
                 'karyotypesFilesPath','circosConfigFilesPath', 'LinkPath', 'circosOutPath', 'BPsThreshold',
                 'multipleSeqAlignFastasPath','fastaOutputName', 'allMAPImageOutputPath', 'online','projectName',
-                'nerscUsername','nohup'] # find the following information
+                'nerscUsername','nohup','cactusRun','cactusFolder'] # find the following information
  # list of query strings into config path finder
 for i in range(len(findInfoList)): # find the paths/info of above queries
     findInfoList[i] = parseConfigFindPath(findInfoList[i], masterConfigFile)
@@ -63,7 +63,7 @@ for i in range(len(findInfoList)): # find the paths/info of above queries
 (performSynteny, performCircos, performALLMAPS,querySpecies, NameAnalysis, writeFastaOut, Loci_Threshold, pathPython,
  pathSystem,pathALLMAPS, BdPath, pathUnOut, pathGFF, pathSort, BPsMergeDist , genomePath, karyotypesFilesPath,
  circosConfigFilesPath, LinkPath, circosOutPath, BPsThreshold, multipleSeqAlignFastasPath,
- fastaOutputName, allMAPImageOutputPath, online, projectName, nerscUsername, nohup) = tuple(findInfoList)
+ fastaOutputName, allMAPImageOutputPath, online, projectName, nerscUsername, nohup, cactusRun,cactusFolder) = tuple(findInfoList)
 
 
 
@@ -397,3 +397,14 @@ if int(performAltAllMaps): # if perform alternative ALLMAPS, RECOMMENDED over re
         except:
             print 'Unable to run allmaps analysis.'
             exit()
+
+try:
+    if int(cactusRun):
+        for file in os.listdir(multipleSeqAlignFastasPath):
+            if file.endswith('fasta'):
+                shutil.copy(file,cactusFolder+'FastaFiles')
+        print 'Remember to have grassnewick file in place!!!'
+        os.chdir(cactusFolder)
+        subprocess.call('sh runcac.sh',shell = True)
+except:
+    print 'Error running cactus...'
