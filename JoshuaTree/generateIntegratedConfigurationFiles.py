@@ -14,6 +14,7 @@ pathPythonModules = %s
 pathUnOut = %s
 pathSort = %s
 BPsMergeDist = %s
+softMasked = %s
 %s Test Analysis path = %s
 %sStop
 

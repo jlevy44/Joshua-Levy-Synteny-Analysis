@@ -33,6 +33,7 @@ def parseConfigFindList(stringFind,configFile):
                 listOfItems.append(line.strip('\n'))
             if stringFind in line:
                 read = 1 # if find string specified, begin reading lines
+    configFile.seek(0)
     return listOfItems
 
 def parseConfigFindPath(stringFind,configFile):
@@ -41,6 +42,7 @@ def parseConfigFindPath(stringFind,configFile):
         if stringFind in line: # if find string specified, return pathname or specific value trying to find
             configFile.seek(0)
             return line.split()[-1].strip('\n')
+    configFile.seek(0)
 
 
 # open master configuration file
@@ -51,7 +53,7 @@ masterConfigFile = open('masterConfig.txt','r')
 # grab the following information from the configuration file
 weightsList = parseConfigFindList('Weights info',masterConfigFile)
 findInfoList = ['performSynteny','performCircos', 'performALLMAPS', 'querySpecies', 'NameAnalysis','writeFastaOut', 'Loci_Threshold',
-                'pathPython','pathSystem', 'pathALLMAPS', 'BdPath', 'pathUnOut', 'pathGFF', 'pathSort', 'BPsMergeDist', 'genomePath',
+                'pathPython','pathSystem', 'pathALLMAPS', 'BdPath', 'pathUnOut', 'pathGFF', 'pathSort', 'BPsMergeDist', 'softMasked', 'genomePath',
                 'karyotypesFilesPath','circosConfigFilesPath', 'LinkPath', 'circosOutPath', 'BPsThreshold',
                 'multipleSeqAlignFastasPath','fastaOutputName', 'allMAPImageOutputPath', 'online','projectName',
                 'nerscUsername','nohup','cactusRun','cactusFolder'] # find the following information
@@ -61,7 +63,7 @@ for i in range(len(findInfoList)): # find the paths/info of above queries
 
 # assign values
 (performSynteny, performCircos, performALLMAPS,querySpecies, NameAnalysis, writeFastaOut, Loci_Threshold, pathPython,
- pathSystem,pathALLMAPS, BdPath, pathUnOut, pathGFF, pathSort, BPsMergeDist , genomePath, karyotypesFilesPath,
+ pathSystem,pathALLMAPS, BdPath, pathUnOut, pathGFF, pathSort, BPsMergeDist , softmask, genomePath, karyotypesFilesPath,
  circosConfigFilesPath, LinkPath, circosOutPath, BPsThreshold, multipleSeqAlignFastasPath,
  fastaOutputName, allMAPImageOutputPath, online, projectName, nerscUsername, nohup, cactusRun,cactusFolder) = tuple(findInfoList)
 
@@ -199,7 +201,7 @@ except:
     BPsMergeDist = '100000'
 
 # write syntenic Config text
-generateIntAnalysisConfig('syntenyAnalysis',(NameAnalysis,writeFastaOut,Loci_Threshold,pathPython,pathUnOut,pathSort, BPsMergeDist,
+generateIntAnalysisConfig('syntenyAnalysis',(NameAnalysis,writeFastaOut,Loci_Threshold,pathPython,pathUnOut,pathSort, BPsMergeDist,softmask,
                                              NameAnalysis,multipleSeqAlignFastasPath,syntenicFilesText,genomePath,
                                              genomeFilesText))
 

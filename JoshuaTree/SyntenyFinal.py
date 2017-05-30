@@ -324,6 +324,8 @@ def syntenicStructure(): #input N or K for subgenome, will generalize later
             if 'BPsMergeDist' in line:
                 BPsMergeDist = line.split()[-1]
                 print line
+            if 'softMasked' in line:
+                softmask = line.split()[-1]
             if read == 1:
                 if 'Stop' in line:
                     break # read lines until stop
@@ -345,6 +347,10 @@ def syntenicStructure(): #input N or K for subgenome, will generalize later
         BPsMergeDist = int(BPsMergeDist)
     except:
         BPsMergeDist = 100000
+    try:
+        softmask = int(softmask)
+    except:
+        softmask = 0
     print BPsMergeDist
     synTupFile.close()
 
@@ -438,19 +444,34 @@ def syntenicStructure(): #input N or K for subgenome, will generalize later
                     #    a=1
                 # for each output tuple for one Synteny across the merged comparison final bed structure, output info/
                 # actual DNA sequence to fasta under appropriate header
-                for fastaOutputTuple in fastaOutputTuples:
-                    try:
-                        # eliminate reordering of gene coordinates for now... unless drawing error file and need debug
-                        #if int(fastaOutputTuple[2]) > int(fastaOutputTuple[3]): #FIXME!!!
-                        #    print fastaOutputTuple
-                        #    fastaOutputTuple[2],fastaOutputTuple[3] = fastaOutputTuple[3],fastaOutputTuple[2]
-                        # header to outputted sequence > Species Chromosome start coord (xi) end coord xf
-                        fastaOutFile.write('> %s %s %s %s\n' %fastaOutputTuple)
-                        # writing the actual sequence
-                        fastaOutFile.write(softmaskedOutput(str(fastaObjectStructure[fastaOutputTuple[0]]
-                                            [fastaOutputTuple[1]][int(fastaOutputTuple[2]):int(fastaOutputTuple[3])]))+'\n')
-                    except: # if not able to write
-                        errorFile.write(str(fastaOutputTuple) + ('\n')) # search through sort2 file to debug error
+                if softmask:
+                    for fastaOutputTuple in fastaOutputTuples:
+                        try:
+                            # eliminate reordering of gene coordinates for now... unless drawing error file and need debug
+                            #if int(fastaOutputTuple[2]) > int(fastaOutputTuple[3]): #FIXME!!!
+                            #    print fastaOutputTuple
+                            #    fastaOutputTuple[2],fastaOutputTuple[3] = fastaOutputTuple[3],fastaOutputTuple[2]
+                            # header to outputted sequence > Species Chromosome start coord (xi) end coord xf
+                            fastaOutFile.write('> %s %s %s %s\n' %fastaOutputTuple)
+                            # writing the actual sequence
+                            fastaOutFile.write(softmaskedOutput(str(fastaObjectStructure[fastaOutputTuple[0]]
+                                                [fastaOutputTuple[1]][int(fastaOutputTuple[2]):int(fastaOutputTuple[3])]))+'\n')
+                        except: # if not able to write
+                            errorFile.write(str(fastaOutputTuple) + ('\n')) # search through sort2 file to debug error
+                else:
+                    for fastaOutputTuple in fastaOutputTuples:
+                        try:
+                            # eliminate reordering of gene coordinates for now... unless drawing error file and need debug
+                            #if int(fastaOutputTuple[2]) > int(fastaOutputTuple[3]): #FIXME!!!
+                            #    print fastaOutputTuple
+                            #    fastaOutputTuple[2],fastaOutputTuple[3] = fastaOutputTuple[3],fastaOutputTuple[2]
+                            # header to outputted sequence > Species Chromosome start coord (xi) end coord xf
+                            fastaOutFile.write('> %s %s %s %s\n' %fastaOutputTuple)
+                            # writing the actual sequence
+                            fastaOutFile.write(str(fastaObjectStructure[fastaOutputTuple[0]]
+                                                [fastaOutputTuple[1]][int(fastaOutputTuple[2]):int(fastaOutputTuple[3])])+'\n')
+                        except: # if not able to write
+                            errorFile.write(str(fastaOutputTuple) + ('\n')) # search through sort2 file to debug error
                 fastaOutFile.close()
             count += 1 # change cound to change title of fasta out file
         errorFile.close()

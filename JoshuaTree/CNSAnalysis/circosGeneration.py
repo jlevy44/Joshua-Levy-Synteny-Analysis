@@ -7,6 +7,20 @@ import numpy as np
 import shutil
 import operator
 from ete2 import Tree
+
+e = sys.argv
+print e
+try:
+    maxInner = float(e[1])
+except:
+    maxInner = 0.3
+try:
+    analysisCompare = int(e[2])
+except:
+    analysisCompare = 0
+
+print 'maxInner',maxInner
+print analysisCompare
 def parseConfigFindList(stringFind,configFile):
     """parseConfigFindList inputs a particular string to find and read file after and a configuration file object
     outputs list of relevant filenames"""
@@ -150,231 +164,256 @@ for species in inputList:
 generateRadii = np.linspace(0.40,0.80,len(speciesDict.keys())+1)
 totalNumberSpecies = float(len(speciesDict.keys()))
 for species in inputList:
-    histInterval = defaultdict(list)
-    with open([file for file in listFiles if protId[species] in file and file.endswith('.fai')][0],'r') as f:
-        chromCount = 0
-        for line in f:
-            chromCount+=1
-            #bedread = '\n'.join('\t'.join('%s\t%d\t%d'%tuple([line.split('\t')[0]]+sorted(np.vectorize(lambda x: int(x))(line.split('\t')[1:3])))))
-            interval = sorted(np.vectorize(lambda x: int(x))(line.split('\t')[1:3]))
-            histInterval[line.split('\t')[0]] = list(np.arange(0.,interval[-1],250000.)) + [interval[-1]]
-            if chromCount > 22:
-                break
-        bedHist = BedTool('\n'.join('\n'.join('\t'.join([key] + [str(int(x)) for x in [histInterval[key][i],histInterval[key][i+1]]]) for i in range(len(histInterval[key])-1)) for key in histInterval.keys()),from_string=True)
-    print speciesDict[species][1]
-    with open(speciesDict[species][1],'r') as f:
-        bedGenes = BedTool(f.read(),from_string=True).sort().merge()
-    bedHistGeneFinal = bedHist.intersect(bedGenes,wao=True).sort().merge(c=7,o='sum',d=-1)
-    with open('%s_geneDensity.txt'%(species),'w') as f:
-        for line in str(bedHistGeneFinal).split('\n'):
-            if line:
-                lineList = line.split('\t')
-                f.write('\t'.join(lineList[0:3])+'\t%f'%(float(lineList[-1])/(float(lineList[2])-float(lineList[1])))+'\n')
-    transposonDensityFile = next((file for file in os.listdir('.') if '%s_transposonDensity' % protId[species] in file and (file.endswith('.gff') or file.endswith('.gff2') or file.endswith('.gff3'))), ['emptyDensity.txt'])
-    if transposonDensityFile != 'emptyDensity.txt': #FIXME start here
-        with open(transposonDensityFile, 'r') as f:
-            #print 'hello'
-            #print '\n'.join('\t'.join(operator.itemgetter(0, 3, 4)(line.split('\t'))) for line in f.readlines())
-            bedTrans = bedHist.intersect(BedTool('\n'.join('\t'.join(operator.itemgetter(0, 3, 4)(line.split('\t'))) for line in f.readlines()),from_string=True).sort().merge(),wao = True).merge(c=7,o='sum',d=-1)
-        with open('%s_transposonDensity.bed'%protId[species],'w') as f:
-            for line in str(bedTrans).split('\n'):
+    try:
+        histInterval = defaultdict(list)
+        with open([file for file in listFiles if protId[species] in file and file.endswith('.fai')][0],'r') as f:
+            chromCount = 0
+            for line in f:
+                chromCount+=1
+                #bedread = '\n'.join('\t'.join('%s\t%d\t%d'%tuple([line.split('\t')[0]]+sorted(np.vectorize(lambda x: int(x))(line.split('\t')[1:3])))))
+                interval = sorted(np.vectorize(lambda x: int(x))(line.split('\t')[1:3]))
+                histInterval[line.split('\t')[0]] = list(np.arange(0.,interval[-1],250000.)) + [interval[-1]]
+                if chromCount > 22:
+                    break
+            bedHist = BedTool('\n'.join('\n'.join('\t'.join([key] + [str(int(x)) for x in [histInterval[key][i],histInterval[key][i+1]]]) for i in range(len(histInterval[key])-1)) for key in histInterval.keys()),from_string=True)
+        print speciesDict[species][1]
+        with open(speciesDict[species][1],'r') as f:
+            bedGenes = BedTool(f.read(),from_string=True).sort().merge()
+        bedHistGeneFinal = bedHist.intersect(bedGenes,wao=True).sort().merge(c=7,o='sum',d=-1)
+        with open('%s_geneDensity.txt'%(species),'w') as f:
+            for line in str(bedHistGeneFinal).split('\n'):
                 if line:
                     lineList = line.split('\t')
                     f.write('\t'.join(lineList[0:3])+'\t%f'%(float(lineList[-1])/(float(lineList[2])-float(lineList[1])))+'\n')
-    else:
-        open('%s_transposonDensity.bed' % protId[species],'w').close()
-    for species2 in speciesDict.keys():
-        speciesDict[species2][-1].close()
-        speciesDict[species2][-1] = open(speciesDict[species2][-2],'w')
-    with open('histogramCount%s.txt'%species,'w') as f:
-        for i in range(1):#3
-            file = speciesDict[species][i]
-            #file in speciesDict[species][0:3]:
-            with open(file,'r') as bedfile:
-                for line in bedfile:
+        transposonDensityFile = next((file for file in os.listdir('.') if '%s_transposonDensity' % protId[species] in file and (file.endswith('.gff') or file.endswith('.gff2') or file.endswith('.gff3'))), ['emptyDensity.txt'])
+        if transposonDensityFile != 'emptyDensity.txt': #FIXME start here
+            with open(transposonDensityFile, 'r') as f:
+                #print 'hello'
+                #print '\n'.join('\t'.join(operator.itemgetter(0, 3, 4)(line.split('\t'))) for line in f.readlines())
+                bedTrans = bedHist.intersect(BedTool('\n'.join('\t'.join(operator.itemgetter(0, 3, 4)(line.split('\t'))) for line in f.readlines()),from_string=True).sort().merge(),wao = True).merge(c=7,o='sum',d=-1)
+            with open('%s_transposonDensity.bed'%protId[species],'w') as f:
+                for line in str(bedTrans).split('\n'):
+                    if line:
+                        lineList = line.split('\t')
+                        f.write('\t'.join(lineList[0:3])+'\t%f'%(float(lineList[-1])/(float(lineList[2])-float(lineList[1])))+'\n')
+        else:
+            open('%s_transposonDensity.bed' % protId[species],'w').close()
+        for species2 in speciesDict.keys():
+            speciesDict[species2][-1].close()
+            speciesDict[species2][-1] = open(speciesDict[species2][-2],'w')
+        with open('histogramCount%s.txt'%species,'w') as f:
+            for i in range(1):#3
+                file = speciesDict[species][i]
+                #file in speciesDict[species][0:3]:
+                with open(file,'r') as bedfile:
+                    for line in bedfile:
+                        if line:
+                            try:
+                                countSeq = Counter()
+                                for countOfSpecies in line.split('\t')[-1].split(';')[1].split(','):
+                                    countSeq[countOfSpecies.split(':')[0]] = int(countOfSpecies.split(':')[1])
+                                f.write(line[:line.rfind('\t')+1]+str((float(line.split('\t')[2])-float(line.split('\t')[1]))*float(len(set(countSeq.elements())))/totalNumberSpecies)+'\n')
+                                for species2 in countSeq.keys():
+                                    if countSeq[species2] > 0:
+                                        output = str(i+2)
+                                        speciesDict[species2][-1].write(line[:line.rfind('\t')] + '\n')
+                                    else:
+                                        output = '1'
+
+                            except:
+                                pass
+            f.close()
+        with open('histogramCount%s.txt'%species,'r') as f:
+            bedHist2 = BedTool(f.read(), from_string=True).sort().merge(c=4,o='mean').saveas('histogramCount%s.txt'%species)
+            bedSpeciesHist = bedHist.intersect(bedHist2, wao=True).sort().merge(c=7, o='sum', d=-1).saveas('histogramCount%s.txt'%species)#.merge(c=[7,8], o=['sum','sum'], d=-1)
+        """with open('histogramCount%s.txt'%species,'w') as f:
+            for line in str(bedSpeciesHist).split('\n'):
+                if line:
+                    #if not float(line.split('\t')[3]):
+                    #    print line
+                    if line.split('\t')[4] != '0':
+                        f.write('\t'.join(line.split('\t')[0:3]+[str(float(line.split('\t')[3])/float(line.split('\t')[4]))])+'\n')
+                    else:
+                        f.write('\t'.join(
+                            line.split('\t')[0:3] + [str(float(line.split('\t')[3]))]) + '\n')
+        """
+        for species2 in speciesDict.keys():
+            speciesDict[species2][-1].close()
+            with open(speciesDict[species2][-2],'r') as f:
+                reads = f.read()
+            with open(speciesDict[species2][-2],'w') as f2:
+                for line in str(bedHist.intersect(BedTool(reads,from_string=True).sort().merge(),wao=True).sort().merge(c=7,o='sum',d=-1)).split('\n'):
                     if line:
                         try:
-                            countSeq = Counter()
-                            for countOfSpecies in line.split('\t')[-1].split(';')[1].split(','):
-                                countSeq[countOfSpecies.split(':')[0]] = int(countOfSpecies.split(':')[1])
-                            f.write(line[:line.rfind('\t')+1]+str((float(line.split('\t')[2])-float(line.split('\t')[1]))*float(len(set(countSeq.elements())))/totalNumberSpecies)+'\n')
-                            for species2 in countSeq.keys():
-                                if countSeq[species2] > 0:
-                                    output = str(i+2)
-                                    speciesDict[species2][-1].write(line[:line.rfind('\t')] + '\n')
-                                else:
-                                    output = '1'
-
+                            f2.write('\t'.join(line.split('\t')[0:3]+[str(float(line.split('\t')[-1])/250000.)])+'\n')
                         except:
                             pass
-        f.close()
-    with open('histogramCount%s.txt'%species,'r') as f:
-        bedHist2 = BedTool(f.read(), from_string=True).sort().merge(c=4,o='mean').saveas('histogramCount%s.txt'%species)
-        bedSpeciesHist = bedHist.intersect(bedHist2, wao=True).sort().merge(c=7, o='sum', d=-1).saveas('histogramCount%s.txt'%species)#.merge(c=[7,8], o=['sum','sum'], d=-1)
-    """with open('histogramCount%s.txt'%species,'w') as f:
-        for line in str(bedSpeciesHist).split('\n'):
-            if line:
-                #if not float(line.split('\t')[3]):
-                #    print line
-                if line.split('\t')[4] != '0':
-                    f.write('\t'.join(line.split('\t')[0:3]+[str(float(line.split('\t')[3])/float(line.split('\t')[4]))])+'\n')
-                else:
-                    f.write('\t'.join(
-                        line.split('\t')[0:3] + [str(float(line.split('\t')[3]))]) + '\n')
-    """
-    for species2 in speciesDict.keys():
-        speciesDict[species2][-1].close()
-        with open(speciesDict[species2][-2],'r') as f:
-            reads = f.read()
-        with open(speciesDict[species2][-2],'w') as f2:
-            for line in str(bedHist.intersect(BedTool(reads,from_string=True).sort().merge(),wao=True).sort().merge(c=7,o='sum',d=-1)).split('\n'):
-                if line:
-                    try:
-                        f2.write('\t'.join(line.split('\t')[0:3]+[str(float(line.split('\t')[-1])/250000.)])+'\n')
-                    except:
-                        pass
 
-    # now configure circos files
-    print speciesDict[species][2], [(os.getcwd()+'/',species2) for species2 in speciesDict.keys()], os.getcwd()+'/'+'histogramCount%s.txt' %species,os.getcwd()+'/'+'%s_geneDensity.txt'%species
-    circosconf = """
-show_histogram = yes
-show_heatmap   = yes
-use_rules      = yes
+        # now configure circos files
+        print speciesDict[species][2], [(os.getcwd()+'/',species2) for species2 in speciesDict.keys()], os.getcwd()+'/'+'histogramCount%s.txt' %species,os.getcwd()+'/'+'%s_geneDensity.txt'%species
+        if analysisCompare:
+            compareString = """<plot>
+    show         = conf(show_histogram)
+    type         = heatmap
+    file         = %s
+    orientation  = out
+    thickness    = 1
+    padding = 1
+    color        = greens-9-seq
+    color_mapping = 1
+    #fill_under   = yes
+    #fill_color   = green
+    r0           = 0.85r
+    r1           = 0.90r
+    max_gap      = 5u
+    z = 10
+    </plot>"""%(os.getcwd()+'/CompareAnalysis/'+'histogramCount%s.txt'%(species))
+        else:
+            compareString = ''
+        #print compareString
+        circosconf = """
+    show_histogram = yes
+    show_heatmap   = yes
+    use_rules      = yes
 
-<<include colors_fonts_patterns.conf>>
+    <<include colors_fonts_patterns.conf>>
 
-<<include ideogram.conf>>
-<<include ticks.conf>>
-<<include bands.conf>>
-<<include position.conf>>
-<<include label.conf>>
+    <<include ideogram.conf>>
+    <<include ticks.conf>>
+    <<include bands.conf>>
+    <<include position.conf>>
+    <<include label.conf>>
 
 
 
-<image>
-<<include etc/image.conf>>
-</image>
+    <image>
+    <<include etc/image.conf>>
+    </image>
 
-karyotype         = %s
-chromosomes_units = 1000000
-chromosomes_display_default = yes
+    karyotype         = %s
+    chromosomes_units = 1000000
+    chromosomes_display_default = yes
 
-# to see how reversing ideograms work - comment out the chromosomes
-# line below
-#chromosomes       = hs2
+    # to see how reversing ideograms work - comment out the chromosomes
+    # line below
+    #chromosomes       = hs2
 
-# and uncomment the two definitions below
-# - first split hs2 into three ideograms
-# - now reverse the ideogram with tag "b"
-#chromosomes       = hs2[a]:0-60;hs2[b]:70-140;hs2[c]:150-)
-#chromosomes_reverse = b
+    # and uncomment the two definitions below
+    # - first split hs2 into three ideograms
+    # - now reverse the ideogram with tag "b"
+    #chromosomes       = hs2[a]:0-60;hs2[b]:70-140;hs2[c]:150-)
+    #chromosomes_reverse = b
 
-#chromosomes        = hs2[a]:0-30;hs2[b]:50-80;hs2[c]:100-130;hs2[d]:150-180;hs2[e]:190-200;hs2[f]:210-)
-#chromosomes_radius = a:0.95r;b:0.9r;c:0.85r;d:0.8r;e:0.75r;f:0.7r
+    #chromosomes        = hs2[a]:0-30;hs2[b]:50-80;hs2[c]:100-130;hs2[d]:150-180;hs2[e]:190-200;hs2[f]:210-)
+    #chromosomes_radius = a:0.95r;b:0.9r;c:0.85r;d:0.8r;e:0.75r;f:0.7r
 
-<plots>
+    <plots>
 
-show = no
+    show = no
 
 
-%s
+    %s
 
-<plot>
-show         = conf(show_histogram)
-type         = heatmap
-file         = %s
-min = 0
-max = 0.45
-orientation  = out
-thickness    = 1
-padding = 1
-color        = purples-9-seq
-color_mapping = 1
-#fill_under   = yes
-#fill_color   = green
-r0           = 0.80r
-r1           = 0.85r
-max_gap      = 5u
-z = 10
-</plot>
+    %s
 
-<plot>
-show         = conf(show_histogram)
-type         = heatmap
-file         = %s
-orientation  = out
-thickness    = 1
-padding = 1
-color        = reds-9-seq
-color_mapping = 1
-#fill_under   = yes
-#fill_color   = green
-r0           = 0.85r
-r1           = 0.90r
-max_gap      = 5u
-z = 10
-</plot>
+    <plot>
+    show         = conf(show_histogram)
+    type         = heatmap
+    file         = %s
+    orientation  = out
+    thickness    = 1
+    padding = 1
+    color        = reds-9-seq
+    color_mapping = 1
+    #fill_under   = yes
+    #fill_color   = green
+    r0           = 0.80r
+    r1           = 0.85r
+    max_gap      = 5u
+    z = 10
+    </plot>
 
-<plot>
-show         = conf(show_histogram)
-type         = heatmap
-file         = %s
-min = 0
-max = 0.45
-orientation  = out
-thickness    = 1
-padding = 1
-color        = blues-9-seq
-color_mapping = 1
-#fill_under   = yes
-#fill_color   = green
-r0           = 0.90r
-r1           = 0.95r
-max_gap      = 5u
-z = 10
-</plot>
-</plots>
+    <plot>
+    show         = conf(show_histogram)
+    type         = heatmap
+    file         = %s
+    orientation  = out
+    thickness    = 1
+    padding = 1
+    color        = purples-9-seq
+    color_mapping = 1
+    #fill_under   = yes
+    #fill_color   = green
+    r0           = 0.90r
+    r1           = 0.95r
+    max_gap      = 5u
+    min = 0
+    max = 0.45
+    z = 10
+    </plot>
 
-<<include etc/housekeeping.conf>>
-data_out_of_range* = trim"""%(os.getcwd()+'/'+speciesDict[species][2],'\n'.join("""<plot>
-show             = conf(show_heatmap)
-type             = heatmap
-min = 0
-max = 0.1
-margin      = 0.02u
-#orientation = out
-color = white, spectral-11-div, grey
-color_mapping = 1
-thickness   = 1
-padding     = 1
-#color            = black
-#fill_color = yellow
-#stroke_thickness = 5
-#scale_log_base   = 0.25
-#stroke_color     = black
-file             = %s
-r0             = %fr
-r1             = %fr
-#<rules>
-#use = conf(use_rules)
-#<rule>
-#condition     = var(value) == 1
-#color         = white
-#</rule>
-#<rule>
-#condition     = var(value) > 1
-#color         = black
-#</rule>
-#</rules>
-</plot>"""%(os.getcwd()+'/'+'heatmap.'+inputList[i]+'.txt',generateRadii[i],generateRadii[i+1]) for i in range(len(speciesDict.keys()))),os.getcwd()+'/'+'%s_transposonDensity.bed'%protId[species],os.getcwd()+'/'+'histogramCount%s.txt'%(species),os.getcwd()+'/'+species+'_geneDensity.txt')
-    with open('circos.conf','w') as f:
-        f.write(circosconf)
-        f.close()
-    print os.getcwd()+'/'+'circos.conf'
-    print ['circos','-conf',os.getcwd()+'/'+'circos.conf','-outputfile',
-                     species,'-outputdir',os.getcwd()]
-    subprocess.call(['circos','-conf',os.getcwd()+'/'+'circos.conf','-outputfile',species,'-outputdir',os.getcwd()])
+    <plot>
+    show         = conf(show_histogram)
+    type         = heatmap
+    file         = %s
+    min = 0
+    max = 0.45
+    orientation  = out
+    thickness    = 1
+    padding = 1
+    color        = blues-9-seq
+    color_mapping = 1
+    #fill_under   = yes
+    #fill_color   = green
+    r0           = 0.95r
+    r1           = 1.0r
+    max_gap      = 5u
+    z = 10
+    </plot>
+    </plots>
 
+    <<include etc/housekeeping.conf>>
+    data_out_of_range* = trim"""%(os.getcwd()+'/'+speciesDict[species][2],'\n'.join("""<plot>
+    show             = conf(show_heatmap)
+    type             = heatmap
+    min = 0
+    max = %f
+    margin      = 0.02u
+    #orientation = out
+    color = white, spectral-11-div, grey
+    color_mapping = 1
+    thickness   = 1
+    padding     = 1
+    #color            = black
+    #fill_color = yellow
+    #stroke_thickness = 5
+    #scale_log_base   = 0.25
+    #stroke_color     = black
+    file             = %s
+    r0             = %fr
+    r1             = %fr
+    #<rules>
+    #use = conf(use_rules)
+    #<rule>
+    #condition     = var(value) == 1
+    #color         = white
+    #</rule>
+    #<rule>
+    #condition     = var(value) > 1
+    #color         = black
+    #</rule>
+    #</rules>
+    </plot>"""%(maxInner,os.getcwd()+'/'+'heatmap.'+inputList[i]+'.txt',generateRadii[i],generateRadii[i+1]) for i in range(len(speciesDict.keys()))),
+                                  compareString,os.getcwd()+'/'+'histogramCount%s.txt'%(species),os.getcwd()+'/'+'%s_transposonDensity.bed'%protId[species],os.getcwd()+'/'+species+'_geneDensity.txt')
+        with open('circos.conf','w') as f:
+            f.write(circosconf)
+            f.close()
+        print os.getcwd()+'/'+'circos.conf'
+        print ['circos','-conf',os.getcwd()+'/'+'circos.conf','-outputfile',
+                         species,'-outputdir',os.getcwd()]
+        subprocess.call(['circos','-conf',os.getcwd()+'/'+'circos.conf','-outputfile',species,'-outputdir',os.getcwd()])
+    except:
+        print 'Error for '+species
 
 """<plot>
 <<include r0r1.conf>>

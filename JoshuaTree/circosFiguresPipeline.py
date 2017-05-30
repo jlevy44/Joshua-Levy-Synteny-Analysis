@@ -27,7 +27,9 @@ def parseConfigFindPath(stringFind,configFile):
     """findPath will find path of associated specified string"""
     for line in configFile:
         if stringFind in line: # if find string specified, return pathname
+            configFile.seek(0)
             return line.split()[-1].strip('\n')
+    configFile.seek(0)
 
 
 # time to parse config file

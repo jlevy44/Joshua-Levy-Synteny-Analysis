@@ -115,7 +115,7 @@ class speciesClass(): # add information about species that stores name and proty
             if self.speciesNumber in file:
                 self.genome = Fasta(file)
         for file in gffFileList:
-            if self.speciesNumber in file:
+            if self.speciesNumber in file and 'PAC' in file:
                 self.gffFile = file
         self.speciesName = speciesName
         self.speciesShortName = speciesShortName

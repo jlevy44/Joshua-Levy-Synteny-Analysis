@@ -30,6 +30,7 @@ def parseConfigFindPath(stringFind,configFile):
         if stringFind in line: # if find string specified, return pathname or specific value trying to find
             configFile.seek(0)
             return line.split()[-1].strip('\n')
+    configFile.seek(0)
 
 class integratedAnalysis():
     def __init__(self,IntconfigFile,master):
