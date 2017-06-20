@@ -1,0 +1,12 @@
+# Allmaps configuration file
+pythonPath = /global/u2/j/jlevy/python_modules
+systemPath = /global/u2/j/jlevy/virtualBin
+bedPath = /global/projectb/scratch/jlevy/Synteny/ALLMAPS/allMapsJosh2/BdFiles/
+fastaInputName = Bdistachyon_473_v4New.softmasked.tr.fa
+fastaOutputName = newBdGenome
+BedFileList
+PAC4GC.473-PAC2_0.283_10.bed
+PAC4GC.473-PAC2_0.313_10.bed
+PAC4GC.473-PAC2_0.314_10.bed
+PAC4GC.473-PAC2_0.316_10.bed
+Stop

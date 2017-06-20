@@ -1,0 +1,38 @@
+# Circos Figures Config File Joshua Levy
+faiFiles
+Athaliana_167_TAIR9.fa.fai
+Gmax_275_v2.0.softmasked.fa.fai
+Pvirgatum_383_v3.0.softmasked.fa.fai
+Sviridis_311_v1.0.softmasked.fa.fai
+Bdistachyon_283_assembly_v2.0.softmasked.fa.fai
+Osativa_323_v7.0.softmasked.fa.fai
+Sbicolor_313_v3.0.softmasked.fa.fai
+Taestivum_296_v2.softmasked.fa.fai
+Bstacei_316_v1.0.softmasked.fa.fai
+Phallii_308_v2.0.softmasked.fa.fai
+Sitalica_312_v2.softmasked.fa.fai
+mtruncatula_285_mt4.0.softmasked.fa.fai
+Stop
+BedFiles
+PAC2_0.283-PAC2_0.167_5.bed
+PAC2_0.283-PAC2_0.312_5.bed
+PAC2_0.283-PAC2_0.323_5.bed
+PAC2_0.283-PAC2_0.275_5.bed
+PAC2_0.283-PAC2_0.308_5.bed
+PAC2_0.283-PAC2_0.296_5.bed
+PAC2_0.283-PAC2_0.313_5.bed
+PAC2_0.283-PAC2_0.383_5.bed
+PAC2_0.283-PAC2_0.285_5.bed
+PAC2_0.283-PAC2_0.311_5.bed
+PAC2_0.283-PAC2_0.316_5.bed
+Stop
+faiFilePath = /Users/jlevy/Documents/Joshua_Research_JGI/Joshua_Levy_Research_Outputs/DNA_Segment_Extraction/BdistachyonAnalysis/Genomes/
+karyotypesFilesPath = /Users/jlevy/Documents/Joshua_Research_JGI/Joshua_Levy_Research_Outputs/DNA_Segment_Extraction/BdistachyonAnalysis/CircosInputs/Data/Karyotypes/
+BedInputPath = /Users/jlevy/Documents/Joshua_Research_JGI/Joshua_Levy_Research_Outputs/DNA_Segment_Extraction/BdistachyonAnalysis/BdFiles/
+circosConfigFilesPath = /Users/jlevy/Documents/Joshua_Research_JGI/Joshua_Levy_Research_Outputs/DNA_Segment_Extraction/BdistachyonAnalysis/CircosInputs/ConfigFiles/
+LinkPath = /Users/jlevy/Documents/Joshua_Research_JGI/Joshua_Levy_Research_Outputs/DNA_Segment_Extraction/BdistachyonAnalysis/CircosInputs/Data/Links/
+circosOutPath = /Users/jlevy/Documents/Joshua_Research_JGI/Joshua_Levy_Research_Outputs/DNA_Segment_Extraction/BdistachyonAnalysis/CircosOutputs
+pathPythonModules = /global/u2/j/jlevy/python_modules
+BPsThreshold = 100000
+Omissions # 314 and 296
+PAC2_0.283-PAC2_0.314_5.bed
