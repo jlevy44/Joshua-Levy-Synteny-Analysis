@@ -532,7 +532,7 @@ def syntenicStructure(): #input N or K for subgenome, will generalize later
     """
 
 # run K and N subgenome analysis
-syntenicStructure()
+#syntenicStructure()
 
 
 

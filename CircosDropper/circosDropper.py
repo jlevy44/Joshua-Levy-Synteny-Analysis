@@ -49,13 +49,11 @@ for unoutfile in unoutFiles:
             #print targetSortFile
     if bedfile not in os.listdir('.'):
         unout2bed((unoutfile,querySortFile,targetSortFile))
-    linkFile = unoutfile.replace('.unout','.link')
+    linkFile = unoutfile.replace('.unout','.link.txt')
     if linkFile not in os.listdir('.'):
         bed2link(bedfile)
     karyotypeQT = tuple([karyFile for karyFile in karyotypeFiles if querySpecies in karyFile.split('.')[1] or targetSpecies in karyFile.split('.')[1]])
     generateConfigs(karyotypeQT,linkFile)
-    if '%s-%s.png'%karyotypeQT not in os.listdir('.'):
+    if '%s-%s.png'%(querySpecies,targetSpecies) not in os.listdir('.'):
         subprocess.call(['circos', '-conf', 'circos.conf', '-outputfile',
-                     '%s-%s' %karyotypeQT, '-outputdir', '.'])
-
-
+                     '%s-%s' %(querySpecies,targetSpecies), '-outputdir', '.'])

@@ -18,7 +18,7 @@ def fai2karyotype(inputfilename,BPsThreshold=100000):
     #import fai file
     inputFile = open(inputfilename,'r')
     #output karyotype .txt file name
-    outputFilename = 'karyotype.'+speciesNameId+'.txt'
+    outputFilename = 'karyotype.'+protId+'.txt'
     # panicum virgatum and subgenomes # better if P. vir is query species, FIXME may need to change if target speci
     #create karyotype file for species; fai file will be converted
     with open(outputFilename,'w') as outputFile:
@@ -40,10 +40,10 @@ def fai2karyotype(inputfilename,BPsThreshold=100000):
                     outTup1 = outTup1.replace('Bh','Bh%s'%replaceChr)
                 if '_' in lineList[0]:
                     # output name that takes into account scaffolds
-                    outputTuple = (outTup1,outTup1[0]+outTup1.split('_')[-1],lineList[1],chrCount)
+                    outputTuple = (protId+outTup1,outTup1[0]+outTup1.split('_')[-1],lineList[1],chrCount)
                 else:
                     # output chromosome name, chr name, how large chromosome is, and color of chromosome indicated by %d
-                    outputTuple = (outTup1, outTup1, lineList[1], chrCount)
+                    outputTuple = (protId+outTup1, outTup1, lineList[1], chrCount)
                 if 'scaffold_' in line or 'super_' in line or 'ta_' in line:
                     scaffoldOutList += [list(outputTuple)] # separate outputs for scaffolds
                 else:
