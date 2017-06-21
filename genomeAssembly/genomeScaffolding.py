@@ -7,6 +7,7 @@ import subprocess,shutil
 from pybedtools import BedTool
 from jcvi.formats import gff
 from pyfaidx import Fasta
+import time
 
 
 """python genomeScaffolding.py ReferenceBuild sampleBuild  CDSProtID OldCDSGeneName protID1 weight1 protID2 weight2 ..."""
@@ -126,15 +127,19 @@ def buildSamplesv0(sample): #sample = Bdist_xxx_v0.fa
     os.chdir('v0/'+sample)
     fastaNew = sample+'.fa'
     geneNaming = sample.replace('_','') # -t is number of worker threads
-    writeCommands = [binbash,moduleLoads,makeTrashFolder,'samtools faidx %s' %fastaNew,
+    runCommand('rm finishBuild.txt')
+    writeCommands = [binbash,moduleLoads,makeTrashFolder,'rm -r %s %s.gff3.db %s.chromosome *.iit %s.coords'%(geneNaming,geneNaming,geneNaming,geneNaming),
+                     'samtools faidx %s' %fastaNew,
                      'gmap_build --dir=. -d %s %s' % (geneNaming,fastaNew),
                      'gmap --dir=. -d %s -B 5 -A --format=gff3_gene -n 1 -t 6 %s > %s 2> %s' % (
-                     geneNaming, CDSOld, geneNaming + '.gff3', geneNaming + '.log'),
+                     geneNaming, '../../referenceGenomes/%s/'%CDSspecies + CDSOld, geneNaming + '.gff3', geneNaming + '.log'),
                      'python %srenameGenes.py %s %s %s' %(root,geneNaming + '.gff3', CDSgeneNaming ,geneNaming),
                      'python -m jcvi.formats.gff bed --type=mRNA --key=Name %s -o %s' % (geneNaming + '.gff3', sample + '.bed'),
-                     'python -m jcvi.formats.gff load %s %s --feature=CDS --id_attribute=Name -o %s' % (geneNaming + '.gff3', fastaNew,
-                     sample + '.cds'),
-                     ]+linkReferences#'mv %s %s ..'%(sample+'.cds',sample+'.bed') binbash, moduleLoads, makeTrashFolder,
+                     'python %sgff2CDSBed.py %s'%(root,geneNaming + '.gff3'),'sortBed -i %s.CDS.bed > %s.CDS2.bed'%(geneNaming,geneNaming),
+                     'python %sformatBed.py s %s v0 1'%(root,geneNaming+'.CDS2'),'bedtools getfasta -name -fi ./%s -bed %s.CDS2.bed -fo %s.cds'%(fastaNew,geneNaming,sample)
+                     ]+linkReferences+['> finishBuild.txt']#'mv %s %s ..'%(sample+'.cds',sample+'.bed') binbash, moduleLoads, makeTrashFolder,
+    #'python -m jcvi.formats.gff load %s %s --feature=CDS --id_attribute=Name -o %s' % (geneNaming + '.gff3', fastaNew,sample + '.cds'),
+    #'mergeBed -c 4  -i %s.CDS2.bed > %s.CDS.bed'%(geneNaming,geneNaming)
     #print writeCommands
     #print os.getcwd()
     #open('buildSample.sh', 'w').close()
@@ -164,7 +169,15 @@ def buildSamplesv0(sample): #sample = Bdist_xxx_v0.fa
     """
     with open('buildSample.sh', 'w') as f:
         f.write('\n'.join(writeCommands))
-    subprocess.call(['nohup', 'sh', 'buildSample.sh'])
+    #subprocess.call(['nohup', 'sh', 'buildSample.sh'])
+    runCommand('qsub -P plant-analysis.p -N %s -cwd -l high.c -pe pe_slots 16 -e %s %s' % (
+    'build'+sample.split('_')[1], 'ErrFile.txt', 'buildSample.sh'))
+    while True:
+        if os.path.isfile('finishBuild.txt'):
+            break
+        else:
+            time.sleep(10)
+
     os.chdir(root)
 
     """try:
@@ -322,7 +335,8 @@ def generatev1(sample):
     print os.listdir('%s/v1/%s'%(root,sample.replace('v0','v1')))
     if '%snuc.tiling'%CDSspecies not in os.listdir('.'):
         runCommand('sh nucCommand.sh')
-    runCommand('sh constructv1_1.sh')
+    if all(['%s.%s.lifted.anchors' %(sample, ref) in os.listdir('.') and os.stat('%s.%s.lifted.anchors' %(sample, ref)).st_size > 0 for ref in weights.keys()]) == 0:
+        runCommand('sh constructv1_1.sh')
     sampleCount = 0
     for ref in weights.keys():
         sampleCount = replaceGeneNames(sample,ref,sampleCount)
@@ -360,24 +374,43 @@ def formatRef(reference):
 
 sampleDist = [listSamplesv0[x:x+7] for x in xrange(0,len(listSamplesv0),7)]
 print sampleDist
+
+def buildSampv0List(samplist):
+    for sample in samplist:
+        try:
+            buildSamplesv0(sample)
+        except:
+            print 'Error building ' + sample
+
+def formatv0List(samplist):
+    for sample in samplist:
+        try:
+            formatSamplev0(sample)
+        except:
+            print 'Error formatting ' + sample
+
 if __name__ == '__main__':
     with open('output.txt', 'a') as f:
         f.write('Outv1')
-
+    listSamplesv0 = [sample for sample in listSamplesv0 if sample.replace('v0', 'v1') + '.fa' not in os.listdir(
+        '%sv1/%s' % (root, sample.replace('v0', 'v1')))]
+    print len(listSamplesv0) // 6 + 1
+    sampleDist = [listSamplesv0[x:x + len(listSamplesv0) // 6 + 1] for x in
+                  xrange(0, len(listSamplesv0), len(listSamplesv0) // 6 + 1)]
+    print listSamplesv0
+    print sampleDist
     if ReferenceBuild:
-        p = Pool()
+        p = Pool(processes=6)
         p.map(buildReferences, weights.keys())
         p.map(func=formatRef, iterable=weights.keys())
         p.close()
         p.join()
     if sampleBuild:
-        for samplelist in sampleDist:
-            p = Pool()#processes=8
-            print samplelist
-            p.map_async(func=buildSamplesv0, iterable=samplelist)
-            p.map_async(func=formatSamplev0, iterable=samplelist)
-            p.close()
-            p.join()
+        p = Pool(processes=6)#processes=8
+        p.map_async(func=buildSampv0List, iterable=sampleDist)
+        p.map_async(func=formatv0List, iterable=sampleDist)
+        p.close()
+        p.join()
     #for samplelist in sampleDist:
     #    p.map(generatev1, samplelist)
     #for ref in weights.keys():
@@ -399,10 +432,11 @@ def reader(q):
 
 def genv1List(samplelist):
     for sample in samplelist:
+        #generatev1(sample)
         try:
             generatev1(sample)
         except:
-            print 'Error in ' + sample
+            print 'Error gen v1 in ' + sample
 
 if __name__ == '__main__':
     #for samplelist in sampleDist:

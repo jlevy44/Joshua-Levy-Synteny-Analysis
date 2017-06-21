@@ -11,8 +11,10 @@ if refSamp == 'r':
     folder = './referenceGenomes/'
 else:
     folder = './'+version+'/'+sys.argv[2]+'/'
-
-os.chdir(folder)
+try:
+    sys.argv[4] == '1'
+except:
+    os.chdir(folder)
 
 with open(fname,'r') as f:
     bedLines = f.readlines()
