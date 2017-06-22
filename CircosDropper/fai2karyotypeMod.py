@@ -41,6 +41,8 @@ def fai2karyotype(inputfilename,BPsThreshold=100000):
                 if '_' in lineList[0]:
                     # output name that takes into account scaffolds
                     outputTuple = (protId+outTup1,outTup1[0]+outTup1.split('_')[-1],lineList[1],chrCount)
+                    with open('karyotype.'+protId+'.correspondence'+'.txt','a') as f:
+                        f.write('original='+outTup1+'\tmodifiedName=%s\n'%(outTup1[0]+outTup1.split('_')[-1]))
                 else:
                     # output chromosome name, chr name, how large chromosome is, and color of chromosome indicated by %d
                     outputTuple = (protId+outTup1, outTup1, lineList[1], chrCount)

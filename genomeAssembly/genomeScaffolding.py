@@ -223,29 +223,40 @@ listSamplesv1 = buildCorrespondence.values()
 
 print listSamplesv1
 
-def replaceGeneNames(sample,ref,count):
+def replaceGeneNames(sample,ref,count=0,nuc=0):
     refGeneCount = 0
     synmap = '%s.%s.lifted.anchors' % (sample, ref)
+    if nuc:
+        nucAdd = 'nuc'
+        synmap = 'nucMap.bed'
+        refbed = ref + '_nucSyn.bed'
+        sampbed = sample + '_nucSyn.bed'
+        a, b = 1, 0
+    else:
+        nucAdd = ''
+        refbed = ref + '.bed'
+        sampbed = sample + '.bed'
+        a, b = 0, 1
     sampleProt = sample.split('_')[1]
-    with open(ref+'.bed','r') as f:
+    with open(refbed,'r') as f:
         refBedLines = f.readlines()
     refBedOut = []
     refGenes = defaultdict(list)
-    sampGenes = defaultdict(list)
     for line in refBedLines:
         if line:
-            refGenes[line.split('\t')[3]] = ref+'_'+str(refGeneCount)
-            refBedOut.append(line.replace(line.split('\t')[3],ref+'_'+str(refGeneCount)))
+            refGenes[line.split('\t')[3]] = ref+nucAdd+'_'+str(refGeneCount)
+            refBedOut.append(line.replace(line.split('\t')[3],ref+nucAdd+'_'+str(refGeneCount)))
             refGeneCount+=1
     #ref+'_syn'+'.bed',sample+'_%ssyn'%ref+'.bed'
-    with open(sample+'.bed','r') as f:
+    #print refGenes
+    with open(sampbed,'r') as f:
         sampBedLines = f.readlines()
     sampBedOut = []
     sampGenes = defaultdict(list)
     for line in sampBedLines:
         if line:
-            sampGenes[line.split('\t')[3]] = sampleProt+'_'+str(count)
-            sampBedOut.append(line.replace(line.split('\t')[3], sampleProt + '_' + str(count)))
+            sampGenes[line.split('\t')[3]] = sampleProt+nucAdd+'_'+str(count)
+            sampBedOut.append(line.replace(line.split('\t')[3], sampleProt + nucAdd + '_' + str(count)))
             count+=1
     with open(synmap,'r') as f:
         synRead = f.readlines()
@@ -254,13 +265,29 @@ def replaceGeneNames(sample,ref,count):
         if line and '###' not in line:
             try:
                 genes = line.split('\t')
-                synOut.append(line.replace(genes[0],refGenes[genes[0]]).replace(genes[1],sampGenes[genes[1]]))
+                print genes
+                synOut.append(line.replace(genes[0],refGenes[genes[a]]).replace(genes[1],sampGenes[genes[b]]))
             except:
                 with open('Err.txt','a') as f:
                     f.write(line+'\n')
-    for writeTuple in [(ref+'_syn'+'.bed',refBedOut),(sample+'_%ssyn'%ref+'.bed',sampBedOut),(synmap,synOut)]:
-        with open(writeTuple[0],'w') as f:
-            f.writelines(writeTuple[1])
+    """
+    if nuc:
+        print sampBedOut[0:10]
+        print refBedOut[0:10]
+        print sampGenes.items()[0:10]
+        print refGenes.items()[0:10]
+        print synOut[0:10]
+    with open('nucMap.bed','r') as f:
+        print f.readlines()[0:10]
+    """
+    if nuc == 0:
+        for writeTuple in [(ref+'_syn'+'.bed',refBedOut),(sample+'_%ssyn'%ref+'.bed',sampBedOut),(synmap,synOut)]:
+            with open(writeTuple[0],'w') as f:
+                f.writelines(writeTuple[1])
+    else:
+        for writeTuple in [(refbed,refBedOut),(sampbed,sampBedOut),(synmap,synOut)]:
+            with open(writeTuple[0],'w') as f:
+                f.writelines(writeTuple[1])
     return count
 
 def tiling2bed(tilingFile,ref,sample,sampBed):
@@ -279,16 +306,24 @@ def tiling2bed(tilingFile,ref,sample,sampBed):
                 f2.write('\t'.join([lineList[-1]]+map(str,int2)+['_'.join([lineList[-1]]+map(str,int2)),'0','+']) + '\n')
                 genesDict['_'.join([lineList[-1]]+map(str,int2))] = '_'.join([lineList[-2]]+map(str,int1))
     b = BedTool(sample+'_nucSyn.bed').subtract(BedTool(sampBed),A=True)
+    #print b.head()
+    #print genesDict.keys()[0:10]
     origGenes = set(genesDict.keys())
-    remainGenes = set(np.vectorize(lambda line: line[3])(str(b).split('\n')))
+    #print str(b).split('\n')[0:10]
+    #print [ line.split('\t')[3] for line in str(b).split('\n') if line][0:10]
+    remainGenes = set([ line.split('\t')[3] for line in str(b).split('\n') if line])
+    #print list(remainGenes)[0:10]
     BadGenes = list(origGenes - remainGenes)
+    #print BadGenes[0:10]
+    #print len(origGenes), len(remainGenes), len(BadGenes)
+    #exit()
     for gene in BadGenes:
         try:
             del genesDict[gene]
         except:
             pass
     with open('nucMap.bed','w') as f:
-        f.write('\n'.join('%s\t%s\t100'%item for item in genesDict.items()))
+        f.write('\n'.join('%s\t%s\t100'%item for item in genesDict.items() if item))
 
 fastaNucOld = [fasta for fasta in os.listdir('./referenceGenomes/%s'%CDSspecies) if 'cds' not in fasta.lower() and (fasta.endswith('.fa') or fasta.endswith('.fasta'))][0]
 
@@ -304,12 +339,12 @@ def generatev1(sample):
         p = Pool(None)
         p.imap(pairwise, [(sample,ref) for ref in weights.keys()])"""
     with open('weights.txt','w') as f:
-        f.write('\n'.join('%s %d'%(key,weights[key]) for key in weights.keys())+'\n%snuc %d'%(CDSspecies,weights[CDSspecies]-1))
+        f.write('\n'.join([weights.keys()[0]+' %d'%weights[weights.keys()[0]],'%snuc %d'%(CDSspecies,weights[CDSspecies]-1)]+['%s %d'%(key,weights[key]) for key in weights.keys()[1:]]))
     nucCommands = [binbash,moduleLoads]+ ['nucmer -t 6 -p %s %s %s'%(CDSspecies+'nuc',root+'referenceGenomes/%s/'%CDSspecies+fastaNucOld,sample+'.fa'),
                  'delta-filter -m -q -i 85 -u 50 %snuc.delta > %snuc2.delta'%(CDSspecies,CDSspecies),'show-tiling -a %snuc2.delta > %snuc.tiling'%(CDSspecies,CDSspecies)]
     commands1 = [binbash, moduleLoads]+['rm *.anchors *.last *.filtered *.prj']+\
                 ['nohup python -m jcvi.compara.catalog ortholog %s %s\nmv %s %s'%(ref,sample,'%s.%s.lifted.anchors'%(ref,sample),'%s.%s.lifted.anchors'%(sample,ref)) for ref in weights.keys()]
-    commands2=[binbash, moduleLoads]+['\n'.join('python -m jcvi.assembly.syntenypath bed %s --switch --scale=10000 --qbed=%s --sbed=%s -o %s'%('%s.%s.lifted.anchors'%(sample,ref),ref+'_syn'+'.bed',sample+'_%ssyn'%ref+'.bed','%s.synteny.bed'%(ref)) for ref in weights.keys()),
+    commands2=[binbash, moduleLoads]+['rm multipleMapping.bed','\n'.join('python -m jcvi.assembly.syntenypath bed %s --switch --scale=10000 --qbed=%s --sbed=%s -o %s'%('%s.%s.lifted.anchors'%(sample,ref),ref+'_syn'+'.bed',sample+'_%ssyn'%ref+'.bed','%s.synteny.bed'%(ref)) for ref in weights.keys()),
                                       'python -m jcvi.assembly.syntenypath bed %s --switch --scale=10000 --qbed=%s --sbed=%s -o %snuc.synteny.bed'%('nucMap.bed',CDSspecies+'_nucSyn.bed',sample+'_nucSyn.bed',CDSspecies),
          'nohup python -m jcvi.assembly.allmaps mergebed %s -o %s'%(' '.join(['%s.synteny.bed'%(ref) for ref in (weights.keys() + [CDSspecies+'nuc'])]),'multipleMapping.bed')]
     qsub=[binbash,moduleLoads]+['python -m jcvi.assembly.allmaps path multipleMapping.bed %s.fa' % (sample),
@@ -335,16 +370,34 @@ def generatev1(sample):
     print os.listdir('%s/v1/%s'%(root,sample.replace('v0','v1')))
     if '%snuc.tiling'%CDSspecies not in os.listdir('.'):
         runCommand('sh nucCommand.sh')
-    if all(['%s.%s.lifted.anchors' %(sample, ref) in os.listdir('.') and os.stat('%s.%s.lifted.anchors' %(sample, ref)).st_size > 0 for ref in weights.keys()]) == 0:
+    #print ['%s.%s.lifted.anchors' %(sample, ref) in os.listdir('.') and os.stat('%s.%s.lifted.anchors' %(sample, ref)).st_size > 0 for ref in weights.keys()]
+    print all(['%s.%s.lifted.anchors' %(sample, ref) in os.listdir('.') and os.stat('%s.%s.lifted.anchors' %(sample, ref)).st_size > 0 for ref in weights.keys()]) == 0
+
+    #exit()
+    if all([os.path.isfile('%s.%s.lifted.anchors' %(sample, ref)) and os.stat('%s.%s.lifted.anchors' %(sample, ref)).st_size > 0 for ref in weights.keys()]) == 0:
+        print sample, ['%s.%s.lifted.anchors' %(sample, ref) in os.listdir('.') and os.stat('%s.%s.lifted.anchors' %(sample, ref)).st_size > 0 for ref in weights.keys()]
         runCommand('sh constructv1_1.sh')
-    sampleCount = 0
-    for ref in weights.keys():
-        sampleCount = replaceGeneNames(sample,ref,sampleCount)
-    tiling2bed('%snuc.tiling'%CDSspecies, CDSspecies, sample, sample+'_%ssyn'%CDSspecies+'.bed')
+        sampleCount = 0
+        for ref in weights.keys():
+            sampleCount = replaceGeneNames(sample, ref, sampleCount)
+            print 'hello ' + sample, ref
+
+    print 'construct_1' + sample + ' done'
+
+    try:
+        tiling2bed('%snuc.tiling'%CDSspecies, CDSspecies, sample, sample+'_%ssyn'%CDSspecies+'.bed')
+    except:
+        print sys.exc_info()[0]
+    #exit()
+    print 'hi2'
+    replaceGeneNames(sample,CDSspecies,0,1)
+    if os.stat('nucMap.bed').st_size == 0:
+        exit()
+    print 'hi3'
     runCommand('sh constructv1_2.sh')
     try:
         if os.stat('./multipleMapping.bed').st_size > 0:
-            runCommand('qsub -P plant-analysis.p -N %s -cwd -l h_rt=3:00:00 -pe pe_slots 16 -e %s %s'%(sample,'ErrFile.txt','qsub_buildv1.sh')) #FIXME pe_slots 16, time limit pe_8
+            runCommand('qsub -P plant-analysis.p -N %s -cwd -l h_rt=4:00:00 -pe pe_slots 16 -e %s %s'%(sample,'ErrFile.txt','qsub_buildv1.sh')) #FIXME pe_slots 16, time limit pe_8
         else:
             with open('ErrFile.txt','a') as f:
                 f.write('Multiple Mapping Size 0, unable to build v1...')
