@@ -78,7 +78,7 @@ def buildReferences(reference): # essentially keys of weights
     #Fasta(fastaOld)
     #gff.load([file for file in os.listdir('.') if 'cufflinks' not in file and (file.endswith('.gff3') or file.endswith('.gff'))][0])
     writeCommands = [binbash,moduleLoads,makeTrashFolder,'samtools faidx %s'%fastaOld,
-                     'python -m jcvi.formats.gff load %s %s --feature=CDS -o %s'%([file for file in os.listdir('.') if 'cufflinks' not in file and (file.endswith('.gff3') or file.endswith('.gff'))][0],fastaOld,reference+'.cds'),
+                     'python -m jcvi.formats.gff load %s %s --parents=mRNA --children=CDS -o %s'%([file for file in os.listdir('.') if 'cufflinks' not in file and (file.endswith('.gff3') or file.endswith('.gff'))][0],fastaOld,reference+'.cds'),
                      'python -m jcvi.formats.gff bed --type=mRNA --key=Name %s -o %s'%([file for file in os.listdir('.') if 'cufflinks' not in file and (file.endswith('.gff3') or file.endswith('.gff'))][0],reference+'.bed'),
                      'python %sreplacepath.py %s'%(root,reference+'.bed'),'mv %s %s ..'%(reference+'.bed',reference+'.cds')]
     #binbash,makeTrashFolder,moduleLoads,
@@ -135,9 +135,12 @@ def buildSamplesv0(sample): #sample = Bdist_xxx_v0.fa
                      geneNaming, '../../referenceGenomes/%s/'%CDSspecies + CDSOld, geneNaming + '.gff3', geneNaming + '.log'),
                      'python %srenameGenes.py %s %s %s' %(root,geneNaming + '.gff3', CDSgeneNaming ,geneNaming),
                      'python -m jcvi.formats.gff bed --type=mRNA --key=Name %s -o %s' % (geneNaming + '.gff3', sample + '.bed'),
-                     'python %sgff2CDSBed.py %s'%(root,geneNaming + '.gff3'),'sortBed -i %s.CDS.bed > %s.CDS2.bed'%(geneNaming,geneNaming),
-                     'python %sformatBed.py s %s v0 1'%(root,geneNaming+'.CDS2'),'bedtools getfasta -name -fi ./%s -bed %s.CDS2.bed -fo %s.cds'%(fastaNew,geneNaming,sample)
-                     ]+linkReferences+['> finishBuild.txt']#'mv %s %s ..'%(sample+'.cds',sample+'.bed') binbash, moduleLoads, makeTrashFolder,
+                     'python -m jcvi.formats.gff load %s %s --parents=mRNA --children=CDS -o %s' % (
+                     geneNaming+'.gff3', fastaNew,sample + '.cds')]+linkReferences+['> finishBuild.txt']
+
+                     #"""'python %sgff2CDSBed.py %s'%(root,geneNaming + '.gff3'),'sortBed -i %s.CDS.bed > %s.CDS2.bed'%(geneNaming,geneNaming),
+                     #'python %sformatBed.py s %s v0 1'%(root,geneNaming+'.CDS2'),'bedtools getfasta -name -fi ./%s -bed %s.CDS2.bed -fo %s.cds'%(fastaNew,geneNaming,sample)
+                     #]"""#'mv %s %s ..'%(sample+'.cds',sample+'.bed') binbash, moduleLoads, makeTrashFolder,
     #'python -m jcvi.formats.gff load %s %s --feature=CDS --id_attribute=Name -o %s' % (geneNaming + '.gff3', fastaNew,sample + '.cds'),
     #'mergeBed -c 4  -i %s.CDS2.bed > %s.CDS.bed'%(geneNaming,geneNaming)
     #print writeCommands
@@ -347,7 +350,7 @@ def generatev1(sample):
     commands2=[binbash, moduleLoads]+['rm multipleMapping.bed','\n'.join('python -m jcvi.assembly.syntenypath bed %s --switch --scale=10000 --qbed=%s --sbed=%s -o %s'%('%s.%s.lifted.anchors'%(sample,ref),ref+'_syn'+'.bed',sample+'_%ssyn'%ref+'.bed','%s.synteny.bed'%(ref)) for ref in weights.keys()),
                                       'python -m jcvi.assembly.syntenypath bed %s --switch --scale=10000 --qbed=%s --sbed=%s -o %snuc.synteny.bed'%('nucMap.bed',CDSspecies+'_nucSyn.bed',sample+'_nucSyn.bed',CDSspecies),
          'nohup python -m jcvi.assembly.allmaps mergebed %s -o %s'%(' '.join(['%s.synteny.bed'%(ref) for ref in (weights.keys() + [CDSspecies+'nuc'])]),'multipleMapping.bed')]
-    qsub=[binbash,moduleLoads]+['python -m jcvi.assembly.allmaps path multipleMapping.bed %s.fa' % (sample),
+    qsub=[binbash,moduleLoads]+['python -m jcvi.assembly.allmaps path --cpus=32 --ngen=400 --npop=60 multipleMapping.bed %s.fa' % (sample),
          'mv multipleMapping.fasta %sv1/%s/%s.fa' % (root,sample.replace('v0', 'v1'), sample.replace('v0', 'v1'))]
     #'nohup liftOver -gff %s.gff3 multipleMapping.chain %s.gff3 unmapped' % (sample.replace('_',''), sample.replace('_','').replace('v0', 'v1')), ,'mv %s.gff3 ../../v1/%s' % (sample.replace('_','').replace('v0', 'v1'), sample.replace('v0', 'v1'))
     #for ref in weights.keys():
@@ -364,7 +367,6 @@ def generatev1(sample):
         f.write('\n'.join(commands1))
     with open('constructv1_2.sh','w') as f:
         f.write('\n'.join(commands2))
-
     with open('qsub_buildv1.sh','w') as f:
         f.write('\n'.join(qsub))
     print os.listdir('%s/v1/%s'%(root,sample.replace('v0','v1')))
@@ -397,7 +399,7 @@ def generatev1(sample):
     runCommand('sh constructv1_2.sh')
     try:
         if os.stat('./multipleMapping.bed').st_size > 0:
-            runCommand('qsub -P plant-analysis.p -N %s -cwd -l h_rt=4:00:00 -pe pe_slots 16 -e %s %s'%(sample,'ErrFile.txt','qsub_buildv1.sh')) #FIXME pe_slots 16, time limit pe_8
+            runCommand('qsub -P plant-analysis.p -N %s -cwd -l h_rt=12:00:00 -pe pe_slots 32 -e %s %s'%(sample,'ErrFile.txt','qsub_buildv1.sh')) #FIXME pe_slots 16, time limit pe_8
         else:
             with open('ErrFile.txt','a') as f:
                 f.write('Multiple Mapping Size 0, unable to build v1...')

@@ -2,6 +2,7 @@ import os, sys
 from pyfaidx import Fasta
 from pybedtools import *
 from collections import defaultdict
+#from wrap_Josh import *
 
 """Creates Fasta object structure of genomes and multiple bedtools files/objects for each pairwise comparison
 (another structure created for this. The bedtool object structure of pairwise comparison is merged to stitch together
@@ -466,9 +467,8 @@ def syntenicStructure(): #input N or K for subgenome, will generalize later
                             #    print fastaOutputTuple
                             #    fastaOutputTuple[2],fastaOutputTuple[3] = fastaOutputTuple[3],fastaOutputTuple[2]
                             # header to outputted sequence > Species Chromosome start coord (xi) end coord xf
-                            fastaOutFile.write('> %s %s %s %s\n' %fastaOutputTuple)
                             # writing the actual sequence
-                            fastaOutFile.write(str(fastaObjectStructure[fastaOutputTuple[0]]
+                            fastaOutFile.write('> %s %s %s %s\n' %fastaOutputTuple + str(fastaObjectStructure[fastaOutputTuple[0]]
                                                 [fastaOutputTuple[1]][int(fastaOutputTuple[2]):int(fastaOutputTuple[3])])+'\n')
                         except: # if not able to write
                             errorFile.write(str(fastaOutputTuple) + ('\n')) # search through sort2 file to debug error

@@ -1,0 +1,14 @@
+version = v0
+writeSh = 0
+buildSample = 0
+buildRef = 1
+constructSample = 0
+CDS = 314
+CDSFasta = Bdistachyonv3.1.primaryTrs.cds.fa
+geneNameOld = Bradi
+weights =
+314 100
+348 60
+354 60
+362 60
+Stop
