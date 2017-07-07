@@ -350,7 +350,7 @@ def generatev1(sample):
     commands2=[binbash, moduleLoads]+['rm multipleMapping.bed','\n'.join('python -m jcvi.assembly.syntenypath bed %s --switch --scale=10000 --qbed=%s --sbed=%s -o %s'%('%s.%s.lifted.anchors'%(sample,ref),ref+'_syn'+'.bed',sample+'_%ssyn'%ref+'.bed','%s.synteny.bed'%(ref)) for ref in weights.keys()),
                                       'python -m jcvi.assembly.syntenypath bed %s --switch --scale=10000 --qbed=%s --sbed=%s -o %snuc.synteny.bed'%('nucMap.bed',CDSspecies+'_nucSyn.bed',sample+'_nucSyn.bed',CDSspecies),
          'nohup python -m jcvi.assembly.allmaps mergebed %s -o %s'%(' '.join(['%s.synteny.bed'%(ref) for ref in (weights.keys() + [CDSspecies+'nuc'])]),'multipleMapping.bed')]
-    qsub=[binbash,moduleLoads]+['python -m jcvi.assembly.allmaps path --cpus=32 --ngen=400 --npop=60 multipleMapping.bed %s.fa' % (sample),
+    qsub=[binbash,moduleLoads]+['python -m jcvi.assembly.allmaps path --cpus=32 --ngen=300 --npop=50 multipleMapping.bed %s.fa' % (sample),
          'mv multipleMapping.fasta %sv1/%s/%s.fa' % (root,sample.replace('v0', 'v1'), sample.replace('v0', 'v1'))]
     #'nohup liftOver -gff %s.gff3 multipleMapping.chain %s.gff3 unmapped' % (sample.replace('_',''), sample.replace('_','').replace('v0', 'v1')), ,'mv %s.gff3 ../../v1/%s' % (sample.replace('_','').replace('v0', 'v1'), sample.replace('v0', 'v1'))
     #for ref in weights.keys():
@@ -399,7 +399,7 @@ def generatev1(sample):
     runCommand('sh constructv1_2.sh')
     try:
         if os.stat('./multipleMapping.bed').st_size > 0:
-            runCommand('qsub -P plant-analysis.p -N %s -cwd -l h_rt=12:00:00 -pe pe_slots 32 -e %s %s'%(sample,'ErrFile.txt','qsub_buildv1.sh')) #FIXME pe_slots 16, time limit pe_8
+            runCommand('qsub -P plant-analysis.p -N %s -cwd -l h_rt=24:00:00 -pe pe_slots 32 -e %s %s'%(sample,'ErrFile.txt','qsub_buildv1.sh')) #FIXME pe_slots 16, time limit pe_8
         else:
             with open('ErrFile.txt','a') as f:
                 f.write('Multiple Mapping Size 0, unable to build v1...')

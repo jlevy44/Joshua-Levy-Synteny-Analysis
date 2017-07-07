@@ -43,7 +43,7 @@ for reference in weights.keys():
             [file for file in os.listdir('.') if 'cufflinks' not in file and (file.endswith('.gff3') or file.endswith('.gff'))][
                 0], reference + '.bed'),
             'python %sreplacepath.py %s' % (root, reference + '.bed'), 'mv %s %s ..' % (reference + '.bed', reference + '.cds')]+
-                          ['python %sformatBed.py r %s %s' % (root, reference,version), 'python %sformatCDS.py r %s %s' % (root, reference,version)]))
+                          ['cd '+root,'python %sformatBed.py r %s %s' % (root, reference,version),'cd '+root, 'python %sformatCDS.py r %s %s' % (root, reference,version)]))
     os.chdir(root)
 
 linkReferences = ['ln -s %s%s/%s.cds %s.cds\nln -s %s%s/%s.bed %s.bed'%(root,'referenceGenomes',ref,ref,root,'referenceGenomes',ref,ref) for ref in weights.keys()]
@@ -67,7 +67,7 @@ for sample in listSamples:
         'python %srenameGenes.py %s %s %s' % (root, geneNaming + '.gff3', CDSgeneNaming, geneNaming),
         'python -m jcvi.formats.gff bed --type=mRNA --key=Name %s -o %s' % (geneNaming + '.gff3', sample + '.bed'),
         'python -m jcvi.formats.gff load %s %s --parents=mRNA --children=CDS -o %s' % (
-                 geneNaming+'.gff3', fastaNew,sample + '.cds')]+linkReferences + ['python %sformatBed.py s %s %s'%(root,sample,version),'python %sformatCDS.py s %s %s'%(root,sample,version)]
+                 geneNaming+'.gff3', fastaNew,sample + '.cds')]+linkReferences + ['cd '+root,'python %sformatBed.py s %s %s'%(root,sample,version),'cd '+root,'python %sformatCDS.py s %s %s'%(root,sample,version)]
 
     nucCommands = [headSh]+ ['nucmer -t 6 -p %s %s %s'%(CDSspecies+'nuc',root+'referenceGenomes/%s/'%CDSspecies+fastaNucOld,sample+'.fa'),
                  'delta-filter -m -q -i 85 -u 50 %snuc.delta > %snuc2.delta'%(CDSspecies,CDSspecies),'show-tiling -a %snuc2.delta > %snuc.tiling'%(CDSspecies,CDSspecies)]
