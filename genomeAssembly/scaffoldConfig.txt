@@ -1,5 +1,5 @@
 version = v0
-writeSh = 1
+writeSh = 0
 buildSample = 0
 buildRef = 0
 constructSample = 1

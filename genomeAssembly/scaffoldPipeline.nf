@@ -11,6 +11,8 @@ for( line in allLines ) {
 }
 
 }
+
+params.folder = './'
 //String workingDir = System.getProperty("user.dir");
 writeSh = findValue('writeSh ').asType(Integer);
 println 'writeSh ' + writeSh.asType(String)
@@ -22,10 +24,11 @@ geneNameOld = findValue('geneNameOld ');
 buildSamp = findValue('buildSample ').asType(Integer);
 constructSample = findValue('constructSample ').asType(Integer);
 
-chanBuildSamples = Channel.fromPath(version + '/*'+version,type: 'dir', relative: true).toList()
+chanBuildSamples = Channel.fromPath(version + '/*'+version,type: 'dir', relative: true)
+//.toList()
 //chanBuildSamples.subscribe { println "value: $it" }
 workingDir = new File('').getAbsolutePath()
-chanBuildRef = Channel.fromPath('referenceGenomes' + '/*',type: 'dir', relative: true).toList()
+chanBuildRef = Channel.fromPath('referenceGenomes' + '/*',type: 'dir', relative: true)
 //= Channel
                     //
                     /* .subscribe(onNext: { println it}, onComplete: { println 'Done.' }) */
@@ -34,6 +37,8 @@ chanBuildRef = Channel.fromPath('referenceGenomes' + '/*',type: 'dir', relative:
 
 linkageChannel = Channel.create()
 process writeShFiles {
+
+executor = 'local'
 
 output:
     file 'done' into linkageChannel
@@ -46,13 +51,16 @@ touch done
 python ${workingDir}/writeShFiles.py
 """
 else {
-    println "Not writing analysis files..."
+    """
+    #!/bin/bash
+    echo Not writing analysis files...
+    touch done
+    """
     }
 }
 
 
 linkageChannel = linkageChannel.take(1)
-
 linkageChannel15= Channel.create()
 refStr = Channel.create()
 
@@ -63,19 +71,32 @@ input:
 
 output:
     file 'done' into linkageChannel15
-    val refText into refStr
+    stdout refStr
 
-exec:
-refFile = file('references.txt')
+script:
+"""
+#!/usr/bin/python
+open('touch','w').close()
+with open('../../../references.txt','r') as f:
+    print f.read()
+"""
+/*
+refFile = file('../../../references.txt')
 allLines = refFile.readLines()
 for( line in allLines ) {
     if(line) {
     refText = line
     }
 }
+
 println refText
+done = file('\${NXF_WORK}/done')
+*/
 }
 
+
+//refText = "[${chanBuildRef.join(',')}]"
+//println refText
 
 
 linkageChannel15 = linkageChannel15.take(1)
@@ -90,7 +111,7 @@ clusterOptions = '-P plant-analysis.p -cwd -l high.c -pe pe_slots 6 -e OutputFil
 
 input:
 file 'done' from linkageChannel15
-each ref from chanBuildRef
+each ref from chanBuildRef.toList()
 
 output:
 file 'done' into linkageChannel1
@@ -105,31 +126,35 @@ cd ${workingDir}/referenceGenomes/${ref}
 pwd
 sh buildRef.sh
 """
+else
+"""touch done"""
 }
+
 
 
 
 linkageChannel1 = linkageChannel1.take(1)
 
 
-if(buildSamp) {
 linkageChannel2 = Channel.create()
 
 process buildSample{
 clusterOptions = '-P plant-analysis.p -cwd -l high.c -pe pe_slots 6 -e OutputFile.txt'
 
 input:
-each sample from chanBuildSamples
+each sample from chanBuildSamples.toList()
 file 'done' from linkageChannel1
 
 output:
-file 'done' into linkageChannel2
+val sample into linkageChannel2
+//file 'done' into linkageChannel2
 
 //when:
 //Channel.fromPath('${version}/${sample}/*${sample}.cds').ifEmpty('E').toList() == ['E'] || Channel.fromPath('${version}/${sample}/*${sample}.bed').ifEmpty('E').toList()
 //file('${version}/${sample}/${sample}.cds').exists() == 0 || file('${version}/${sample}/${sample}.bed').exists() == 0
 
 script:
+if(buildSamp)
 """
 #!/bin/bash
 touch done
@@ -137,33 +162,27 @@ cd ${workingDir}/${version}/${sample}
 pwd
 sh build.sh
 """
+else
+"""touch done"""
 }
-}
-else {
-linkageChannel2 = Channel.from('done')
-//Channel.fromPath(workingDir + '/referenceGenomes' + '/*',type: 'dir', relative: true)
-//Channel.from('done')
-}
-linkageChannel2 = linkageChannel2.take(1)
+//linkageChannel2 = linkageChannel2.take(1)
 
 
-if(constructSample) {
-linkageChannel3 = Channel.create()
-linkageChannel4 = Channel.create()
-linkageChannel5 = Channel.create()
 process nucmerfy {
 
 clusterOptions = '-P plant-analysis.p -cwd -l high.c -pe pe_slots 6 -e OutputFile.txt'
 
 input:
-file 'done' from linkageChannel2
-each sample from chanBuildSamples
+val sample from linkageChannel2
+//file 'done' from linkageChannel2
+//each sample from chanBuildSamples
 //val chanBuildSamples
 //file 'done'
 
 
 output:
-file 'done' into linkageChannel3
+val sample into linkageChannel3
+//file 'done' into linkageChannel3
 //file 'done'
 
 //when:
@@ -171,31 +190,41 @@ file 'done' into linkageChannel3
 //file('${version}/${sample}/*${CDS}nuc.tiling').exists() == 0
 
 script:
+if(constructSample)
 """
 #!/bin/bash
 touch done
 cd ${workingDir}/${version}/${sample}
 sh nucCommand.sh
 """
-
+else
+"""touch done"""
 }
 
-references = chanBuildRef
-linkageChannel3 = linkageChannel3.take(1)
+linkageChannel3 = Channel.create()
+linkageChannel4 = Channel.create()
+linkageChannel5 = Channel.create()
+refStrList = refStr.toList()
+//linkageChannel3 = linkageChannel3.take(1)
 process com_1_2 {
 
 input:
-file 'done' from linkageChannel3
-val refText from refStr
-each sample from chanBuildSamples
+val sample from linkageChannel3
+each refText from refStrList
+
+//file 'done' from linkageChannel3
+
+//each sample from chanBuildSamples
 
 output:
-file 'done' into linkageChannel4
+val sample into linkageChannel4
+//file 'done' into linkageChannel4
 
 
 script:
+if(constructSample)
 """
-#!/bin/python
+#!/usr/bin/python
 import os, subprocess, sys
 open('done','w').close()
 os.chdir('../../..')
@@ -213,23 +242,28 @@ except:
 replaceGeneNames(${sample},${CDS},0,1)
 subprocess.call('sh constructv1_2.sh',shell=True)
 """
+else
+"""touch done"""
 }
-linkageChannel4 = linkageChannel4.take(1)
+//linkageChannel4 = linkageChannel4.take(1)
 process allmaps {
 clusterOptions = '-P plant-analysis.p -cwd -l h_rt=50:00:00 -pe pe_slots 32 -e OutputFile.txt'
 queue 'long'
 
 input:
-file 'done' from linkageChannel4
-each sample from chanBuildSamples
+val sample from linkageChannel4
+//each sample from chanBuildSamples
+//file 'done' from linkageChannel4
+
 
 output:
-file 'done' into linkageChannel5
+val sample into linkageChannel5
 
 
 
 script:
-if(File('${version}/${sample}/multipleMapping.bed').length() == 0)
+//if(File('${version}/${sample}/multipleMapping.bed').length() == 0)
+if(constructSample)
 """
 #!/bin/bash
 touch done
@@ -238,5 +272,4 @@ sh qsub_build.sh
 """
 else
     error "Unable to build new genome: ${sample}"
-}
 }
