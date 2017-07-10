@@ -11,6 +11,8 @@ with open('scaffoldConfig.txt','r') as f:
     weights = parseConfigFindList('weights',f)
 weightsText = '\n'.join([weights[0]]+[CDSspecies+'nuc ' + str(int(weights[0].split()[-1])-1)]+weights[1:])
 weights = {line.split()[0]:int(line.split()[-1]) for line in weights}
+with open('references.txt','w') as f:
+    f.write('['+','.join("'%s'"%ref for ref in weights.keys())+']')
 
 listSamples = [folder for folder in os.listdir(version) if folder.endswith(version)]
 #listSamples = ['Bdist_100_v0','Bdist_001_v0','Bdist_011_v0']
@@ -66,9 +68,9 @@ for sample in listSamples:
             geneNaming, '../../referenceGenomes/%s/' % CDSspecies + CDSOld, geneNaming + '.gff3', geneNaming + '.log'),
         'python %srenameGenes.py %s %s %s' % (root, geneNaming + '.gff3', CDSgeneNaming, geneNaming),
         'python -m jcvi.formats.gff bed --type=mRNA --key=Name %s -o %s' % (geneNaming + '.gff3', sample + '.bed'),
-        'python -m jcvi.formats.gff load %s %s --parents=mRNA --children=CDS -o %s' % (
-                 geneNaming+'.gff3', fastaNew,sample + '.cds')]+linkReferences + ['cd '+root,'python %sformatBed.py s %s %s'%(root,sample,version),'cd '+root,'python %sformatCDS.py s %s %s'%(root,sample,version)]
-
+        'gffread -x %s.cds -g %s.fa %s.gff3 -E'%(sample,sample,geneNaming)]+linkReferences + ['cd '+root,'python %sformatBed.py s %s %s'%(root,sample,version),'cd '+root,'python %sformatCDS.py s %s %s'%(root,sample,version)]
+    """'python -m jcvi.formats.gff load %s %s --parents=mRNA --children=CDS -o %s' % (
+                 geneNaming+'.gff3', fastaNew,sample + '.cds')"""
     nucCommands = [headSh]+ ['nucmer -t 6 -p %s %s %s'%(CDSspecies+'nuc',root+'referenceGenomes/%s/'%CDSspecies+fastaNucOld,sample+'.fa'),
                  'delta-filter -m -q -i 85 -u 50 %snuc.delta > %snuc2.delta'%(CDSspecies,CDSspecies),'show-tiling -a %snuc2.delta > %snuc.tiling'%(CDSspecies,CDSspecies)]
     commands1 = [headSh]+['rm *.anchors *.last *.filtered *.prj']+\
@@ -76,7 +78,7 @@ for sample in listSamples:
     commands2=[headSh]+['rm multipleMapping.bed','\n'.join('python -m jcvi.assembly.syntenypath bed %s --switch --scale=10000 --qbed=%s --sbed=%s -o %s'%('%s.%s.lifted.anchors'%(sample,ref),ref+'_syn'+'.bed',sample+'_%ssyn'%ref+'.bed','%s.synteny.bed'%(ref)) for ref in weights.keys()),
                                       'python -m jcvi.assembly.syntenypath bed %s --switch --scale=10000 --qbed=%s --sbed=%s -o %snuc.synteny.bed'%('nucMap.bed',CDSspecies+'_nucSyn.bed',sample+'_nucSyn.bed',CDSspecies),
          'nohup python -m jcvi.assembly.allmaps mergebed %s -o %s'%(' '.join(['%s.synteny.bed'%(ref) for ref in (weights.keys() + [CDSspecies+'nuc'])]),'multipleMapping.bed')]
-    qsub=[headSh]+['python -m jcvi.assembly.allmaps path --cpus=32 --ngen=400 --npop=60 multipleMapping.bed %s.fa' % (sample),
+    qsub=[headSh]+['python -m jcvi.assembly.allmaps path --skipconcorde --cpus=32 --ngen=400 --npop=60 multipleMapping.bed %s.fa' % (sample),
          'mv multipleMapping.fasta %s%s/%s/%s.fa' % (root,nextVersion,sample.replace(version, nextVersion), sample.replace(version, nextVersion))]
 
     with open('build.sh','w') as f:

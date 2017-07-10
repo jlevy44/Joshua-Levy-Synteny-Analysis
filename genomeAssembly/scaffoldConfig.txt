@@ -1,8 +1,8 @@
 version = v0
-writeSh = 0
-buildSample = 1
+writeSh = 1
+buildSample = 0
 buildRef = 0
-constructSample = 0
+constructSample = 1
 CDS = 314
 CDSFasta = Bdistachyonv3.1.primaryTrs.cds.fa
 geneNameOld = Bradi
