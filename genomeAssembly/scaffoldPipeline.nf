@@ -22,7 +22,9 @@ CDS = findValue('CDS ' );
 CDSFasta = findValue('CDSFasta ' );
 geneNameOld = findValue('geneNameOld ');
 buildSamp = findValue('buildSample ').asType(Integer);
-constructSample = findValue('constructSample ').asType(Integer);
+nuc = findValue('nuc ').asType(Integer);
+com1_2 = findValue('com1_2 ').asType(Integer);
+allmaps = findValue('allmaps ').asType(Integer);
 
 chanBuildSamples = Channel.fromPath(version + '/*'+version,type: 'dir', relative: true)
 //.toList()
@@ -86,6 +88,7 @@ allLines = refFile.readLines()
 for( line in allLines ) {
     if(line) {
     refText = line
+    break;
     }
 }
 
@@ -107,7 +110,7 @@ linkageChannel1 = Channel.create()
 
 process buildReference {
 
-clusterOptions = '-P plant-analysis.p -cwd -l high.c -pe pe_slots 6 -e OutputFile.txt'
+clusterOptions = { buildRef == 1 ? '-P plant-analysis.p -cwd -l exclusive.c -pe pe_slots 6 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt' }
 
 input:
 file 'done' from linkageChannel15
@@ -139,7 +142,7 @@ linkageChannel1 = linkageChannel1.take(1)
 linkageChannel2 = Channel.create()
 
 process buildSample{
-clusterOptions = '-P plant-analysis.p -cwd -l high.c -pe pe_slots 6 -e OutputFile.txt'
+clusterOptions = {buildSamp == 1 ? '-P plant-analysis.p -cwd -l exclusive.c -pe pe_slots 6 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt' }
 
 input:
 each sample from chanBuildSamples.toList()
@@ -167,11 +170,11 @@ else
 }
 //linkageChannel2 = linkageChannel2.take(1)
 
-
+linkageChannel3 = Channel.create()
 process nucmerfy {
 
-clusterOptions = '-P plant-analysis.p -cwd -l high.c -pe pe_slots 6 -e OutputFile.txt'
-
+clusterOptions = {nuc == 1 ? '-P plant-analysis.p -cwd -q normal -pe pe_slots 6 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt'}
+//-l exclusive.c
 input:
 val sample from linkageChannel2
 //file 'done' from linkageChannel2
@@ -190,7 +193,7 @@ val sample into linkageChannel3
 //file('${version}/${sample}/*${CDS}nuc.tiling').exists() == 0
 
 script:
-if(constructSample)
+if(nuc)
 """
 #!/bin/bash
 touch done
@@ -201,12 +204,15 @@ else
 """touch done"""
 }
 
-linkageChannel3 = Channel.create()
+
 linkageChannel4 = Channel.create()
 linkageChannel5 = Channel.create()
-refStrList = refStr.toList()
+refStrList = refStr.take(1)
+    .map { it - '\n' }
+    .toList()
 //linkageChannel3 = linkageChannel3.take(1)
 process com_1_2 {
+clusterOptions = { com1_2 == 1 ? '-P plant-analysis.p -cwd -q normal.q -pe pe_slots 3 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt'}
 
 input:
 val sample from linkageChannel3
@@ -222,33 +228,21 @@ val sample into linkageChannel4
 
 
 script:
-if(constructSample)
+if(com1_2)
 """
-#!/usr/bin/python
-import os, subprocess, sys
-open('done','w').close()
-os.chdir('../../..')
-from pipelineFunctions import *
-os.chdir(${version}/${sample})
-if all([os.path.isfile('%s.%s.lifted.anchors' %(${sample}, ref)) and os.stat('%s.%s.lifted.anchors' %(${sample}, ref)).st_size > 0 for ref in ${refText}]) == 0:
-    subprocess.call('sh constructv1_1.sh',shell=True)
-    sampleCount = 0
-    for ref in weights.keys():
-        sampleCount = replaceGeneNames(${sample}, ref, sampleCount)
-try:
-    tiling2bed('%snuc.tiling'%${CDS}, ${CDS}, ${sample}, ${sample}+'_%ssyn'%${CDS}+'.bed')
-except:
-    print sys.exc_info()[0]
-replaceGeneNames(${sample},${CDS},0,1)
-subprocess.call('sh constructv1_2.sh',shell=True)
+#!/bin/bash
+touch done
+cd ${workingDir}
+python com1_2.py ${sample} ${refText} ${CDS} ${version}
 """
 else
 """touch done"""
 }
 //linkageChannel4 = linkageChannel4.take(1)
-process allmaps {
+process Allmaps {
 clusterOptions = '-P plant-analysis.p -cwd -l h_rt=50:00:00 -pe pe_slots 32 -e OutputFile.txt'
-queue 'long'
+queue = 'long'
+errorStrategy = 'ignore'
 
 input:
 val sample from linkageChannel4
@@ -263,7 +257,7 @@ val sample into linkageChannel5
 
 script:
 //if(File('${version}/${sample}/multipleMapping.bed').length() == 0)
-if(constructSample)
+if(allmaps)
 """
 #!/bin/bash
 touch done

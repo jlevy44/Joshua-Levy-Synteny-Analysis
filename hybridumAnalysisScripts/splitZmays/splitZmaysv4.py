@@ -96,7 +96,7 @@ mays1Chr = [mays1[mays1['chr'] == str(i+1)] for i in range(10)]
 mays2Chr = [mays2[mays2['chr'] == str(i+1)] for i in range(10)]
 #from Tkinter import Tk
 #tk = Tk()
-maysFasta = Fasta('Zmays_284_AGPv3.softmasked.fa')
+maysFasta = Fasta('Zmays_xxx_Smv4.fa')
 if 0:
     for i in range(10):
         plt.figure()
@@ -129,14 +129,77 @@ if 0:
 mays1ChrXiXfBed = []
 mays2ChrXiXfBed = []
 
+def search(fname,listOfGenes=''):
+    Mdict = defaultdict(list)
+    with open(fname,'r') as f, open('genes','w') as f2:
+        for line in f:
+            #if 'gene' in line:
+            #    f2.write(line.split('lov3to4.')[-1])
+            if 'gene' in line:# and line.split('Name=')[-1].split('_')[0].strip('\n') in listOfGenes:
+                Mdict[line.split('lov3to4.')[-1].strip('\n')] = map(int,line.split('\t')[3:5])#Name= .split('_')[0]
+    return Mdict
 
 
+listGenes = []
 for chrom in maysNpChrSplit:
     if 'maize1' in chrom.keys():
-        mays1ChrXiXfBed += [('_'.join([npChr[0,1],str(npChr[0,2]),str(npChr[len(npChr)-1,3])]),npChr[0,1],npChr[0,2]-1,npChr[len(npChr)-1,3]) for npChr in chrom['maize1']]
+        listGenes += [npChr[0,0] for npChr in chrom['maize1']] + [npChr[len(npChr)-1,0] for npChr in chrom['maize1']]
     if 'maize2' in chrom.keys():
-        mays2ChrXiXfBed += [('_'.join([npChr[0,1],str(npChr[0,2]),str(npChr[len(npChr)-1,3])]),npChr[0,1],npChr[0,2]-1,npChr[len(npChr)-1,3]) for npChr in chrom['maize2']]
+        listGenes += [npChr[0, 0] for npChr in chrom['maize2']] + [npChr[len(npChr) - 1, 0] for npChr in
+                                                                   chrom['maize2']]
 
+#print listGenes[0:5]
+
+GDict = search('PAC4GC.639.maizev3toV4liftover.gff3')#'Zmaysv4Final.gff3'
+
+#print GDict.keys()[0:5]
+
+#print list(set(listGenes)-set(GDict.keys()))
+
+#print map(len,[listGenes,GDict.keys()])
+a = 0
+for chrom in maysNpChrSplit:
+    if 'maize1' in chrom.keys():
+        for npChr in chrom['maize1']:
+            try:
+                gene1 = GDict[npChr[0,0]][0]
+            except:
+                gene1 = GDict[npChr[1,0]][0]
+            try:
+                gene2 = GDict[npChr[len(npChr)-1,0]][1]
+            except:
+                gene2 = GDict[npChr[len(npChr)-2,0]][1]
+            mays1ChrXiXfBed.append(('_'.join([npChr[0,1],str(gene1),str(gene2)]),npChr[0,1],gene1-1,gene2))
+    if 'maize2' in chrom.keys():
+        for npChr in chrom['maize2']:
+            try:
+                gene1 = GDict[npChr[0, 0]][0]
+            except:
+                gene1 = GDict[npChr[1, 0]][0]
+            try:
+                gene2 = GDict[npChr[len(npChr) - 1, 0]][1]
+            except:
+                gene2 = GDict[npChr[len(npChr) - 2, 0]][1]
+            #print npChr[0,1]
+            if gene1 > gene2:
+                try:
+                    gene2 = GDict[npChr[0, 0]][1]
+                except:
+                    gene2 = GDict[npChr[1, 0]][1]
+                try:
+                    gene1 = GDict[npChr[len(npChr) - 1, 0]][0]
+                except:
+                    gene1 = GDict[npChr[len(npChr) - 2, 0]][0]
+            """
+            if npChr[0,1] == '3' and a==0:
+                print npChr[0:len(npChr)-1,0]
+                a=1
+                for i in range(len(npChr)-1):
+                    if npChr[i,0] in GDict.keys():
+                        print (npChr[i,0],GDict[npChr[i,0]][0])
+            """
+            #print [(npChr[0,1],npChr[x, 0],GDict[npChr[x,0]][0]) for x in range(5) if npChr[x,0] in GDict.keys()]
+            mays2ChrXiXfBed.append(('_'.join([npChr[0,1],str(gene1),str(gene2)]),npChr[0,1],gene1-1,gene2))
 
 with open('Maize1_SplitInfo.txt','w') as f:
     f.write('\t'.join(['SubgenomeChr','MaizeOriginalChr','xi','xf'])+'\n')
@@ -146,27 +209,27 @@ with open('Maize2_SplitInfo.txt','w') as f:
     f.write('\t'.join(['SubgenomeChr','MaizeOriginalChr','xi','xf'])+'\n')
     f.write('\n'.join('\t'.join([str(x) for x in bedTuple]) for bedTuple in mays2ChrXiXfBed) + '\n')
 
-
 if 0:
+    print mays2ChrXiXfBed
     global inputStr
-    with open('ZmaysM1_301_AGPv3.fa','w') as f:
+    with open('ZmaysM1_640_AGPv4.fa','w') as f:
         for chrom in mays1ChrXiXfBed:
             inputStr = maysFasta[chrom[1]][chrom[2]:chrom[3]].seq
             f.write('>%s\n%s\n'%(chrom[0],wraplines()))#fill(,60, break_on_hyphens = False)))
-    with open('ZmaysM2_302_AGPv3.fa', 'w') as f:
+    with open('ZmaysM2_641_AGPv4.fa', 'w') as f:
         for chrom in mays2ChrXiXfBed:
             inputStr = maysFasta[chrom[1]][chrom[2]:chrom[3]].seq
             f.write('>%s\n%s\n'%(chrom[0],wraplines()))#fill(maysFasta[chrom[1]][chrom[2]:chrom[3]].seq,60, break_on_hyphens = False)))
 
-    mays1Fasta= Fasta('ZmaysM1_301_AGPv3.fa')
+mays1Fasta= Fasta('ZmaysM1_640_AGPv4.fa')
 
-    mays2Fasta = Fasta('ZmaysM2_302_AGPv3.fa')
+mays2Fasta = Fasta('ZmaysM2_641_AGPv4.fa')
 
     #print mays1Fasta['M1_1'][:].seq == maysFasta['1'][mays1ChrXiXfBed[0][2]:mays1ChrXiXfBed[0][3]].seq
 
 #b = BedTool('284.bed')
 
-b = BedTool('q.PAC2_0.284.gff3')
+b = BedTool('PAC4GC.639.maizev3toV4liftover.gff3')
 
 def changeGFFCoordinates(gffstring,xi,chrName):
     gffOut = []
@@ -193,7 +256,7 @@ gffOutLines = []
 for chrom in mays1ChrXiXfBed:
     gffstr = str(b.intersect(BedTool('\t'.join([chrom[1],str(chrom[2]+1),str(chrom[3])]),from_string=True),wa=True,f=0.95))
     gffOutLines += changeGFFCoordinates(gffstr,chrom[2],chrom[0])
-with open('301_presort.gff3','w') as f:
+with open('640_presort.gff3','w') as f:
     f.writelines(gffOutLines)
 
 #BedTool('q.PAC2_0.301.gff3').sort().saveas('q.PAC2_0.301.gff3')
@@ -202,10 +265,10 @@ gffOutLines = []
 for chrom in mays2ChrXiXfBed:
     gffstr = str(b.intersect(BedTool('\t'.join([chrom[1],str(chrom[2]+1),str(chrom[3])]),from_string=True),wa=True,f=0.95))
     gffOutLines += changeGFFCoordinates(gffstr,chrom[2],chrom[0])
-with open('302_presort.gff3','w') as f:
+with open('641_presort.gff3','w') as f:
     f.writelines(gffOutLines)
 
 runCommand = lambda x: subprocess.call(x, shell=True)
-for command in ['python -m jcvi.formats.gff sort %s -o %s'%(gff[0],gff[1]) for gff in [('301_presort.gff3','q.PAC2_0.301.gff3'),('302_presort.gff3','q.PAC2_0.302.gff3')]]:
+for command in ['python -m jcvi.formats.gff sort %s -o %s'%(gff[0],gff[1]) for gff in [('640_presort.gff3','q.PAC2_0.640.gff3'),('641_presort.gff3','q.PAC2_0.641.gff3')]]:
     runCommand(command)
     #BedTool('q.PAC2_0.302.gff3').sort().saveas('q.PAC2_0.302.gff3')

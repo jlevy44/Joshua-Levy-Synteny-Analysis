@@ -9,7 +9,7 @@ with open('scaffoldConfig.txt','r') as f:
     (version,buildSample,buildRef,constructSample,CDSspecies,CDSOld,CDSgeneNaming) = tuple([parseConfigFindPath(x,f) for x in
                                                         ['version','buildSample','buildRef','constructSample','CDS','CDSFasta','geneNameOld']])
     weights = parseConfigFindList('weights',f)
-weightsText = '\n'.join([weights[0]]+[CDSspecies+'nuc ' + str(int(weights[0].split()[-1])-1)]+weights[1:])
+weightsText = '\n'.join([weights[0]]+[CDSspecies+'nuc ' + str(int(weights[1].split()[-1]))]+weights[1:])
 weights = {line.split()[0]:int(line.split()[-1]) for line in weights}
 with open('references.txt','w') as f:
     f.write('['+','.join("'%s'"%ref for ref in weights.keys())+']')
