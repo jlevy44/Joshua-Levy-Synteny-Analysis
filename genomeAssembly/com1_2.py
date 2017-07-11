@@ -17,10 +17,7 @@ if all([os.path.isfile('%s.%s.lifted.anchors' %(sample, ref)) and os.stat('%s.%s
             print sample, ref, sampleCount
 try:
     tiling2bed('%snuc.tiling'%CDS, CDS, sample, sample+'_%ssyn'%CDS+'.bed')
-except:
-    print sys.exc_info()[0]
-try:
-    replaceGeneNames(sample,CDS,0,1)
+    replaceGeneNames(sample, CDS, 0, 1)
     subprocess.call('sh constructv1_2.sh',shell=True)
 except:
     print 'Unable to finish sh constructv1_2.sh for ' + sample

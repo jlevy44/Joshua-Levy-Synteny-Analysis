@@ -213,6 +213,7 @@ refStrList = refStr.take(1)
 //linkageChannel3 = linkageChannel3.take(1)
 process com_1_2 {
 clusterOptions = { com1_2 == 1 ? '-P plant-analysis.p -cwd -q normal.q -pe pe_slots 3 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt'}
+//module = 'bedtools/2.25.0'
 
 input:
 val sample from linkageChannel3
@@ -232,6 +233,7 @@ if(com1_2)
 """
 #!/bin/bash
 touch done
+module load bedtools/2.25.0
 cd ${workingDir}
 python com1_2.py ${sample} ${refText} ${CDS} ${version}
 """
