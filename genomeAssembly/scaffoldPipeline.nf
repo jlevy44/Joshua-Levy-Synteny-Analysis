@@ -25,6 +25,7 @@ buildSamp = findValue('buildSample ').asType(Integer);
 nuc = findValue('nuc ').asType(Integer);
 com1_2 = findValue('com1_2 ').asType(Integer);
 allmaps = findValue('allmaps ').asType(Integer);
+nextVersion = 'v' + ((version - 'v').asType(Integer)+1).asType(String)
 
 chanBuildSamples = Channel.fromPath(version + '/*'+version,type: 'dir', relative: true)
 //.toList()
@@ -51,12 +52,14 @@ if(writeSh)
 #!/bin/bash
 touch done
 python ${workingDir}/writeShFiles.py
+mkdir ${workingDir}/${nextVersion}
 """
 else {
     """
     #!/bin/bash
     echo Not writing analysis files...
     touch done
+    mkdir ${workingDir}/${nextVersion}
     """
     }
 }

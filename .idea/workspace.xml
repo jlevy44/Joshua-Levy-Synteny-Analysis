@@ -3,7 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="87dadfdf-9689-45cf-b4af-5fd342ee0ae6" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/genomeAssembly/com1_2.py" afterPath="$PROJECT_DIR$/genomeAssembly/com1_2.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/genomeAssembly/scaffoldPipeline.nf" afterPath="$PROJECT_DIR$/genomeAssembly/scaffoldPipeline.nf" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -19,11 +18,11 @@
   <component name="ExecutionTargetManager" SELECTED_TARGET="default_target" />
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="genomeScaffolding.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="genomeScaffolding.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/genomeAssembly/genomeScaffolding.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="5880">
-              <caret line="401" column="70" lean-forward="false" selection-start-line="401" selection-start-column="70" selection-end-line="401" selection-end-column="70" />
+            <state relative-caret-position="211">
+              <caret line="398" column="16" lean-forward="true" selection-start-line="398" selection-start-column="16" selection-end-line="398" selection-end-column="16" />
               <folding>
                 <element signature="e#0#26#0" expanded="true" />
               </folding>
@@ -66,18 +65,28 @@
       <file leaf-file-name="scaffoldPipeline.nf" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/genomeAssembly/scaffoldPipeline.nf">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="3945">
-              <caret line="263" column="11" lean-forward="false" selection-start-line="263" selection-start-column="11" selection-end-line="263" selection-end-column="11" />
+            <state relative-caret-position="91">
+              <caret line="253" column="35" lean-forward="true" selection-start-line="253" selection-start-column="35" selection-end-line="253" selection-end-column="35" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="com1_2.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="SyntenyFinal.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/JoshuaTree/SyntenyFinal.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="180">
+              <caret line="38" column="11" lean-forward="true" selection-start-line="38" selection-start-column="11" selection-end-line="38" selection-end-column="11" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="com1_2.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/genomeAssembly/com1_2.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="150">
-              <caret line="10" column="53" lean-forward="false" selection-start-line="10" selection-start-column="53" selection-end-line="10" selection-end-column="53" />
+            <state relative-caret-position="180">
+              <caret line="12" column="26" lean-forward="true" selection-start-line="12" selection-start-column="26" selection-end-line="12" selection-end-column="26" />
               <folding />
             </state>
           </provider>
@@ -191,14 +200,14 @@
         <option value="$PROJECT_DIR$/genomeAssembly/nextflow.config" />
         <option value="$PROJECT_DIR$/hybridumAnalysisScripts/com1_2.py" />
         <option value="$PROJECT_DIR$/genomeAssembly/writeShFiles.py" />
-        <option value="$PROJECT_DIR$/genomeAssembly/scaffoldPipeline.nf" />
         <option value="$PROJECT_DIR$/genomeAssembly/com1_2.py" />
+        <option value="$PROJECT_DIR$/genomeAssembly/scaffoldPipeline.nf" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="-1629" />
-    <option name="y" value="58" />
+    <option name="x" value="-1608" />
+    <option name="y" value="313" />
     <option name="width" value="1438" />
     <option name="height" value="768" />
   </component>
@@ -217,8 +226,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope" />
-      <pane id="Scratches" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -277,8 +284,24 @@
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="Joshua-Levy-Synteny-Analysis" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="Joshua-Levy-Synteny-Analysis" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="JoshuaTree" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
         </subPane>
       </pane>
+      <pane id="Scope" />
+      <pane id="Scratches" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -507,7 +530,14 @@
       <option name="project" value="LOCAL" />
       <updated>1499809445305</updated>
     </task>
-    <option name="localTasksCounter" value="10" />
+    <task id="LOCAL-00010" summary="More bugs to fix on scaffolding pipeline">
+      <created>1499814622985</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1499814622985</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="TodoView">
@@ -520,8 +550,8 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="-1629" y="58" width="1438" height="768" extended-state="0" />
-    <editor active="false" />
+    <frame x="-1608" y="313" width="1438" height="768" extended-state="0" />
+    <editor active="true" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.23157163" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.20314735" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
@@ -554,7 +584,8 @@
     <MESSAGE value="modified pipeline to run more smoothly. Everything up to building samples is working" />
     <MESSAGE value="better working pipeline. Can run through to end now save for any debug errors" />
     <MESSAGE value="Working out some bugs in the com1_2 section. Almost ready for deployment... Need to set more conditions for pipeline to run for a given sample...&#10;&#10;Also was able to split mays" />
-    <option name="LAST_COMMIT_MESSAGE" value="Working out some bugs in the com1_2 section. Almost ready for deployment... Need to set more conditions for pipeline to run for a given sample...&#10;&#10;Also was able to split mays" />
+    <MESSAGE value="More bugs to fix on scaffolding pipeline" />
+    <option name="LAST_COMMIT_MESSAGE" value="More bugs to fix on scaffolding pipeline" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -738,13 +769,6 @@
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/genomeAssembly/work/0d/10032a99359a3faf7e6b5dc7de7073/.command.out" />
-    <entry file="file://$PROJECT_DIR$/JoshuaTree/SyntenyFinal.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="60">
-          <caret line="4" column="1" lean-forward="false" selection-start-line="4" selection-start-column="1" selection-end-line="4" selection-end-column="1" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/genomeAssembly/scaffoldpipe.nf">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="165">
@@ -764,16 +788,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="135">
           <caret line="9" column="60" lean-forward="false" selection-start-line="9" selection-start-column="60" selection-end-line="9" selection-end-column="60" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/genomeAssembly/genomeScaffolding.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="5880">
-          <caret line="401" column="70" lean-forward="false" selection-start-line="401" selection-start-column="70" selection-end-line="401" selection-end-column="70" />
-          <folding>
-            <element signature="e#0#26#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -840,14 +854,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/genomeAssembly/scaffoldPipeline.nf">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3945">
-          <caret line="263" column="11" lean-forward="false" selection-start-line="263" selection-start-column="11" selection-end-line="263" selection-end-column="11" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/genomeAssembly/writeShFiles.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1215">
@@ -858,9 +864,35 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/genomeAssembly/com1_2.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="150">
-          <caret line="10" column="53" lean-forward="false" selection-start-line="10" selection-start-column="53" selection-end-line="10" selection-end-column="53" />
+        <state relative-caret-position="180">
+          <caret line="12" column="26" lean-forward="true" selection-start-line="12" selection-start-column="26" selection-end-line="12" selection-end-column="26" />
           <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/JoshuaTree/SyntenyFinal.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="180">
+          <caret line="38" column="11" lean-forward="true" selection-start-line="38" selection-start-column="11" selection-end-line="38" selection-end-column="11" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/genomeAssembly/scaffoldPipeline.nf">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="91">
+          <caret line="253" column="35" lean-forward="true" selection-start-line="253" selection-start-column="35" selection-end-line="253" selection-end-column="35" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/genomeAssembly/genomeScaffolding.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="211">
+          <caret line="398" column="16" lean-forward="true" selection-start-line="398" selection-start-column="16" selection-end-line="398" selection-end-column="16" />
+          <folding>
+            <element signature="e#0#26#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
