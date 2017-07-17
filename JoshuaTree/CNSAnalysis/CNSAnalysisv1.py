@@ -132,7 +132,7 @@ class speciesClass(): # add information about species that stores name and proty
         outputFile2 = open(outputfilename2, 'w')
         for line in open(self.gffFile, 'r'):
             if line:
-                if 'mRNA' in line and 'longest=1' in line:
+                if 'mRNA' in line and 'longest=1' in line and int(line.split('\t')[3] >= 0):
                     geneName = line.split()[-1].split(';')[1].replace('Name=','')
                     outputFile.write('%s\t%d\t%s\t%s\n'%(line.split()[0],int(line.split()[3]) - 1,line.split()[4],geneName))
 

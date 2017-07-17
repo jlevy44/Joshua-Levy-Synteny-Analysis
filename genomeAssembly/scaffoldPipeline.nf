@@ -26,17 +26,40 @@ nuc = findValue('nuc ').asType(Integer);
 com1_2 = findValue('com1_2 ').asType(Integer);
 allmaps = findValue('allmaps ').asType(Integer);
 nextVersion = 'v' + ((version - 'v').asType(Integer)+1).asType(String)
-
 chanBuildSamples = Channel.fromPath(version + '/*'+version,type: 'dir', relative: true)
 //.toList()
 //chanBuildSamples.subscribe { println "value: $it" }
 workingDir = new File('').getAbsolutePath()
+nextDir = file(workingDir+'/'+nextVersion)
+result = nextDir.mkdir()
 chanBuildRef = Channel.fromPath('referenceGenomes' + '/*',type: 'dir', relative: true)
+chanNextSamples = Channel.fromPath(version + '/*'+version,type: 'dir', relative: true)
+                        .map { nextVersion + '/' + it.name - version + nextVersion}
+                        .map{ file(it) }
+                        .subscribe { it.mkdirs() }
 //= Channel
                     //
                     /* .subscribe(onNext: { println it}, onComplete: { println 'Done.' }) */
 
+//bridgeChannel = Channel.create()
+/*
+process newVersionFolders {
+executor = 'local'
 
+input:
+    file sample from chanNextSamples
+
+output:
+    file 'done' into bridgeChannel
+
+script:
+"""
+#!/bin/bash
+touch done
+mkdir ${workingDir}/${nextVersion}/${sample}
+"""
+}
+*/
 
 linkageChannel = Channel.create()
 process writeShFiles {
@@ -52,15 +75,14 @@ if(writeSh)
 #!/bin/bash
 touch done
 python ${workingDir}/writeShFiles.py
-mkdir ${workingDir}/${nextVersion}
 """
 else {
     """
     #!/bin/bash
     echo Not writing analysis files...
     touch done
-    mkdir ${workingDir}/${nextVersion}
     """
+    //mkdir ${workingDir}/${version}
     }
 }
 
@@ -145,7 +167,7 @@ linkageChannel1 = linkageChannel1.take(1)
 linkageChannel2 = Channel.create()
 
 process buildSample{
-clusterOptions = {buildSamp == 1 ? '-P plant-analysis.p -cwd -l exclusive.c -pe pe_slots 6 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt' }
+clusterOptions = {buildSamp == 1 ? '-P plant-analysis.p -cwd -q normal.q -pe pe_slots 6 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt' }
 
 input:
 each sample from chanBuildSamples.toList()
@@ -169,14 +191,15 @@ pwd
 sh build.sh
 """
 else
-"""touch done"""
+"""#!/bin/bash
+touch done"""
 }
 //linkageChannel2 = linkageChannel2.take(1)
 
 linkageChannel3 = Channel.create()
 process nucmerfy {
 
-clusterOptions = {nuc == 1 ? '-P plant-analysis.p -cwd -q normal -pe pe_slots 6 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt'}
+clusterOptions = {nuc == 1 ? '-P plant-analysis.p -cwd -q normal.q -pe pe_slots 6 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt'}
 //-l exclusive.c
 input:
 val sample from linkageChannel2
