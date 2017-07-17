@@ -1,0 +1,10 @@
+# kmercount configuration file
+pythonPath = /global/homes/j/jlevy/python_modules
+systemPath = /usr/common/usg/languages/python/2.7.4/bin/python
+blastPath = ./blast_files/
+kmercountPath = ./kmercount_files/
+fastaPath = ./fasta_files/
+bedPath = ./bed_files/
+sortPath = ./sortedbed_files/
+sortedbedPath = ./*.sorted.bed3
+genome = ABR113_split.fa
