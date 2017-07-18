@@ -3,7 +3,13 @@ import subprocess, shutil
 import pybedtools
 from pyfaidx import Fasta
 import pandas as pd
+import multiprocessing as mp
 import numpy as np
+from time import time, clock
+from collections import Counter
+from sklearn.decomposition import PCA
+from sklearn.cluster import KMeans
+from sklearn import metrics
 
 # modify to run kmercount on a set of fasta files:
 def writeKmercount(fastaPath, fastaFiles, kmercountPath):
@@ -260,12 +266,37 @@ def findScaffolds():
     return lineList
 
 def findKmerNames(kmercountPath):
-    for file in kmercountPath:
+    for file in os.listdir(kmercountPath):
         if file.endswith('.fa'):
-            with open(file,'r') as f:
+            print file
+            with open(kmercountPath + file,'r') as f:
                 listKmer = sorted([line.strip('\n') for line in f.readlines()[1::2] if line])
-        return listKmer
+            return listKmer
+def blast2bed(blastFile):
+    with open(blastFile,'r') as f, open('blasted.bed','w') as f2:
+        for line in f:
+            if line:
+                l1 = line.split('\t')[1]
+                f2.write('\t'.join([l1] + ['0',str(int(l1.split('_')[-1])-int(l1.split('_')[-2]))] + [line.split('\t')[0]])+'\n')
 
+    b = pybedtools.BedTool('blasted.bed').sort().merge(c=4,o='collapse',)
+    return b
+
+global dfMatrix
+global count
+global target
+def populateKMatrix(line):
+    global dfMatrix
+    global count
+    global target
+    #print line
+    if line:
+        dfMatrix[line.split('\t')[1]][line.split('\t')[0]] += 1
+        count += 1
+
+        if float(count) / 14487787. > target:
+            print target
+            target += 1
 
 def real_main():
     # parse config file
@@ -284,7 +315,7 @@ def real_main():
     genome = parseConfigFindPath('genome', configFile)
     print fastaFiles
     # make fixed windows across the genome in bed format
-    genomewindows(genome)
+    #genomewindows(genome)
 
     # first analysis step is to split whole genome into subgenome fasta files
     # use something like python ../GenomeKmerComp/fetch.tobacco_subgenome_sequences.py
@@ -294,13 +325,13 @@ def real_main():
     # write the shell scripts for generating kmercounts
     # pass fastaFiles to bbtools for running kmerCounts
     kmercountPath = parseConfigFindPath('kmercountPath',configFile)
-    writeKmercount(fastaPath, fastaFiles, kmercountPath)
+    #writeKmercount(fastaPath, fastaFiles, kmercountPath)
 
     kmercountFiles = filter(None,str(subprocess.Popen(['ls', '%s' % kmercountPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout.read()).split('\n'))
     # kmercount_files are input to compareKmers function
     # output are fasta files of 23mers ending with PAM
     #compareKmers(kmercountPath, kmercountFiles)
-    kmer2Fasta(kmercountPath)
+    #kmer2Fasta(kmercountPath)
 
     # blast fasta files against the whole genome
     # could filter BLAST output, if needed
@@ -314,15 +345,97 @@ def real_main():
     #sortPath = parseConfigFindPath('sortPath',configFile)
     #blast2bed3(blastFiles, bedPath, sortPath, genome)
 
-    d = {scaffold: {kmer: 0 for kmer in findKmerNames(kmercountPath)} for scaffold in findScaffolds()}
+    kmers = findKmerNames(kmercountPath)
 
-    dfMatrix = pd.DataFrame(d)
+    scaffolds = findScaffolds()
 
-    with open('kmerFasta.BLASTtsv.txt','r') as f:
-        for line in f.readlines():
+    print len(scaffolds), len(kmers)
+    #d = {scaffold: {kmer: 0 for kmer in kmers} for scaffold in scaffolds}
+    #print d.keys()[0:10]
+    global count, target, dfMatrix
+    start = clock()
+    dfMatrix = pd.DataFrame(np.full((len(scaffolds),len(kmers)),0,dtype=float))
+    dfMatrix.columns = kmers
+    dfMatrix.rows = scaffolds
+    print clock()-start
+    #dfMatrix.to_csv('emptyMatrix.csv')
+    count = 0
+    target = 1
+    #with open(blastPath + 'kmerFasta.BLASTtsv.txt','r') as f:
+    #    lines = f.readlines()
+    """
+
+    """
+    start = clock()
+    labels = dfMatrix.rows
+
+    #dfMatrix.to_csv('clusteringMatrix.csv')
+    #b = blast2bed(blastPath + 'kmerFasta.BLASTtsv.txt')
+    #print b.head()
+    #b.saveas('blasted_merged.bed')
+    #print time.clock() - start
+    def addToKMatrix(line):
+        global dfMatrix
+        scaffold = line.split('\t')[0]
+        #print scaffold
+        print scaffold
+        counts = Counter(line.strip('\n').split('\t')[-1].split(','))
+        for key in counts.keys():
+            dfMatrix.set_value(scaffold, key, counts[key])
+        print scaffold
+    print dfMatrix.rows
+    """
+    if __name__ == '__main__':
+        p = mp.Pool(8)
+        with open('blasted_merged.bed', 'r') as f:
+            for line in f:
+                if line:
+                    p.apply_async(addToKMatrix,(line,))
+        #p.map(populateKMatrix, lines)
+        p.close()
+        p.join()"""
+    with open('blasted_merged.bed', 'r') as f:
+        for line in f:
             if line:
-                dfMatrix[line.split('\t')[1]][line.split('\t')[0]] += 1
+                scaffold = line.split('\t')[0]
+                # print scaffold
+                counts = Counter(line.strip('\n').split('\t')[-1].split(','))
+                interval = abs(float(line.split('\t')[2]) - float(line.split('\t')[1]))
+                print scaffold, counts
+                for key in counts.keys():
+                    dfMatrix.set_value(scaffold, key, float(counts[key])/interval)
+    """
+    with open('blasted_merged.bed','r') as f:
+        for line in f:
+            if line:
+                scaffold = line.split('\t')[0]
+                counts = Counter(line.strip('\n').split('\t')[-1].split(','))
+                #print counts
+                for key in counts.keys():
+                    dfMatrix.set_value(scaffold,key,counts[key])
+                    """
+    dfMatrix.to_csv('clusteringMatrix.csv')
+    sample_size = len(scaffolds)
 
+    def bench_k_means(estimator, name, data):
+        t0 = time.time()
+        estimator.fit(data)
+        print('% 9s   %.2fs    %i   %.3f   %.3f   %.3f   %.3f   %.3f    %.3f'
+              % (name, (time.time() - t0), estimator.inertia_,
+                 metrics.homogeneity_score(labels, estimator.labels_),
+                 metrics.completeness_score(labels, estimator.labels_),
+                 metrics.v_measure_score(labels, estimator.labels_),
+                 metrics.adjusted_rand_score(labels, estimator.labels_),
+                 metrics.adjusted_mutual_info_score(labels, estimator.labels_),
+                 metrics.silhouette_score(data, estimator.labels_,
+                                          metric='euclidean',
+                                          sample_size=sample_size)))
+
+    pca = PCA(n_components=min(len(scaffolds),len(kmers)))
+    pca = pca.fit_transform(dfMatrix.as_matrix())
+    bench_k_means(KMeans(init=pca.components_, n_clusters=3, n_init=1),
+                  name="PCA-based",
+                  data=dfMatrix.as_matrix())
     # turn above into function and run clustering model on this...
 
 
