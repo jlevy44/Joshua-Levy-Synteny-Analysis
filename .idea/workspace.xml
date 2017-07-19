@@ -2,28 +2,13 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="87dadfdf-9689-45cf-b4af-5fd342ee0ae6" name="Default" comment="">
-      <change type="MOVED" beforePath="$PROJECT_DIR$/Subgenome Clustering/OlderScipts/README.md" afterPath="$PROJECT_DIR$/SubgenomeClustering/OlderScipts/README.md" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/Subgenome Clustering/OlderScipts/__init__.py" afterPath="$PROJECT_DIR$/SubgenomeClustering/OlderScipts/__init__.py" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/Subgenome Clustering/OlderScipts/blastTsv2bed.py" afterPath="$PROJECT_DIR$/SubgenomeClustering/OlderScipts/blastTsv2bed.py" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/Subgenome Clustering/OlderScipts/compareKmerCountsDictsv3.py" afterPath="$PROJECT_DIR$/SubgenomeClustering/OlderScipts/compareKmerCountsDictsv3.py" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/Subgenome Clustering/OlderScipts/compareKmerCountsDictsv4.py" afterPath="$PROJECT_DIR$/SubgenomeClustering/OlderScipts/compareKmerCountsDictsv4.py" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/Subgenome Clustering/OlderScipts/fetch.tobacco_subgenome_sequences.py" afterPath="$PROJECT_DIR$/SubgenomeClustering/OlderScipts/fetch.tobacco_subgenome_sequences.py" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/Subgenome Clustering/OlderScipts/fetch.virgatum_subgenome_sequences.py" afterPath="$PROJECT_DIR$/SubgenomeClustering/OlderScipts/fetch.virgatum_subgenome_sequences.py" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/Subgenome Clustering/OlderScipts/multiplot_gRNA.py" afterPath="$PROJECT_DIR$/SubgenomeClustering/OlderScipts/multiplot_gRNA.py" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/Subgenome Clustering/OlderScipts/multiplot_gRNA_chrIter.py" afterPath="$PROJECT_DIR$/SubgenomeClustering/OlderScipts/multiplot_gRNA_chrIter.py" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/Subgenome Clustering/OlderScipts/multiplot_gRNA_chrIter_2colBedGraph.py" afterPath="$PROJECT_DIR$/SubgenomeClustering/OlderScipts/multiplot_gRNA_chrIter_2colBedGraph.py" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/Subgenome Clustering/OlderScipts/multiplot_gRNA_chrIter_2colBedGraphv2.py" afterPath="$PROJECT_DIR$/SubgenomeClustering/OlderScipts/multiplot_gRNA_chrIter_2colBedGraphv2.py" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/Subgenome Clustering/OlderScipts/splitRef.tobacco.py" afterPath="$PROJECT_DIR$/SubgenomeClustering/OlderScipts/splitRef.tobacco.py" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/Subgenome Clustering/__init__.py" afterPath="$PROJECT_DIR$/SubgenomeClustering/__init__.py" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/Subgenome Clustering/bed_files/.gitignore" afterPath="$PROJECT_DIR$/SubgenomeClustering/bed_files/.gitignore" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/Subgenome Clustering/blast_files/.gitignore" afterPath="$PROJECT_DIR$/SubgenomeClustering/blast_files/.gitignore" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/Subgenome Clustering/compareKmerCountsDictsv5.py" afterPath="$PROJECT_DIR$/SubgenomeClustering/compareKmerCountsDictsv5.py" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/Subgenome Clustering/fasta_files/.gitignore" afterPath="$PROJECT_DIR$/SubgenomeClustering/fasta_files/.gitignore" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/Subgenome Clustering/kmerCountCompare.txt" afterPath="$PROJECT_DIR$/SubgenomeClustering/kmerCountCompare.txt" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/Subgenome Clustering/kmercount_files/.gitignore" afterPath="$PROJECT_DIR$/SubgenomeClustering/kmercount_files/.gitignore" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/Subgenome Clustering/sortedbed_files/.gitignore" afterPath="$PROJECT_DIR$/SubgenomeClustering/sortedbed_files/.gitignore" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/Subgenome Clustering/splitFasta.py" afterPath="$PROJECT_DIR$/SubgenomeClustering/splitFasta.py" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/genomeAssembly/runPipeline.sh" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/genomeAssembly/.project" afterPath="" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/SubgenomeClustering/compareKmerCountsDictsv5.py" afterPath="$PROJECT_DIR$/SubgenomeClustering/compareKmerCountsDictsv5.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/genomeAssembly/renameGenomes.py" afterPath="$PROJECT_DIR$/genomeAssembly/renameGenomes.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/genomeAssembly/scaffoldPipeline.nf" afterPath="$PROJECT_DIR$/genomeAssembly/scaffoldPipeline.nf" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/genomeAssembly/writeShFiles.py" afterPath="$PROJECT_DIR$/genomeAssembly/writeShFiles.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -41,11 +26,51 @@
       <file leaf-file-name="compareKmerCountsDictsv5.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/SubgenomeClustering/compareKmerCountsDictsv5.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2158">
-              <caret line="376" column="12" lean-forward="false" selection-start-line="376" selection-start-column="12" selection-end-line="376" selection-end-column="12" />
+            <state relative-caret-position="120">
+              <caret line="402" column="57" lean-forward="true" selection-start-line="402" selection-start-column="57" selection-end-line="402" selection-end-column="57" />
               <folding>
                 <element signature="e#0#9#0" expanded="true" />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="renameGenomes.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/genomeAssembly/renameGenomes.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="240">
+              <caret line="17" column="0" lean-forward="true" selection-start-line="17" selection-start-column="0" selection-end-line="17" selection-end-column="0" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="scaffoldPipeline.nf" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/genomeAssembly/scaffoldPipeline.nf">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="30">
+              <caret line="21" column="35" lean-forward="true" selection-start-line="21" selection-start-column="35" selection-end-line="21" selection-end-column="35" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="scaffoldConfig.txt" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/genomeAssembly/scaffoldConfig.txt">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="120">
+              <caret line="8" column="44" lean-forward="true" selection-start-line="8" selection-start-column="44" selection-end-line="8" selection-end-column="44" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="writeShFiles.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/genomeAssembly/writeShFiles.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="162">
+              <caret line="72" column="40" lean-forward="false" selection-start-line="72" selection-start-column="40" selection-end-line="72" selection-end-column="40" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -61,12 +86,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>xi</find>
-      <find>fasta</find>
-      <find>high</find>
-      <find>Zmays_xxx_</find>
-      <find>clusterOptions =</find>
-      <find>== 1</find>
       <find>16</find>
       <find>refText</find>
       <find>CDS</find>
@@ -91,6 +110,12 @@
       <find>target</find>
       <find>sorted</find>
       <find>sorted(</find>
+      <find>.take</find>
+      <find>?</find>
+      <find>def</find>
+      <find>print</find>
+      <find>index=</find>
+      <find>las</find>
     </findStrings>
     <replaceStrings>
       <replace>val</replace>
@@ -127,22 +152,23 @@
         <option value="$PROJECT_DIR$/genomeAssembly/nextflow.config" />
         <option value="$PROJECT_DIR$/hybridumAnalysisScripts/com1_2.py" />
         <option value="$PROJECT_DIR$/genomeAssembly/com1_2.py" />
-        <option value="$PROJECT_DIR$/genomeAssembly/writeShFiles.py" />
-        <option value="$PROJECT_DIR$/genomeAssembly/scaffoldPipeline.nf" />
         <option value="$PROJECT_DIR$/genomeAssembly/fixGFFCoordinates.py" />
-        <option value="$PROJECT_DIR$/genomeAssembly/scaffoldConfig.txt" />
         <option value="$PROJECT_DIR$/GenomeKmerComp_Josh_20170717/splitFasta.py" />
         <option value="$PROJECT_DIR$/JoshuaTree/CNSAnalysis/CNSAnalysisv1.py" />
         <option value="$PROJECT_DIR$/hybridumAnalysisScripts/splitZmays/removev4Ambiguous.py" />
         <option value="$PROJECT_DIR$/GenomeKmerComp_Josh_20170717/kmerCountCompare.txt" />
         <option value="$PROJECT_DIR$/GenomeKmerComp_Josh_20170717/compareKmerCountsDictsv5.py" />
+        <option value="$PROJECT_DIR$/genomeAssembly/renameGenomes.py" />
+        <option value="$PROJECT_DIR$/genomeAssembly/scaffoldPipeline.nf" />
+        <option value="$PROJECT_DIR$/genomeAssembly/writeShFiles.py" />
+        <option value="$PROJECT_DIR$/genomeAssembly/scaffoldConfig.txt" />
         <option value="$PROJECT_DIR$/SubgenomeClustering/compareKmerCountsDictsv5.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="-1497" />
-    <option name="y" value="37" />
+    <option name="x" value="-1721" />
+    <option name="y" value="386" />
     <option name="width" value="1438" />
     <option name="height" value="768" />
   </component>
@@ -161,7 +187,7 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope" />
+      <pane id="Scratches" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -184,13 +210,27 @@
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
+              <option name="myItemId" value="genomeAssembly" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="Joshua-Levy-Synteny-Analysis" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="Joshua-Levy-Synteny-Analysis" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
               <option name="myItemId" value="SubgenomeClustering" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
         </subPane>
       </pane>
-      <pane id="Scratches" />
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -465,7 +505,14 @@
       <option name="project" value="LOCAL" />
       <updated>1500391045012</updated>
     </task>
-    <option name="localTasksCounter" value="16" />
+    <task id="LOCAL-00016" summary="subgenome clustering: Adding PCA and kmeans clustering">
+      <created>1500405185006</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1500405185006</updated>
+    </task>
+    <option name="localTasksCounter" value="17" />
     <servers />
   </component>
   <component name="TodoView">
@@ -478,13 +525,12 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="-1497" y="37" width="1438" height="768" extended-state="0" />
+    <frame x="-1721" y="386" width="1438" height="768" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.23157163" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.20314735" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32904148" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.23032904" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
@@ -496,6 +542,7 @@
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32904148" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
     </layout>
@@ -516,7 +563,8 @@
     <MESSAGE value="mkdir added to pipeline, new versioning" />
     <MESSAGE value="working on characterizing/clustering scaffolds by subgenome" />
     <MESSAGE value="subgenome clustering" />
-    <option name="LAST_COMMIT_MESSAGE" value="subgenome clustering" />
+    <MESSAGE value="subgenome clustering: Adding PCA and kmeans clustering" />
+    <option name="LAST_COMMIT_MESSAGE" value="subgenome clustering: Adding PCA and kmeans clustering" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -525,7 +573,6 @@
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/genomeAssembly/work/7a/00315feabe56dbce5bf8684166af64/.command.sh" />
     <entry file="file://$PROJECT_DIR$/genomeAssembly/work/59/5f247accfa6ad617c2582fc1d4b4a9/.command.sh" />
     <entry file="file://$PROJECT_DIR$/genomeAssembly/work/2e/d7c3306004c0203d9395a84df5904d/.command.sh" />
     <entry file="file://$PROJECT_DIR$/genomeAssembly/work/2e/d7c3306004c0203d9395a84df5904d/.command.out" />
@@ -604,13 +651,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/genomeAssembly/nextflow.config">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="150">
-          <caret line="10" column="15" lean-forward="false" selection-start-line="10" selection-start-column="15" selection-end-line="10" selection-end-column="15" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/genomeAssembly/pipelineFunctions.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="60">
@@ -622,13 +662,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/genomeAssembly/writeShFiles.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="211">
-          <caret line="69" column="41" lean-forward="false" selection-start-line="69" selection-start-column="41" selection-end-line="69" selection-end-column="41" />
         </state>
       </provider>
     </entry>
@@ -660,24 +693,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/genomeAssembly/scaffoldConfig.txt">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="75">
-          <caret line="5" column="10" lean-forward="true" selection-start-line="5" selection-start-column="10" selection-end-line="5" selection-end-column="10" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/hybridumAnalysisScripts/splitZmays/removev4Ambiguous.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="150">
           <caret line="10" column="43" lean-forward="true" selection-start-line="10" selection-start-column="43" selection-end-line="10" selection-end-column="43" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/genomeAssembly/scaffoldPipeline.nf">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="64">
-          <caret line="254" column="0" lean-forward="false" selection-start-line="254" selection-start-column="0" selection-end-line="254" selection-end-column="0" />
         </state>
       </provider>
     </entry>
@@ -688,72 +707,18 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/GenomeKmerComp_Josh_20170717/splitFasta.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="510">
-          <caret line="39" column="37" lean-forward="false" selection-start-line="39" selection-start-column="37" selection-end-line="39" selection-end-column="37" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/GenomeKmerComp_Josh_20170717/kmercount_files/.gitignore">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/GenomeKmerComp_Josh_20170717/sortedbed_files/.gitignore">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/GenomeKmerComp_Josh_20170717/fasta_files/.gitignore">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/GenomeKmerComp_Josh_20170717/blast_files/.gitignore">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/GenomeKmerComp_Josh_20170717/bed_files/.gitignore">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/GenomeKmerComp_Josh_20170717/compareKmerCountsDictsv5.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="4815">
-          <caret line="326" column="0" lean-forward="false" selection-start-line="326" selection-start-column="0" selection-end-line="326" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/GenomeKmerComp_Josh_20170717/kmerCountCompare.txt">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="120">
-          <caret line="8" column="31" lean-forward="false" selection-start-line="8" selection-start-column="31" selection-end-line="8" selection-end-column="31" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/GenomeKmerComp_Josh_20170717/splitFasta.py" />
+    <entry file="file://$PROJECT_DIR$/GenomeKmerComp_Josh_20170717/kmercount_files/.gitignore" />
+    <entry file="file://$PROJECT_DIR$/GenomeKmerComp_Josh_20170717/sortedbed_files/.gitignore" />
+    <entry file="file://$PROJECT_DIR$/GenomeKmerComp_Josh_20170717/fasta_files/.gitignore" />
+    <entry file="file://$PROJECT_DIR$/GenomeKmerComp_Josh_20170717/blast_files/.gitignore" />
+    <entry file="file://$PROJECT_DIR$/GenomeKmerComp_Josh_20170717/bed_files/.gitignore" />
+    <entry file="file://$PROJECT_DIR$/GenomeKmerComp_Josh_20170717/compareKmerCountsDictsv5.py" />
+    <entry file="file://$PROJECT_DIR$/GenomeKmerComp_Josh_20170717/kmerCountCompare.txt" />
     <entry file="file://$PROJECT_DIR$/JoshuaTree/CNSAnalysis/CNSAnalysisv1.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1785">
           <caret line="120" column="48" lean-forward="false" selection-start-line="120" selection-start-column="48" selection-end-line="120" selection-end-column="48" />
-          <folding>
-            <element signature="e#0#9#0" expanded="false" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -761,7 +726,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -769,7 +733,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -777,7 +740,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -785,7 +747,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -793,7 +754,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -801,7 +761,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -809,7 +768,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -817,7 +775,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -825,7 +782,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -833,16 +789,53 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding>
-            <element signature="e#0#24#0" expanded="false" />
-          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/genomeAssembly/nextflow.config">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="150">
+          <caret line="10" column="15" lean-forward="false" selection-start-line="10" selection-start-column="15" selection-end-line="10" selection-end-column="15" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/genomeAssembly/renameGenomes.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="240">
+          <caret line="17" column="0" lean-forward="true" selection-start-line="17" selection-start-column="0" selection-end-line="17" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/genomeAssembly/scaffoldPipeline.nf">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="30">
+          <caret line="21" column="35" lean-forward="true" selection-start-line="21" selection-start-column="35" selection-end-line="21" selection-end-column="35" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/genomeAssembly/writeShFiles.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="162">
+          <caret line="72" column="40" lean-forward="false" selection-start-line="72" selection-start-column="40" selection-end-line="72" selection-end-column="40" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/genomeAssembly/scaffoldConfig.txt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="120">
+          <caret line="8" column="44" lean-forward="true" selection-start-line="8" selection-start-column="44" selection-end-line="8" selection-end-column="44" />
+          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/SubgenomeClustering/compareKmerCountsDictsv5.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2158">
-          <caret line="376" column="12" lean-forward="false" selection-start-line="376" selection-start-column="12" selection-end-line="376" selection-end-column="12" />
+        <state relative-caret-position="120">
+          <caret line="402" column="57" lean-forward="true" selection-start-line="402" selection-start-column="57" selection-end-line="402" selection-end-column="57" />
           <folding>
             <element signature="e#0#9#0" expanded="true" />
           </folding>

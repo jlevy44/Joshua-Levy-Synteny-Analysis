@@ -4,10 +4,11 @@ from collections import defaultdict
 e = sys.argv[1:]
 counter = 1
 fastaCorrespond = defaultdict(list)
+os.mkdir('v0')
 for file in os.listdir('.'):
     if file.endswith('.fa'):
-        os.mkdir('%s_%s_v0'%(e[0],'0'* (3-len(str(counter)))+ str(counter)))
-        shutil.move(file,'%s_%s_v0/%s_%s_v0.fa'%(e[0],'0'* (3-len(str(counter)))+ str(counter),e[0],'0'* (3-len(str(counter)))+ str(counter)))
+        os.mkdir('v0/%s_%s_v0'%(e[0],'0'* (3-len(str(counter)))+ str(counter)))
+        shutil.move(file,'v0/%s_%s_v0/%s_%s_v0.fa'%(e[0],'0'* (3-len(str(counter)))+ str(counter),e[0],'0'* (3-len(str(counter)))+ str(counter)))
         fastaCorrespond[file] = '%s_%s_v0.fa'%(e[0],'0'* (3-len(str(counter)))+ str(counter))
         counter += 1
 

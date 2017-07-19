@@ -37,6 +37,10 @@ chanNextSamples = Channel.fromPath(version + '/*'+version,type: 'dir', relative:
                         .map { nextVersion + '/' + it.name - version + nextVersion}
                         .map{ file(it) }
                         .subscribe { it.mkdirs() }
+chanNextSamples2 = Channel.fromPath(version + '/*'+version,type: 'dir', relative: true)
+                        .map { nextVersion + '/' + it.name - version + nextVersion}
+                        .map{ file(it) }
+                        .subscribe { println it }
 //= Channel
                     //
                     /* .subscribe(onNext: { println it}, onComplete: { println 'Done.' }) */
@@ -135,7 +139,7 @@ linkageChannel1 = Channel.create()
 
 process buildReference {
 
-clusterOptions = { buildRef == 1 ? '-P plant-analysis.p -cwd -l exclusive.c -pe pe_slots 6 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt' }
+clusterOptions = { buildRef == 1 ? '-P plant-analysis.p -cwd -q normal.q -pe pe_slots 6 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt' }
 
 input:
 file 'done' from linkageChannel15
@@ -161,7 +165,7 @@ else
 
 
 
-linkageChannel1 = linkageChannel1.take(1)
+linkageChannel1 = linkageChannel1.last()
 
 
 linkageChannel2 = Channel.create()

@@ -6,7 +6,7 @@ import pandas as pd
 import multiprocessing as mp
 import numpy as np
 from time import time, clock
-from collections import Counter
+from collections import Counter, defaultdict
 from sklearn.decomposition import PCA
 from sklearn.cluster import KMeans
 from sklearn import metrics
@@ -354,20 +354,17 @@ def real_main():
     #print d.keys()[0:10]
     global count, target, dfMatrix
     start = clock()
-    dfMatrix = pd.DataFrame(np.full((len(scaffolds),len(kmers)),0,dtype=float))
-    dfMatrix.columns = kmers
-    dfMatrix.rows = scaffolds
+    #dfMatrix = pd.DataFrame(np.full((len(scaffolds),len(kmers)),0,dtype=float))
+    #dfMatrix.columns = kmers
+    #dfMatrix.rows = scaffolds
     print clock()-start
     #dfMatrix.to_csv('emptyMatrix.csv')
     count = 0
     target = 1
     #with open(blastPath + 'kmerFasta.BLASTtsv.txt','r') as f:
     #    lines = f.readlines()
-    """
-
-    """
     start = clock()
-    labels = dfMatrix.rows
+    #labels = dfMatrix.rows
 
     #dfMatrix.to_csv('clusteringMatrix.csv')
     #b = blast2bed(blastPath + 'kmerFasta.BLASTtsv.txt')
@@ -383,7 +380,7 @@ def real_main():
         for key in counts.keys():
             dfMatrix.set_value(scaffold, key, counts[key])
         print scaffold
-    print dfMatrix.rows
+    #print dfMatrix.rows
     """
     if __name__ == '__main__':
         p = mp.Pool(8)
@@ -394,16 +391,43 @@ def real_main():
         #p.map(populateKMatrix, lines)
         p.close()
         p.join()"""
+    kmerDict = {kmer:[kmer] for kmer in kmers}
+    #print kmerDict
+    d = defaultdict(list)
     with open('blasted_merged.bed', 'r') as f:
         for line in f:
             if line:
-                scaffold = line.split('\t')[0]
                 # print scaffold
-                counts = Counter(line.strip('\n').split('\t')[-1].split(','))
-                interval = abs(float(line.split('\t')[2]) - float(line.split('\t')[1]))
-                print scaffold, counts
-                for key in counts.keys():
-                    dfMatrix.set_value(scaffold, key, float(counts[key])/interval)
+                listLine = line.rstrip('\n').split('\t')
+                #scaffold = listLine[0]
+                counts = Counter(listLine[-1].split(','))
+                interval = (abs(float(listLine[2]) - float(listLine[1])))/5000.
+                #print scaffold, counts
+                for key in counts:
+                    try:
+                        kmerDict[key] += counts.keys()
+                        kmerDict[key] = list(set(kmerDict[key]))
+                    except:
+                        with open('keyErrors.txt','a') as f2:
+                            f2.write(listLine[0] + ' ' + key +'\n')
+
+                    #print kmerDict[key]
+                    counts[key] /= interval
+                d[listLine[0]] = counts
+                    #dfMatrix.set_value(scaffold, key, float(counts[key])/interval)
+    with open('kmerPrevalence.txt','w') as f:
+        for key in kmerDict:
+            f.write('%s\t%s\n'%(key,','.join(kmer for kmer in kmerDict[key])))
+    del kmerDict
+
+    dfMatrix = pd.DataFrame(d).fillna(0.)
+    dfMatrix.to_csv('clusteringMatrix2.csv', index=False)
+    kmers = dfMatrix.columns
+    scaffolds = dfMatrix.rows
+    with open('rowNames.txt', 'w') as f:
+        f.write('\n'.join('\t'.join([str(i),scaffolds[i]]) for i in range(len(scaffolds))))
+    with open('colNames.txt', 'w') as f:
+        f.write('\n'.join('\t'.join([str(i),kmers[i]]) for i in range(len(kmers))))
     """
     with open('blasted_merged.bed','r') as f:
         for line in f:
@@ -414,9 +438,11 @@ def real_main():
                 for key in counts.keys():
                     dfMatrix.set_value(scaffold,key,counts[key])
                     """
-    dfMatrix.to_csv('clusteringMatrix.csv')
-    sample_size = len(scaffolds)
 
+    #dfMatrix = pd.read_csv('clusteringMatrix2.csv')
+    #sample_size = len(scaffolds)
+
+    """
     def bench_k_means(estimator, name, data):
         t0 = time.time()
         estimator.fit(data)
@@ -430,12 +456,24 @@ def real_main():
                  metrics.silhouette_score(data, estimator.labels_,
                                           metric='euclidean',
                                           sample_size=sample_size)))
+    """
+    data = dfMatrix.as_matrix()
+    pca = PCA(n_components=3)#min(len(scaffolds),len(kmers)))
+    pca.fit(data)
+    #print pca.explained_variance_ratio_
+    pca_transformed = pca.transform(data)
+    kmeans = KMeans(init=pca.components_,n_clusters=3)
+    kmeans.fit(pca_transformed)
+    #print kmeans.inertia_
+    #print kmeans.cluster_centers_
+    with open('ClusteringOutputs.txt','w') as f:
+        f.write('\n'.join(map(str,pca.explained_variance_ratio_,kmeans.inertia_,kmeans.cluster_centers_,kmeans.labels_)))
 
-    pca = PCA(n_components=min(len(scaffolds),len(kmers)))
-    pca = pca.fit_transform(dfMatrix.as_matrix())
-    bench_k_means(KMeans(init=pca.components_, n_clusters=3, n_init=1),
+    with open('finalOutput.txt','w') as f:
+        f.write('\n'.join('%s\t%s'%(scaffolds[i],str(kmeans.labels_[i])) for i in range(len(kmeans.labels_))))
+    """bench_k_means(KMeans(init=pca.components_, n_clusters=3, n_init=1),
                   name="PCA-based",
-                  data=dfMatrix.as_matrix())
+                  data=dfMatrix.as_matrix())"""
     # turn above into function and run clustering model on this...
 
 

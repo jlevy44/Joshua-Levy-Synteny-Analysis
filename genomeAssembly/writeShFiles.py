@@ -68,10 +68,10 @@ for sample in listSamples:
             geneNaming, '../../referenceGenomes/%s/' % CDSspecies + CDSOld, geneNaming + '.gff3', geneNaming + '.log'),
         'python %srenameGenes.py %s %s %s' % (root, geneNaming + '.gff3', CDSgeneNaming, geneNaming),
         'python %sfixGFFCoordinates.py %s'%(root,geneNaming),
-        'python -m jcvi.formats.gff bed --type=mRNA --key=Name %s -o %s' % (geneNaming + '.gff3', sample + '.bed'),
+        'python -m jcvi.formats.gff bed --type=mRNA --key=gene_name %s -o %s' % (geneNaming + '.gff3', sample + '.bed'),
         'gffread -x %s.cds -g %s.fa %s.gff3 -E'%(sample,sample,geneNaming)]+linkReferences + ['cd '+root,'python %sformatBed.py s %s %s'%(root,sample,version),'cd '+root,'python %sformatCDS.py s %s %s'%(root,sample,version)]
     """'python -m jcvi.formats.gff load %s %s --parents=mRNA --children=CDS -o %s' % (
-                 geneNaming+'.gff3', fastaNew,sample + '.cds')"""
+                 geneNaming+'.gff3', fastaNew,sample + '.cds')""" # key=Name was original, now gene_name with
     nucCommands = [headSh]+ ['nucmer -t 6 -p %s %s %s'%(CDSspecies+'nuc',root+'referenceGenomes/%s/'%CDSspecies+fastaNucOld,sample+'.fa'),
                  'delta-filter -m -q -i 85 -u 50 %snuc.delta > %snuc2.delta'%(CDSspecies,CDSspecies),'show-tiling -a %snuc2.delta > %snuc.tiling'%(CDSspecies,CDSspecies)]
     commands1 = [headSh]+['rm *.anchors *.last *.filtered *.prj']+\
