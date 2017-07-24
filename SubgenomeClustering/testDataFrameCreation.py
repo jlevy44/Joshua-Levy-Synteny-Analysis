@@ -49,7 +49,7 @@ pca = PCA(n_components=3)
 #pca.fit(data)
 pca_transformed = pca.fit_transform(data)
 inertias = []
-for j in range(4,11):
+for j in range(2,11):
     kmeans = KMeans(n_clusters=j)
     kmeans.fit(pca_transformed)
     inertias.append(kmeans.inertia_)
