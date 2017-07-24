@@ -209,15 +209,17 @@ with open('Maize2_SplitInfo.txt','w') as f:
     f.write('\t'.join(['SubgenomeChr','MaizeOriginalChr','xi','xf'])+'\n')
     f.write('\n'.join('\t'.join([str(x) for x in bedTuple]) for bedTuple in mays2ChrXiXfBed) + '\n')
 
-if 0:
-    print mays2ChrXiXfBed
-    global inputStr
-    with open('ZmaysM1_640_AGPv4.fa','w') as f:
-        for chrom in mays1ChrXiXfBed:
+badChr = ['3_76388985_88434194','3_99309338_112736828','3_93379329_144019348']
+print mays2ChrXiXfBed
+global inputStr
+with open('ZmaysM1_640_AGPv4.fa','w') as f:
+    for chrom in mays1ChrXiXfBed:
+        if chrom[0] not in badChr:
             inputStr = maysFasta[chrom[1]][chrom[2]:chrom[3]].seq
             f.write('>%s\n%s\n'%(chrom[0],wraplines()))#fill(,60, break_on_hyphens = False)))
-    with open('ZmaysM2_641_AGPv4.fa', 'w') as f:
-        for chrom in mays2ChrXiXfBed:
+with open('ZmaysM2_641_AGPv4.fa', 'w') as f:
+    for chrom in mays2ChrXiXfBed:
+        if chrom[0] not in badChr:
             inputStr = maysFasta[chrom[1]][chrom[2]:chrom[3]].seq
             f.write('>%s\n%s\n'%(chrom[0],wraplines()))#fill(maysFasta[chrom[1]][chrom[2]:chrom[3]].seq,60, break_on_hyphens = False)))
 
@@ -254,8 +256,9 @@ M2gffLines = []
 
 gffOutLines = []
 for chrom in mays1ChrXiXfBed:
-    gffstr = str(b.intersect(BedTool('\t'.join([chrom[1],str(chrom[2]+1),str(chrom[3])]),from_string=True),wa=True,f=0.95))
-    gffOutLines += changeGFFCoordinates(gffstr,chrom[2],chrom[0])
+    if chrom[0] not in badChr:
+        gffstr = str(b.intersect(BedTool('\t'.join([chrom[1],str(chrom[2]+1),str(chrom[3])]),from_string=True),wa=True,f=0.95))
+        gffOutLines += changeGFFCoordinates(gffstr,chrom[2],chrom[0])
 with open('640_presort.gff3','w') as f:
     f.writelines(gffOutLines)
 
@@ -263,8 +266,9 @@ with open('640_presort.gff3','w') as f:
 
 gffOutLines = []
 for chrom in mays2ChrXiXfBed:
-    gffstr = str(b.intersect(BedTool('\t'.join([chrom[1],str(chrom[2]+1),str(chrom[3])]),from_string=True),wa=True,f=0.95))
-    gffOutLines += changeGFFCoordinates(gffstr,chrom[2],chrom[0])
+    if chrom[0] not in badChr:
+        gffstr = str(b.intersect(BedTool('\t'.join([chrom[1],str(chrom[2]+1),str(chrom[3])]),from_string=True),wa=True,f=0.95))
+        gffOutLines += changeGFFCoordinates(gffstr,chrom[2],chrom[0])
 with open('641_presort.gff3','w') as f:
     f.writelines(gffOutLines)
 

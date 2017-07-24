@@ -10,6 +10,7 @@ from collections import Counter, defaultdict
 from sklearn.decomposition import PCA
 from sklearn.cluster import KMeans
 from sklearn import metrics
+import matplotlib.pyplot as plt
 
 # modify to run kmercount on a set of fasta files:
 def writeKmercount(fastaPath, fastaFiles, kmercountPath):
@@ -417,13 +418,22 @@ def real_main():
                     #dfMatrix.set_value(scaffold, key, float(counts[key])/interval)
     with open('kmerPrevalence.txt','w') as f:
         for key in kmerDict:
-            f.write('%s\t%s\n'%(key,','.join(kmer for kmer in kmerDict[key])))
+            f.write('%s\t%s\t%d\n'%(key,','.join(kmer for kmer in kmerDict[key]),len(kmerDict[key])))
+    histData = np.vectorize(lambda x: len(x))(kmerDict.values())
+    fig = plt.figure()
+    plt.hist(histData,bins = 50)
+    plt.xlabel('Number of Related Kmers')
+    plt.ylabel('Count')
+    plt.title('Histogram of Number of Related Kmers')
+    plt.savefig('Kmer Histogram.png')
+
+
     del kmerDict
 
-    dfMatrix = pd.DataFrame(d).fillna(0.)
-    dfMatrix.to_csv('clusteringMatrix2.csv', index=False)
-    kmers = dfMatrix.columns
-    scaffolds = dfMatrix.rows
+    dfMatrix = pd.DataFrame(d).fillna(0.).T
+    dfMatrix.to_csv('clusteringMatrix2.csv', index=True)
+    kmers = list(dfMatrix.axes[1])
+    scaffolds = list(dfMatrix.axes[0])
     with open('rowNames.txt', 'w') as f:
         f.write('\n'.join('\t'.join([str(i),scaffolds[i]]) for i in range(len(scaffolds))))
     with open('colNames.txt', 'w') as f:
@@ -439,7 +449,7 @@ def real_main():
                     dfMatrix.set_value(scaffold,key,counts[key])
                     """
 
-    #dfMatrix = pd.read_csv('clusteringMatrix2.csv')
+    #dfMatrix = pd.read_csv('clusteringMatrix2.csv', index_col = 0)
     #sample_size = len(scaffolds)
 
     """
@@ -462,7 +472,7 @@ def real_main():
     pca.fit(data)
     #print pca.explained_variance_ratio_
     pca_transformed = pca.transform(data)
-    kmeans = KMeans(init=pca.components_,n_clusters=3)
+    kmeans = KMeans(n_clusters=3)
     kmeans.fit(pca_transformed)
     #print kmeans.inertia_
     #print kmeans.cluster_centers_
