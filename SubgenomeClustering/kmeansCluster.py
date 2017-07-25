@@ -1,27 +1,39 @@
 import pandas as pd, numpy as np
 from sklearn.decomposition import PCA
 from sklearn.cluster import KMeans
-from multiprocessing import Pool
 import matplotlib.pyplot as plt
 import plotly.graph_objs as go
-import random
 import plotly.offline as py
-df = pd.read_csv('clusteringMatrix3.csv',index_col=0)
-scaffolds = list(df.axes[0])
+import cPickle as pickle
+save=0
+load=1
+if save:
+    df = pd.read_csv('clusteringMatrix3.csv',index_col=0)
+    scaffolds = list(df.axes[0])
+    pickle.dump(scaffolds,open('scaffolds.p','wb'))
+    data = df.as_matrix()
+    pca = PCA(n_components=3)
+    pca_transformed = pca.fit_transform(data)
+    del data
+    np.save('transformed_matrix.npy',pca_transformed)
+if load:
+    scaffolds = pickle.load(open('scaffolds.p','rb'))
+    pca_transformed = np.load('transformed_matrix.npy')
 
-data = df.as_matrix()
-pca = PCA(n_components=3)
-pca_transformed = pca.fit_transform(data)
+#pd.DataFrame(pca_transformed).to_csv('Transformed_ClusteringMatrix.csv',index=False)
+#pca_transformed = pd.read_csv('Transformed_ClusteringMatrix.csv',index_col=False).to_matrix
+#
 def runKmeans(i):
     global pca_transformed, scaffolds
-
     kmeans = KMeans(n_clusters=i)
     kmeans.fit(pca_transformed)
+    inertia = kmeans.inertia_
     labels = kmeans.labels_
     centers = kmeans.cluster_centers_
-    print centers, kmeans.inertia_
+    del kmeans
+    print centers, inertia
     with open('kmeans_nclusters_%d.txt'%i,'w') as f:
-        f.write('\n'.join('%s\t%d\tdistance=%f'%(scaffolds[j],labels[j],np.linalg.norm(pca_transformed[j,:]-centers[labels[j],:])) for j in range(len(scaffolds))))
+        f.write('inertia=%s\nclusterCenters:\n%s\n'%tuple(map(str,[inertia,centers]))+'\n'.join('%s\t%d\tdistance=%f'%(scaffolds[j],labels[j],np.linalg.norm(pca_transformed[j,:]-centers[labels[j],:])) for j in range(len(scaffolds))))
     plots = []
     N = len(labels)
     c = ['hsl(' + str(h) + ',50%' + ',50%)' for h in np.linspace(0, 360, N)]
@@ -43,17 +55,19 @@ def runKmeans(i):
 
 
 
-    return kmeans.inertia_
+    return inertia
 
-if __name__ == '__main__':
-    p = Pool(9)
-    inertias = p.map(runKmeans,range(2,11))
-    p.close()
-    p.join()
+#if __name__ == '__main__':
+#    p = Pool()
+inertias = []
+for i in range(2,8):
+    inertias.append(runKmeans(i))
+#    p.close()
+#    p.join()
 
 
 fig = plt.figure()
-plt.plot(range(2,11),inertias)
+plt.plot(range(2,8),inertias)
 plt.xlabel('Number of Clusters')
 plt.ylabel('Inertia of Model')
 plt.title('Number of Clusters Versus Inertia')
