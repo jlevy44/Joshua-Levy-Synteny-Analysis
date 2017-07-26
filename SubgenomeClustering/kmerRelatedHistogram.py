@@ -4,6 +4,7 @@ import numpy as np
 import peakutils
 from sklearn.neighbors import KernelDensity
 from collections import defaultdict
+from scipy.signal import argrelextrema
 save=0
 load=1
 if save:
@@ -26,8 +27,8 @@ del kmerDict
 kde = KernelDensity(kernel = 'gaussian', bandwidth=500).fit(histData)
 exp_log_dens = np.exp(kde.score_samples(xplot))
 
-idxs_peaks = peakutils.indexes(exp_log_dens)
-idxs_valleys = peakutils.indexes(-exp_log_dens)
+idxs_peaks = argrelextrema(exp_log_dens,np.greater)[0] #peakutils.indexes(exp_log_dens)
+idxs_valleys = argrelextrema(exp_log_dens,np.less)[0] #peakutils.indexes(-exp_log_dens)
 
 
 fig = plt.figure()
@@ -43,16 +44,20 @@ plt.title('Histogram of Number of Related Kmers (Normalized)')
 plt.savefig('KmerHistogram.png')
 
 
-intervals = [(0,xplot[0])] + [(xplot[idxs_valleys[i]],xplot[idxs_valleys[i+1]]) for i in range(len(idxs_valleys)-1)] + [(xplot[idxs_valleys[-1]],xplot[-1])]
+intervals = [(0,xplot[0][0])] + [(xplot[idxs_valleys[i]][0],xplot[idxs_valleys[i+1]][0]) for i in range(len(idxs_valleys)-1)] + [(xplot[idxs_valleys[-1]][0],xplot[-1][0])]
 counts = np.array(reverseLookup.keys())
-for idx, interval in intervals:
+idx = 1
+print reverseLookup
+for interval in enumerate(intervals):
     try:
         print interval
         keys = counts[np.where((counts <= interval[1]) & (counts >= interval[0]))]
         print keys
         #np.vectorize(lambda x: x <= interval[1] and x >= interval[0])(counts)
-        with open('Peak%d_CountInt_%d_%d.fa'%tuple([idx]+map(int,interval)),'w') as f:
-            f.write('\n'.join('>%s\n%s'%(val,val) for val in reverseLookup[key] for key in keys))
+        with open('Peak%d_CountInt_%d_%d.fa'%tuple([idx+1]+map(int,interval)),'w') as f:
+            for key in keys:
+                f.write('\n'.join('>%s\n%s'%(val,val) for val in reverseLookup[key])+'\n')
+        idx += 1
     except:
         with open('ErrFile.txt','a') as f:
             f.write(str(idx)+'\t%s'%str(interval)+'\n')

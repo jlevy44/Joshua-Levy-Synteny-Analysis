@@ -39,10 +39,10 @@ for reference in weights.keys():
     with open('buildRef.sh','w') as f:
         f.write('\n'.join([headSh,'samtools faidx %s' % fastaOld,
             'python -m jcvi.formats.gff load %s %s --parents=mRNA --children=CDS -o %s' % (
-            [file for file in os.listdir('.') if 'cufflinks' not in file and (file.endswith('.gff3') or file.endswith('.gff'))][
+            [file for file in os.listdir('.') if 'cufflinks' not in file and reference in file and (file.endswith('.gff3') or file.endswith('.gff'))][
                 0], fastaOld, reference + '.cds'),
             'python -m jcvi.formats.gff bed --type=mRNA --key=Name %s -o %s' % (
-            [file for file in os.listdir('.') if 'cufflinks' not in file and (file.endswith('.gff3') or file.endswith('.gff'))][
+            [file for file in os.listdir('.') if 'cufflinks' not in file and reference in file and (file.endswith('.gff3') or file.endswith('.gff'))][
                 0], reference + '.bed'),
             'python %sreplacepath.py %s' % (root, reference + '.bed'), 'mv %s %s ..' % (reference + '.bed', reference + '.cds')]+
                           ['cd '+root,'python %sformatBed.py r %s %s' % (root, reference,version),'cd '+root, 'python %sformatCDS.py r %s %s' % (root, reference,version)]))
