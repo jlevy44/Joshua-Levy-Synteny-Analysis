@@ -1,3 +1,5 @@
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import cPickle as pickle
 import numpy as np
@@ -44,20 +46,18 @@ plt.title('Histogram of Number of Related Kmers (Normalized)')
 plt.savefig('KmerHistogram.png')
 
 
-intervals = [(0,xplot[0][0])] + [(xplot[idxs_valleys[i]][0],xplot[idxs_valleys[i+1]][0]) for i in range(len(idxs_valleys)-1)] + [(xplot[idxs_valleys[-1]][0],xplot[-1][0])]
+intervals = [(0.,xplot[idxs_valleys[0]][0])] + [(xplot[idxs_valleys[i]][0],xplot[idxs_valleys[i+1]][0]) for i in range(len(idxs_valleys)-1)] + [(xplot[idxs_valleys[-1]][0],xplot[-1][0])]
 counts = np.array(reverseLookup.keys())
-idx = 1
 print reverseLookup
 for interval in enumerate(intervals):
     try:
         print interval
-        keys = counts[np.where((counts <= interval[1]) & (counts >= interval[0]))]
+        keys = counts[np.where((counts <= np.floor(interval[1][1])) & (counts >= np.ceil(interval[1][0])))]
         print keys
         #np.vectorize(lambda x: x <= interval[1] and x >= interval[0])(counts)
-        with open('Peak%d_CountInt_%d_%d.fa'%tuple([idx+1]+map(int,interval)),'w') as f:
+        with open('Peak%d_CountInt_%d_%d.fa'%tuple([interval[0]+1]+map(int,list(interval[1]))),'w') as f:
             for key in keys:
                 f.write('\n'.join('>%s\n%s'%(val,val) for val in reverseLookup[key])+'\n')
-        idx += 1
     except:
         with open('ErrFile.txt','a') as f:
-            f.write(str(idx)+'\t%s'%str(interval)+'\n')
+            f.write(str(interval[0])+'\t%s'%str(interval[1])+'\n')
