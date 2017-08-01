@@ -326,7 +326,7 @@ def real_main():
     # write the shell scripts for generating kmercounts
     # pass fastaFiles to bbtools for running kmerCounts
     kmercountPath = parseConfigFindPath('kmercountPath',configFile)
-    #writeKmercount(fastaPath, fastaFiles, kmercountPath)
+    writeKmercount(fastaPath, fastaFiles, kmercountPath)
 
     kmercountFiles = filter(None,str(subprocess.Popen(['ls', '%s' % kmercountPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout.read()).split('\n'))
     # kmercount_files are input to compareKmers function
@@ -337,7 +337,7 @@ def real_main():
     # blast fasta files against the whole genome
     # could filter BLAST output, if needed
     blastPath = parseConfigFindPath('blastPath',configFile)
-    #writeBlast(genome, blastPath, kmercountPath, kmercountFiles)
+    writeBlast(genome, blastPath, kmercountPath, kmercountFiles)
 
     # check for BLAST output
     blastFiles = filter(None,str(subprocess.Popen(['ls', '%s' % blastPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout.read()).split('\n'))
@@ -368,9 +368,9 @@ def real_main():
     #labels = dfMatrix.rows
 
     #dfMatrix.to_csv('clusteringMatrix.csv')
-    #b = blast2bed(blastPath + 'kmerFasta.BLASTtsv.txt')
-    #print b.head()
-    #b.saveas('blasted_merged.bed')
+    b = blast2bed(blastPath + 'kmerFasta.BLASTtsv.txt')
+    print b.head()
+    b.saveas('blasted_merged.bed')
     #print time.clock() - start
     def addToKMatrix(line):
         global dfMatrix
@@ -416,6 +416,7 @@ def real_main():
                     counts[key] /= interval
                 d[listLine[0]] = counts
                     #dfMatrix.set_value(scaffold, key, float(counts[key])/interval)
+
     with open('kmerPrevalence.txt','w') as f:
         for key in kmerDict:
             f.write('%s\t%s\t%d\n'%(key,','.join(kmer for kmer in kmerDict[key]),len(kmerDict[key])))
@@ -430,8 +431,10 @@ def real_main():
 
     del kmerDict
 
+    execfile('kmerRelatedHistogram.py')
+
     dfMatrix = pd.DataFrame(d).fillna(0.).T
-    dfMatrix.to_csv('clusteringMatrix2.csv', index=True)
+    dfMatrix.to_csv('clusteringMatrix3.csv', index=True)
     kmers = list(dfMatrix.axes[1])
     scaffolds = list(dfMatrix.axes[0])
     with open('rowNames.txt', 'w') as f:
@@ -467,7 +470,9 @@ def real_main():
                                           metric='euclidean',
                                           sample_size=sample_size)))
     """
-    data = dfMatrix.as_matrix()
+    #data = dfMatrix.as_matrix()
+    execfile('kmeansCluster.py')
+    """
     pca = PCA(n_components=3)#min(len(scaffolds),len(kmers)))
     pca.fit(data)
     #print pca.explained_variance_ratio_
@@ -480,7 +485,7 @@ def real_main():
         f.write('\n'.join(map(str,pca.explained_variance_ratio_,kmeans.inertia_,kmeans.cluster_centers_,kmeans.labels_)))
 
     with open('finalOutput.txt','w') as f:
-        f.write('\n'.join('%s\t%s'%(scaffolds[i],str(kmeans.labels_[i])) for i in range(len(kmeans.labels_))))
+        f.write('\n'.join('%s\t%s'%(scaffolds[i],str(kmeans.labels_[i])) for i in range(len(kmeans.labels_))))"""
     """bench_k_means(KMeans(init=pca.components_, n_clusters=3, n_init=1),
                   name="PCA-based",
                   data=dfMatrix.as_matrix())"""
