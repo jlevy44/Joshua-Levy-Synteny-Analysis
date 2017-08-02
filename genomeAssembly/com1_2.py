@@ -18,6 +18,14 @@ if all([os.path.isfile('%s.%s.lifted.anchors' %(sample, ref)) and os.stat('%s.%s
 try:
     tiling2bed('%snuc.tiling'%CDS, CDS, sample, sample+'_%ssyn'%CDS+'.bed')
     replaceGeneNames(sample, CDS, 0, 1)
+except:
+    print 'Unable to finish nucmify'
+try:
+    BB2bed('BBmapped.bed',CDS, sample,'../../referenceGenomes/%s/centromere.bed'%CDS)
+    replaceGeneNames(sample, CDS, 0, 0, 1)
+except:
+    print 'Unable to finish BBMapping'
+try:
     subprocess.call('sh constructv1_2.sh',shell=True)
 except:
     print 'Unable to finish sh constructv1_2.sh for ' + sample

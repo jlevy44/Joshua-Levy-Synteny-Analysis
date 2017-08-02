@@ -22,6 +22,7 @@ CDS = findValue('CDS ' );
 CDSFasta = findValue('CDSFasta ' );
 geneNameOld = findValue('geneNameOld ');
 buildSamp = findValue('buildSample ').asType(Integer);
+BB = findValue('BB ').asType(Integer);
 nuc = findValue('nuc ').asType(Integer);
 com1_2 = findValue('com1_2 ').asType(Integer);
 allmaps = findValue('allmaps ').asType(Integer);
@@ -78,7 +79,11 @@ if(writeSh)
 """
 #!/bin/bash
 touch done
+module load bedtools/2.25.0
 python ${workingDir}/writeShFiles.py
+cd ${workingDir}/referenceGenomes/${CDS}
+python ../../generateCentromereBeds.py
+cd -
 """
 else {
     """
@@ -235,6 +240,34 @@ else
 }
 
 
+linkageChannel3_5 = Channel.create()
+process BBfy {
+
+clusterOptions = {nuc == 1 ? '-P plant-analysis.p -cwd -q normal.q -pe pe_slots 6 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt'}
+
+input:
+val sample from linkageChannel3
+
+
+
+output:
+val sample into linkageChannel3_5
+
+
+script:
+if(nuc)
+"""
+#!/bin/bash
+touch done
+module load bedtools/2.25.0
+cd ${workingDir}/${version}/${sample}
+sh BB_build.sh
+"""
+else
+"""touch done"""
+}
+
+
 linkageChannel4 = Channel.create()
 linkageChannel5 = Channel.create()
 refStrList = refStr.take(1)
@@ -246,7 +279,7 @@ clusterOptions = { com1_2 == 1 ? '-P plant-analysis.p -cwd -q normal.q -pe pe_sl
 //module = 'bedtools/2.25.0'
 
 input:
-val sample from linkageChannel3
+val sample from linkageChannel3_5
 each refText from refStrList
 
 //file 'done' from linkageChannel3

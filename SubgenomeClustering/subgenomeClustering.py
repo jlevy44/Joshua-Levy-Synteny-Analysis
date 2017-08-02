@@ -10,24 +10,32 @@ from collections import Counter, defaultdict
 from sklearn.decomposition import PCA
 from sklearn.cluster import KMeans
 from sklearn import metrics
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+import cPickle as pickle
+#import peakutils
+from sklearn.neighbors import KernelDensity
+from collections import defaultdict
+from scipy.signal import argrelextrema
 
 # modify to run kmercount on a set of fasta files:
 def writeKmercount(fastaPath, fastaFiles, kmercountPath):
     """Takes list of fasta files and runs kmercountexact.sh to generate with only one column for pos and converts them to proper bedgraph format to be sorted"""
     for fastaFile in fastaFiles:
-        f = fastaFile.rstrip()
-        print f
-        scriptName = f[:f.rfind('.')] + '.sh'
-        outFileName = f[:f.rfind('.')]+'.kcount'
-        lineOutputList = [fastaPath, fastaFile, kmercountPath, outFileName]
-        bbtoolsI = open(scriptName, 'w')
-        bbtoolsI.write('#!/bin/bash\nmodule load bbtools\nkmercountexact.sh overwrite=true fastadump=f mincount=3 in=%s/%s out=%s/%s k=23 -Xmx20g\n' % tuple(lineOutputList))
-        bbtoolsI.close()
-        try:
-            subprocess.call('nohup sh %s' % scriptName, shell=True)
-        except:
-            print 'Unable to run %s via command line..' % outFileName
+        if fastaFile.endswith('.fa') or fastaFile.endswith('.fasta'):
+            f = fastaFile.rstrip()
+            print f
+            scriptName = f[:f.rfind('.')] + '.sh'
+            outFileName = f[:f.rfind('.')]+'.kcount'
+            lineOutputList = [fastaPath, fastaFile, kmercountPath, outFileName]
+            bbtoolsI = open(scriptName, 'w')
+            bbtoolsI.write('#!/bin/bash\nmodule load bbtools\nkmercountexact.sh overwrite=true fastadump=f mincount=3 in=%s/%s out=%s/%s k=23 -Xmx100g\n' % tuple(lineOutputList))
+            bbtoolsI.close()
+            try:
+                subprocess.call('nohup sh %s' % scriptName, shell=True)
+            except:
+                print 'Unable to run %s via command line..' % outFileName
 
 
 def kmercounttodict(kmercount2fname,kmercountPath):
@@ -44,7 +52,7 @@ def kmercounttodict(kmercount2fname,kmercountPath):
 def kmer2Fasta(kmercountPath):
     for kmer in os.listdir(kmercountPath):
         if kmer.endswith('.kcount'):
-            with open(kmercountPath+kmer,'r') as f, open(kmercountPath+'kmerFasta.fa','w') as f2:
+            with open(kmercountPath+kmer,'r') as f, open(kmercountPath+kmer+'.fa','w') as f2:
                 for line in f:
                     if line and int(line.split('\t')[-1]) >= 100:
                         f2.write('>%s\n%s\n'%tuple([line.split('\t')[0]]*2))
@@ -103,12 +111,12 @@ def compareKmers(kmercountPath, kmercountFiles):
 
 # modify to run blast on fasta files output from compareKmers
 """Takes differential kmercount fasta files and BLASTs them to genome"""
-def writeBlast(genome, blastPath, kmercountPath, kmercountFiles):
+def writeBlast(genome, blastPath, kmercountPath, fastaPath):
     """make blast database for whole genome assembly"""
     genomeName = genome[:genome.rfind('.')]
     dbscriptName = genomeName + '.db.sh'
     blastdb = open(dbscriptName, 'w')
-    database_list = [genome, genomeName]
+    database_list = [fastaPath+genome, genomeName] #FIXME add genome path
     blastdb.write(
         '#!/bin/bash\nmodule load blast+\nmakeblastdb -in %s -dbtype nucl -out %s.blast_db\n' % tuple(database_list))
     blastdb.close()
@@ -117,7 +125,7 @@ def writeBlast(genome, blastPath, kmercountPath, kmercountFiles):
     except:
         print 'Unable to run %s via command line..' % dbscriptName
     """ blast differential kmers to whole genome assembly"""
-    for file in [file2 for file2 in os.listdir(kmercountPath) if file2.endswith('.fa')]:
+    for file in [file2 for file2 in os.listdir(kmercountPath) if file2.endswith('.fa') or file2.endswith('.fasta')]:
         inputFile = kmercountPath+file#'%s.higher.kmers.txt' % (file.split('.')[0])
         f = file.rstrip()
         print f
@@ -168,17 +176,7 @@ def blast2bed3(blastFiles, bedPath, sortPath, genome):
         b.coverage(a).saveas(coveragename)
 
 
-# def bedSort(bedFiles):
-#     for bedFile in bedFiles:
-#         f = bedFile.rstrip()
-#         print f
-#         outFileName = f[:f.rfind('.')] + '.sorted.bed3'
-#         b = pybedtools.BedTool(bedFile)
-#         b.sort().saveas(outFileName)
 
-# >> > a = pybedtools.example_bedtool('a.bed')
-# >> > b = pybedtools.example_bedtool('b.bed')
-# >> > c = b.coverage(a)
 
 
 def genomewindows(genome):
@@ -197,21 +195,7 @@ def genomewindows(genome):
     except:
         print 'Unable to run %s via command line..' % dbscriptName
 
-    # """calculate blast coverage over the whole genome assembly"""
-    # for bedFile in bedFiles:
-    #     f = bedFile.rstrip()
-    #     print f
-    #     inputName = f[:f.rfind('.')]
-    #     inputFileName = inputName + '.sorted.bed3'
-    #     dbscriptName = inputName + '.cov.sh'
-    #     c = open(dbscriptName, 'w')
-    #     lineOutputList = [inputFileName, genomeName, genomeName]
-    #     c.write('#!/bin/bash\nmodule load bedtools\ncoverageBed -a %s -b GENE_LENGTH_%s.win.1Mb.bed | cut -f 1-4 | sortBed -i stdin > %s.cov\n' % tuple(lineOutputList))
-    #     c.close()
-    #     try:
-    #         subprocess.call('nohup sh %s' % dbscriptName, shell=True)
-    #     except:
-    #         print 'Unable to run %s via command line..' % dbscriptName
+
 
 
 def bed2unionBed(genome, bedFiles):
@@ -230,18 +214,7 @@ def bed2unionBed(genome, bedFiles):
     result = x.union_bedgraphs(i=[a.fn, b.fn], g=genomeFile)
     result.saveas(outputFileName)
 
-# scrap code:
-#  make union bedgraph from the two bed files
-# fall back
-# module load bedtools
-# unionBedGraphs -i Nitab_v45_genome_Chr_S.cov Nitab_v45_genome_Chr_T.cov -empty -g GENE_LENGTH_Nitab_v4.5_genome_Chr_Edwards2017.fasta > Seans.tobacco.gRNA.bedgraph
 
-# finalBedIntersect = BedTool(bedList[0])
-# for bed in bedList[1:]:
-#         finalBedIntersect = finalBedIntersect.intersect(BedTool(bed)).sort()
-#
-# a = pybedtools.BedTool('BhS99ends.bed')
-# a.intersect('BhS99ends.bed').saveas('snps-in-exons.bed')
 
 
 # make plots
@@ -266,9 +239,9 @@ def findScaffolds():
         lineList = sorted([line.split('\t')[-1].strip('\n') for line in f.readlines() if line])
     return lineList
 
-def findKmerNames(kmercountPath):
+def findKmerNames(kmercountPath,genome):
     for file in os.listdir(kmercountPath):
-        if file.endswith('.fa'):
+        if file.startswith(genome) and (file.endswith('.fa') or file.endswith('.fasta')):
             print file
             with open(kmercountPath + file,'r') as f:
                 listKmer = sorted([line.strip('\n') for line in f.readlines()[1::2] if line])
@@ -283,21 +256,65 @@ def blast2bed(blastFile):
     b = pybedtools.BedTool('blasted.bed').sort().merge(c=4,o='collapse',)
     return b
 
-global dfMatrix
-global count
-global target
-def populateKMatrix(line):
-    global dfMatrix
-    global count
-    global target
-    #print line
-    if line:
-        dfMatrix[line.split('\t')[1]][line.split('\t')[0]] += 1
-        count += 1
+def kmerRelatedHistogram(save=1):
+    if save == 1:
+        load = 0
+    else:
+        load = 1
+    if save:
+        with open('kmerPrevalence.txt', 'r') as f:
+            kmerDict = {line.split('\t')[0]: line.count(',') for line in f if line}
+        pickle.dump(kmerDict, open('kmerDict.p', 'wb'))
+    if load:
+        kmerDict = pickle.load(open('kmerDict.p', 'rb'))
+    histData = np.array(kmerDict.values())[:, np.newaxis]
+    reverseLookup = defaultdict(list)
+    for k in kmerDict:
+        reverseLookup[kmerDict[k]].append(k)
+    if save:
+        pickle.dump(reverseLookup, open('reverseLook.p', 'wb'))
+    if load:
+        reverseLookup = pickle.load(open('reverseLook.p', 'rb'))
+    xplot = np.linspace(0, np.max(histData), 300000)[:, np.newaxis]
+    del kmerDict
 
-        if float(count) / 14487787. > target:
-            print target
-            target += 1
+    kde = KernelDensity(kernel='gaussian', bandwidth=500).fit(histData)
+    exp_log_dens = np.exp(kde.score_samples(xplot))
+
+    idxs_peaks = argrelextrema(exp_log_dens, np.greater)[0]  # peakutils.indexes(exp_log_dens)
+    idxs_valleys = argrelextrema(exp_log_dens, np.less)[0]  # peakutils.indexes(-exp_log_dens)
+
+    fig = plt.figure()
+    plt.plot(xplot[:], exp_log_dens, '-',
+             label="Envelope Kernel '{0}' Density Function".format('Gaussian'))
+    plt.plot(xplot[idxs_peaks], exp_log_dens[idxs_peaks], '*', color='r', label='Peaks')
+    plt.plot(xplot[idxs_valleys], exp_log_dens[idxs_valleys], 'o', color='r', label='Valleys')
+    plt.hist(histData[:, 0], bins=50, label='Histogram of Counts', normed=True)
+    plt.xlabel('Number of Related Kmers (Normalized)')
+    plt.ylabel('Count')
+    plt.legend(loc='upper left')
+    plt.title('Histogram of Number of Related Kmers (Normalized)')
+    plt.savefig('KmerHistogram.png')
+
+    intervals = [(0., xplot[idxs_valleys[0]][0])] + [(xplot[idxs_valleys[i]][0], xplot[idxs_valleys[i + 1]][0]) for i in
+                                                     range(len(idxs_valleys) - 1)] + [
+                    (xplot[idxs_valleys[-1]][0], xplot[-1][0])]
+    counts = np.array(reverseLookup.keys())
+    print reverseLookup
+    for interval in enumerate(intervals):
+        try:
+            print interval
+            keys = counts[np.where((counts <= np.floor(interval[1][1])) & (counts >= np.ceil(interval[1][0])))]
+            print keys
+            # np.vectorize(lambda x: x <= interval[1] and x >= interval[0])(counts)
+            with open('Peak%d_CountInt_%d_%d.fa' % tuple([interval[0] + 1] + map(int, list(interval[1]))), 'w') as f:
+                for key in keys:
+                    f.write('\n'.join('>%s\n%s' % (val, val) for val in reverseLookup[key]) + '\n')
+        except:
+            with open('ErrFile.txt', 'a') as f:
+                f.write(str(interval[0]) + '\t%s' % str(interval[1]) + '\n')
+
+
 
 def real_main():
     # parse config file
@@ -312,7 +329,7 @@ def real_main():
     # paths parsed from config file:
     path = parseConfigFindPath('systemPath',configFile)
     fastaPath = parseConfigFindPath('fastaPath', configFile)
-    fastaFiles = filter(None, str(subprocess.Popen(['ls', '%s' % fastaPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout.read()).split('\n'))
+    fastaFiles = os.listdir(fastaPath)#filter(None, str(subprocess.Popen(['ls', '%s' % fastaPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout.read()).split('\n'))
     genome = parseConfigFindPath('genome', configFile)
     print fastaFiles
     # make fixed windows across the genome in bed format
@@ -328,25 +345,21 @@ def real_main():
     kmercountPath = parseConfigFindPath('kmercountPath',configFile)
     writeKmercount(fastaPath, fastaFiles, kmercountPath)
 
-    kmercountFiles = filter(None,str(subprocess.Popen(['ls', '%s' % kmercountPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout.read()).split('\n'))
+    kmercountFiles = [file for file in os.listdir(kmercountPath) if file.endswith('.kcount')]#filter(None,str(subprocess.Popen(['ls', '%s' % kmercountPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout.read()).split('\n'))
     # kmercount_files are input to compareKmers function
     # output are fasta files of 23mers ending with PAM
-    #compareKmers(kmercountPath, kmercountFiles)
-    #kmer2Fasta(kmercountPath)
+    kmer2Fasta(kmercountPath)
 
     # blast fasta files against the whole genome
     # could filter BLAST output, if needed
     blastPath = parseConfigFindPath('blastPath',configFile)
-    writeBlast(genome, blastPath, kmercountPath, kmercountFiles)
+    writeBlast(genome, blastPath, kmercountPath, fastaPath)
 
     # check for BLAST output
     blastFiles = filter(None,str(subprocess.Popen(['ls', '%s' % blastPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout.read()).split('\n'))
-    # then parse blast output to bed3 format:
-    #bedPath = parseConfigFindPath('bedPath',configFile)
-    #sortPath = parseConfigFindPath('sortPath',configFile)
-    #blast2bed3(blastFiles, bedPath, sortPath, genome)
 
-    kmers = findKmerNames(kmercountPath)
+
+    kmers = findKmerNames(kmercountPath,genome)
 
     scaffolds = findScaffolds()
 
@@ -355,9 +368,7 @@ def real_main():
     #print d.keys()[0:10]
     global count, target, dfMatrix
     start = clock()
-    #dfMatrix = pd.DataFrame(np.full((len(scaffolds),len(kmers)),0,dtype=float))
-    #dfMatrix.columns = kmers
-    #dfMatrix.rows = scaffolds
+
     print clock()-start
     #dfMatrix.to_csv('emptyMatrix.csv')
     count = 0
@@ -368,7 +379,7 @@ def real_main():
     #labels = dfMatrix.rows
 
     #dfMatrix.to_csv('clusteringMatrix.csv')
-    b = blast2bed(blastPath + 'kmerFasta.BLASTtsv.txt')
+    b = blast2bed(blastPath + genome[:genome.rfind('.')] + '.kcount.BLASTtsv.txt')
     print b.head()
     b.saveas('blasted_merged.bed')
     #print time.clock() - start
@@ -381,17 +392,7 @@ def real_main():
         for key in counts.keys():
             dfMatrix.set_value(scaffold, key, counts[key])
         print scaffold
-    #print dfMatrix.rows
-    """
-    if __name__ == '__main__':
-        p = mp.Pool(8)
-        with open('blasted_merged.bed', 'r') as f:
-            for line in f:
-                if line:
-                    p.apply_async(addToKMatrix,(line,))
-        #p.map(populateKMatrix, lines)
-        p.close()
-        p.join()"""
+
     kmerDict = {kmer:[kmer] for kmer in kmers}
     #print kmerDict
     d = defaultdict(list)
@@ -417,94 +418,194 @@ def real_main():
                 d[listLine[0]] = counts
                     #dfMatrix.set_value(scaffold, key, float(counts[key])/interval)
 
+
     with open('kmerPrevalence.txt','w') as f:
         for key in kmerDict:
             f.write('%s\t%s\t%d\n'%(key,','.join(kmer for kmer in kmerDict[key]),len(kmerDict[key])))
-    histData = np.vectorize(lambda x: len(x))(kmerDict.values())
-    fig = plt.figure()
-    plt.hist(histData,bins = 50)
-    plt.xlabel('Number of Related Kmers')
-    plt.ylabel('Count')
-    plt.title('Histogram of Number of Related Kmers')
-    plt.savefig('Kmer Histogram.png')
-
 
     del kmerDict
 
-    execfile('kmerRelatedHistogram.py')
+    kmerRelatedHistogram(save=1)
 
     dfMatrix = pd.DataFrame(d).fillna(0.).T
-    dfMatrix.to_csv('clusteringMatrix3.csv', index=True)
+    dfMatrix.to_feather('clusteringMatrix.feather')
+    #dfMatrix.to_csv('clusteringMatrix3.csv', index=True)
     kmers = list(dfMatrix.axes[1])
     scaffolds = list(dfMatrix.axes[0])
     with open('rowNames.txt', 'w') as f:
         f.write('\n'.join('\t'.join([str(i),scaffolds[i]]) for i in range(len(scaffolds))))
     with open('colNames.txt', 'w') as f:
         f.write('\n'.join('\t'.join([str(i),kmers[i]]) for i in range(len(kmers))))
-    """
-    with open('blasted_merged.bed','r') as f:
-        for line in f:
-            if line:
-                scaffold = line.split('\t')[0]
-                counts = Counter(line.strip('\n').split('\t')[-1].split(','))
-                #print counts
-                for key in counts.keys():
-                    dfMatrix.set_value(scaffold,key,counts[key])
-                    """
 
-    #dfMatrix = pd.read_csv('clusteringMatrix2.csv', index_col = 0)
-    #sample_size = len(scaffolds)
-
-    """
-    def bench_k_means(estimator, name, data):
-        t0 = time.time()
-        estimator.fit(data)
-        print('% 9s   %.2fs    %i   %.3f   %.3f   %.3f   %.3f   %.3f    %.3f'
-              % (name, (time.time() - t0), estimator.inertia_,
-                 metrics.homogeneity_score(labels, estimator.labels_),
-                 metrics.completeness_score(labels, estimator.labels_),
-                 metrics.v_measure_score(labels, estimator.labels_),
-                 metrics.adjusted_rand_score(labels, estimator.labels_),
-                 metrics.adjusted_mutual_info_score(labels, estimator.labels_),
-                 metrics.silhouette_score(data, estimator.labels_,
-                                          metric='euclidean',
-                                          sample_size=sample_size)))
-    """
-    #data = dfMatrix.as_matrix()
     execfile('kmeansCluster.py')
-    """
-    pca = PCA(n_components=3)#min(len(scaffolds),len(kmers)))
-    pca.fit(data)
-    #print pca.explained_variance_ratio_
-    pca_transformed = pca.transform(data)
-    kmeans = KMeans(n_clusters=3)
-    kmeans.fit(pca_transformed)
-    #print kmeans.inertia_
-    #print kmeans.cluster_centers_
-    with open('ClusteringOutputs.txt','w') as f:
-        f.write('\n'.join(map(str,pca.explained_variance_ratio_,kmeans.inertia_,kmeans.cluster_centers_,kmeans.labels_)))
-
-    with open('finalOutput.txt','w') as f:
-        f.write('\n'.join('%s\t%s'%(scaffolds[i],str(kmeans.labels_[i])) for i in range(len(kmeans.labels_))))"""
-    """bench_k_means(KMeans(init=pca.components_, n_clusters=3, n_init=1),
-                  name="PCA-based",
-                  data=dfMatrix.as_matrix())"""
-    # turn above into function and run clustering model on this...
 
 
-    #bedFiles = filter(None, str(subprocess.Popen(['ls', '%s' % bedPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout.read()).split('\n'))
-
-    # don't think we need to find sorted files
-    #sortedbedFiles = filter(None, str(subprocess.Popen(['ls', '%s' % bedPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout.read()).split('\n'))
-
-
-    # make union between bedfiles
-    #bed2unionBed(genome, bedFiles)
-
-    # make plots
-    #make_plots(genome, bedFiles)
 
 
 if ( __name__ == '__main__' ):
     real_main()
 
+
+"""Old Code"""
+
+
+
+
+# turn above into function and run clustering model on this...
+
+
+# bedFiles = filter(None, str(subprocess.Popen(['ls', '%s' % bedPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout.read()).split('\n'))
+
+# don't think we need to find sorted files
+# sortedbedFiles = filter(None, str(subprocess.Popen(['ls', '%s' % bedPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout.read()).split('\n'))
+
+
+# make union between bedfiles
+# bed2unionBed(genome, bedFiles)
+
+# make plots
+# make_plots(genome, bedFiles)
+
+
+# def bedSort(bedFiles):
+#     for bedFile in bedFiles:
+#         f = bedFile.rstrip()
+#         print f
+#         outFileName = f[:f.rfind('.')] + '.sorted.bed3'
+#         b = pybedtools.BedTool(bedFile)
+#         b.sort().saveas(outFileName)
+
+# >> > a = pybedtools.example_bedtool('a.bed')
+# >> > b = pybedtools.example_bedtool('b.bed')
+# >> > c = b.coverage(a)
+
+# scrap code:
+#  make union bedgraph from the two bed files
+# fall back
+# module load bedtools
+# unionBedGraphs -i Nitab_v45_genome_Chr_S.cov Nitab_v45_genome_Chr_T.cov -empty -g GENE_LENGTH_Nitab_v4.5_genome_Chr_Edwards2017.fasta > Seans.tobacco.gRNA.bedgraph
+
+# finalBedIntersect = BedTool(bedList[0])
+# for bed in bedList[1:]:
+#         finalBedIntersect = finalBedIntersect.intersect(BedTool(bed)).sort()
+#
+# a = pybedtools.BedTool('BhS99ends.bed')
+# a.intersect('BhS99ends.bed').saveas('snps-in-exons.bed')
+
+
+# """calculate blast coverage over the whole genome assembly"""
+# for bedFile in bedFiles:
+#     f = bedFile.rstrip()
+#     print f
+#     inputName = f[:f.rfind('.')]
+#     inputFileName = inputName + '.sorted.bed3'
+#     dbscriptName = inputName + '.cov.sh'
+#     c = open(dbscriptName, 'w')
+#     lineOutputList = [inputFileName, genomeName, genomeName]
+#     c.write('#!/bin/bash\nmodule load bedtools\ncoverageBed -a %s -b GENE_LENGTH_%s.win.1Mb.bed | cut -f 1-4 | sortBed -i stdin > %s.cov\n' % tuple(lineOutputList))
+#     c.close()
+#     try:
+#         subprocess.call('nohup sh %s' % dbscriptName, shell=True)
+#     except:
+#         print 'Unable to run %s via command line..' % dbscriptName
+
+"""
+with open('blasted_merged.bed','r') as f:
+    for line in f:
+        if line:
+            scaffold = line.split('\t')[0]
+            counts = Counter(line.strip('\n').split('\t')[-1].split(','))
+            #print counts
+            for key in counts.keys():
+                dfMatrix.set_value(scaffold,key,counts[key])
+                """
+
+# dfMatrix = pd.read_csv('clusteringMatrix2.csv', index_col = 0)
+# sample_size = len(scaffolds)
+
+"""
+def bench_k_means(estimator, name, data):
+    t0 = time.time()
+    estimator.fit(data)
+    print('% 9s   %.2fs    %i   %.3f   %.3f   %.3f   %.3f   %.3f    %.3f'
+          % (name, (time.time() - t0), estimator.inertia_,
+             metrics.homogeneity_score(labels, estimator.labels_),
+             metrics.completeness_score(labels, estimator.labels_),
+             metrics.v_measure_score(labels, estimator.labels_),
+             metrics.adjusted_rand_score(labels, estimator.labels_),
+             metrics.adjusted_mutual_info_score(labels, estimator.labels_),
+             metrics.silhouette_score(data, estimator.labels_,
+                                      metric='euclidean',
+                                      sample_size=sample_size)))
+"""
+# data = dfMatrix.as_matrix()
+
+"""
+pca = PCA(n_components=3)#min(len(scaffolds),len(kmers)))
+pca.fit(data)
+#print pca.explained_variance_ratio_
+pca_transformed = pca.transform(data)
+kmeans = KMeans(n_clusters=3)
+kmeans.fit(pca_transformed)
+#print kmeans.inertia_
+#print kmeans.cluster_centers_
+with open('ClusteringOutputs.txt','w') as f:
+    f.write('\n'.join(map(str,pca.explained_variance_ratio_,kmeans.inertia_,kmeans.cluster_centers_,kmeans.labels_)))
+
+with open('finalOutput.txt','w') as f:
+    f.write('\n'.join('%s\t%s'%(scaffolds[i],str(kmeans.labels_[i])) for i in range(len(kmeans.labels_))))"""
+"""bench_k_means(KMeans(init=pca.components_, n_clusters=3, n_init=1),
+              name="PCA-based",
+              data=dfMatrix.as_matrix())"""
+
+# print dfMatrix.rows
+"""
+if __name__ == '__main__':
+    p = mp.Pool(8)
+    with open('blasted_merged.bed', 'r') as f:
+        for line in f:
+            if line:
+                p.apply_async(addToKMatrix,(line,))
+    #p.map(populateKMatrix, lines)
+    p.close()
+    p.join()"""
+
+# then parse blast output to bed3 format:
+# bedPath = parseConfigFindPath('bedPath',configFile)
+# sortPath = parseConfigFindPath('sortPath',configFile)
+# blast2bed3(blastFiles, bedPath, sortPath, genome)
+
+# dfMatrix = pd.DataFrame(np.full((len(scaffolds),len(kmers)),0,dtype=float))
+# dfMatrix.columns = kmers
+# dfMatrix.rows = scaffolds
+
+# compareKmers(kmercountPath, kmercountFiles)
+
+
+"""
+histData = np.vectorize(lambda x: len(x))(kmerDict.values())
+fig = plt.figure()
+plt.hist(histData,bins = 50)
+plt.xlabel('Number of Related Kmers')
+plt.ylabel('Count')
+plt.title('Histogram of Number of Related Kmers')
+plt.savefig('Kmer Histogram.png')
+"""
+
+"""
+global dfMatrix
+global count
+global target
+def populateKMatrix(line):
+    global dfMatrix
+    global count
+    global target
+    #print line
+    if line:
+        dfMatrix[line.split('\t')[1]][line.split('\t')[0]] += 1
+        count += 1
+
+        if float(count) / 14487787. > target:
+            print target
+            target += 1
+            """

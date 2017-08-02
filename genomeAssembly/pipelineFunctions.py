@@ -26,7 +26,7 @@ def parseConfigFindPath(stringFind,configFile):
     configFile.seek(0)
 
 
-def replaceGeneNames(sample,ref,count=0,nuc=0):
+def replaceGeneNames(sample,ref,count=0,nuc=0,BB=0):
     refGeneCount = 0
     synmap = '%s.%s.lifted.anchors' % (sample, ref)
     if nuc:
@@ -34,6 +34,12 @@ def replaceGeneNames(sample,ref,count=0,nuc=0):
         synmap = 'nucMap.bed'
         refbed = ref + '_nucSyn.bed'
         sampbed = sample + '_nucSyn.bed'
+        a, b = 1, 0
+    elif BB:
+        nucAdd = 'BB'
+        synmap = 'BBMap.bed'
+        refbed = ref + '_BBSyn.bed'
+        sampbed = sample + '_BBSyn.bed'
         a, b = 1, 0
     else:
         nucAdd = ''
@@ -127,3 +133,38 @@ def tiling2bed(tilingFile,ref,sample,sampBed):
             pass
     with open('nucMap.bed','w') as f:
         f.write('\n'.join('%s\t%s\t100'%item for item in genesDict.items() if item))
+
+def BB2bed(BBfile,ref,sample,centromereBed):
+    with open(BBfile,'r') as f:
+        BBLines = f.read().split('\n')
+    genesDict = defaultdict(list)
+    with open(ref+'_BBSyn.bed','w') as f1, open(sample+'_BBSyn.bed','w') as f2:
+        for line in BBLines:
+            if line:
+                lineList = line.split('\t')
+                refChr = lineList[0]
+                int1 = sorted(map(int,lineList[1:3]))
+                #int1[0] -= 1
+                if '_part_' in lineList[3]:
+                    sampChr,part = tuple(lineList[3].split('_part_'))
+                    int2 = [(int(part)-1)*300]
+                    int2.append(int2[0] + 300)
+                else:
+                    sampChr = lineList[3]
+                    int2 = [0,300]
+                #int2[0] -= 1
+                f1.write('\t'.join([refChr]+map(str,int1)+['_'.join([refChr]+map(str,int1)),'0','+']) + '\n')
+                f2.write('\t'.join([sampChr]+map(str,int2)+['_'.join([sampChr]+map(str,int2)),'0','+']) + '\n')
+                genesDict['_'.join([refChr]+map(str,int1))] = '_'.join([sampChr]+map(str,int2))
+    origGenes = set(genesDict.keys())
+    centromere = BedTool(ref+'_BBSyn.bed').intersect(centromereBed,wa=True)
+    nonCentromere = BedTool(ref+'_BBSyn.bed').subtract(centromereBed,A=True)
+    remainGenes = set([line.split('\t')[3] for line in str(centromere).split('\n')[::2] if line] + [line.split('\t')[3] for line in str(nonCentromere).split('\n')[::10] if line])
+    BadGenes = list(origGenes - remainGenes)
+    for gene in BadGenes:
+        try:
+            del genesDict[gene]
+        except:
+            pass
+    with open('BBMap.bed','w') as f:
+        f.write('\n'.join('%s\t%s\t100'%item[::-1] for item in genesDict.items() if item))

@@ -3,6 +3,7 @@ writeSh = 0
 buildSample = 0
 buildRef = 0
 nuc = 0
+BB = 1
 com1_2 = 1
 allmaps = 1
 CDS = 314

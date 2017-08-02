@@ -9,14 +9,13 @@ with open('scaffoldConfig.txt','r') as f:
     (version,buildSample,buildRef,constructSample,CDSspecies,CDSOld,CDSgeneNaming) = tuple([parseConfigFindPath(x,f) for x in
                                                         ['version','buildSample','buildRef','constructSample','CDS','CDSFasta','geneNameOld']])
     weights = parseConfigFindList('weights',f)
-weightsText = '\n'.join([weights[0]]+[CDSspecies+'nuc ' + str(int(weights[1].split()[-1]))]+weights[1:])
+weightsText = '\n'.join([weights[0]]+[CDSspecies+'nuc ' + str(int(weights[1].split()[-1]))]+[CDSspecies+'BB ' + str(int(weights[1].split()[-1]))]+weights[1:])
 weights = {line.split()[0]:int(line.split()[-1]) for line in weights}
 with open('references.txt','w') as f:
     f.write('['+','.join("'%s'"%ref for ref in weights.keys())+']')
 
 listSamples = [folder for folder in os.listdir(version) if folder.endswith(version)]
 #listSamples = ['Bdist_100_v0','Bdist_001_v0','Bdist_011_v0']
-
 
 
 headSh = """#!/bin/bash
@@ -27,6 +26,7 @@ module load parallel/20150222
 module load bedtools/2.25.0
 module unload gcc
 module load gcc/6.3.0
+module load bbtools
 """
 
 print weightsText
@@ -74,11 +74,15 @@ for sample in listSamples:
                  geneNaming+'.gff3', fastaNew,sample + '.cds')""" # key=Name was original, now gene_name with
     nucCommands = [headSh]+ ['nucmer -t 6 -p %s %s %s'%(CDSspecies+'nuc',root+'referenceGenomes/%s/'%CDSspecies+fastaNucOld,sample+'.fa'),
                  'delta-filter -m -q -i 85 -u 50 %snuc.delta > %snuc2.delta'%(CDSspecies,CDSspecies),'show-tiling -a %snuc2.delta > %snuc.tiling'%(CDSspecies,CDSspecies)]
+    bbCommands = [headSh] + ['bbmap.sh fastareadlen=300 threads=6 ref=%s.fa in=%s minid=0.97 ef=0.01 outm=BBmapped.bam ambiguous=toss'%(sample,root+'referenceGenomes/%s/'%CDSspecies+fastaNucOld),
+                             'python -m jcvi.formats.sam bed BBmapped.bed BBmapped.bam']
     commands1 = [headSh]+['rm *.anchors *.last *.filtered *.prj']+\
                 ['nohup python -m jcvi.compara.catalog ortholog %s %s\nmv %s %s'%(ref,sample,'%s.%s.lifted.anchors'%(ref,sample),'%s.%s.lifted.anchors'%(sample,ref)) for ref in weights.keys()]
     commands2=[headSh]+['rm multipleMapping.bed','\n'.join('python -m jcvi.assembly.syntenypath bed %s --switch --scale=10000 --qbed=%s --sbed=%s -o %s'%('%s.%s.lifted.anchors'%(sample,ref),ref+'_syn'+'.bed',sample+'_%ssyn'%ref+'.bed','%s.synteny.bed'%(ref)) for ref in weights.keys()),
                                       'python -m jcvi.assembly.syntenypath bed %s --switch --scale=10000 --qbed=%s --sbed=%s -o %snuc.synteny.bed'%('nucMap.bed',CDSspecies+'_nucSyn.bed',sample+'_nucSyn.bed',CDSspecies),
-         'nohup python -m jcvi.assembly.allmaps mergebed %s -o %s'%(' '.join(['%s.synteny.bed'%(ref) for ref in (weights.keys() + [CDSspecies+'nuc'])]),'multipleMapping.bed')]
+                        'python -m jcvi.assembly.syntenypath bed %s --switch --scale=10000 --qbed=%s --sbed=%s -o %sBB.synteny.bed' % (
+                        'BBMap.bed', CDSspecies + '_BBSyn.bed', sample + '_BBSyn.bed', CDSspecies),
+         'nohup python -m jcvi.assembly.allmaps mergebed %s -o %s'%(' '.join(['%s.synteny.bed'%(ref) for ref in (weights.keys() + [CDSspecies+'nuc',CDSspecies+'BB'])]),'multipleMapping.bed')]
     qsub=[headSh]+['python -m jcvi.assembly.allmaps path --skipconcorde --cpus=32 --ngen=400 --npop=60 multipleMapping.bed %s.fa' % (sample),
          'mv multipleMapping.fasta %s%s/%s/%s.fa' % (root,nextVersion,sample.replace(version, nextVersion), sample.replace(version, nextVersion))]
 
@@ -90,6 +94,8 @@ for sample in listSamples:
         f.write('\n'.join(commands1))
     with open('constructv1_2.sh','w') as f:
         f.write('\n'.join(commands2))
+    with open('BB_build.sh','w') as f:
+        f.write('\n'.join(bbCommands))
     with open('qsub_build.sh','w') as f:
         f.write('\n'.join(qsub))
 

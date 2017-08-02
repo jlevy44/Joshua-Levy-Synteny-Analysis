@@ -20,8 +20,8 @@ import hdbscan
 from collections import defaultdict
 from scipy import stats
 #import progressbar
-save=0
-load=1
+save=1
+load=0
 n_subgenomes = 3
 pca_transform, tsne_transform = 1,0
 HDBSCAN,kmeans,gaussian, agglomerate = 0,1,0,1
@@ -32,7 +32,8 @@ if pca_transform:
 else:
     transform= 'tsne'
 if save:
-    df = pd.read_csv('clusteringMatrix3.csv',index_col=0)
+    #df = pd.read_csv('clusteringMatrix3.csv',index_col=0)
+    df = pd.read_feather('clusteringMatrix.feather')
     scaffolds = list(df.axes[0])
     pickle.dump(scaffolds,open('scaffolds.p','wb'))
     data = df.as_matrix()

@@ -8,3 +8,4 @@ bedPath = ./bed_files/
 sortPath = ./sortedbed_files/
 sortedbedPath = ./*.sorted.bed3
 genome = ABR113_split.fa
+save = 1

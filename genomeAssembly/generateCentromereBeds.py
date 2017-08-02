@@ -9,11 +9,14 @@ import matplotlib.pyplot as plt
 from scipy.signal import savgol_filter, hilbert
 from scipy.ndimage.filters import gaussian_filter1d
 from scipy.signal import argrelextrema
+from pyfaidx import Fasta
 
 """python generate"""
 
 # search for fai file and transposonDensity file
-
+for file in os.listdir('.'):
+    if 'cds' not in file and (file.endswith('.fa') or file.endswith('.fasta')):
+        Fasta(file)
 faiFile = [file for file in os.listdir('.') if file.endswith('.fai')][0]
 transposonGFF = 'transposonDensity.gff'
 
@@ -42,6 +45,8 @@ for line in str(bedTrans).splitlines():
 transposonDensityArr = np.array(transposonDensity)
 print transposonDensityArr
 window = 21
+centromereRegions = ''
+nonCentromereRegions = ''
 for chrom in histInterval:
     print chrom
     if len(histInterval[chrom]) > window:
@@ -51,8 +56,15 @@ for chrom in histInterval:
         idxs_peaks = argrelextrema(filtered_density, np.greater)[0]
         idxs_valleys = argrelextrema(filtered_density, np.less)[0]
         maxIndex = np.argmax(filtered_density, axis=0)
+        halfWidth = np.min(np.abs(idxs_valleys-maxIndex))
+        centromereInterval = [maxIndex - halfWidth, maxIndex + halfWidth]
         fig = plt.figure()
-        plt.plot(maxIndex,filtered_density[maxIndex],marker='*',color='g')
-        plt.plot(arraySubset[:,-1],color='r')
-        plt.plot(filtered_density,color = 'b')
+        plt.plot(arraySubset[:,-1],color='r',zorder = 0)
+        plt.plot(filtered_density,color = 'b', zorder = 1)
+        for pk in centromereInterval:
+            plt.scatter(pk,filtered_density[pk],marker='o',color='g',s=30, zorder = pk)
         plt.savefig('transposonDensity_%s.png'%(chrom))
+        centromereRegions += '%s\t%s\t%s\n'%(chrom,arraySubset[centromereInterval[0],1],arraySubset[centromereInterval[1],2])
+        nonCentromereRegions += '%s\t%s\t%s\n%s\t%s\t%s\n'%(chrom,arraySubset[0,1],arraySubset[centromereInterval[0]-1,2],chrom,arraySubset[centromereInterval[0]+1,1],arraySubset[len(arraySubset)-1,2])
+
+BedTool(centromereRegions,from_string=True).sort().saveas('centromere.bed')

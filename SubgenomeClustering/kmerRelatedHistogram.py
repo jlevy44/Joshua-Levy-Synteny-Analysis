@@ -3,7 +3,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import cPickle as pickle
 import numpy as np
-import peakutils
+#import peakutils
 from sklearn.neighbors import KernelDensity
 from collections import defaultdict
 from scipy.signal import argrelextrema
