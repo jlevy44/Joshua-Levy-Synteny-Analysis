@@ -428,6 +428,7 @@ def real_main():
     kmerRelatedHistogram(save=1)
 
     dfMatrix = pd.DataFrame(d).fillna(0.).T
+    dfMatrix = dfMatrix.reset_index()
     dfMatrix.to_feather('clusteringMatrix.feather')
     #dfMatrix.to_csv('clusteringMatrix3.csv', index=True)
     kmers = list(dfMatrix.axes[1])

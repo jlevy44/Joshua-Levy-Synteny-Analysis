@@ -243,8 +243,8 @@ else
 linkageChannel3_5 = Channel.create()
 process BBfy {
 
-clusterOptions = {nuc == 1 ? '-P plant-analysis.p -cwd -q normal.q -pe pe_slots 6 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt'}
-
+clusterOptions = {BB == 1 ? '-P plant-analysis.p -cwd -q normal.q -pe pe_slots 8 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt'}
+//-pe pe_slots 6
 input:
 val sample from linkageChannel3
 
@@ -255,7 +255,7 @@ val sample into linkageChannel3_5
 
 
 script:
-if(nuc)
+if(BB)
 """
 #!/bin/bash
 touch done

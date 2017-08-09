@@ -34,9 +34,11 @@ else:
 if save:
     #df = pd.read_csv('clusteringMatrix3.csv',index_col=0)
     df = pd.read_feather('clusteringMatrix.feather')
+    df = df.set_index(['index'])
     scaffolds = list(df.axes[0])
     pickle.dump(scaffolds,open('scaffolds.p','wb'))
     data = df.as_matrix()
+    np.save('original_matrix.npy', data)
     del df
     if pca_transform:
         transform = 'pca'

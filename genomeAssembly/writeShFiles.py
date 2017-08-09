@@ -74,7 +74,7 @@ for sample in listSamples:
                  geneNaming+'.gff3', fastaNew,sample + '.cds')""" # key=Name was original, now gene_name with
     nucCommands = [headSh]+ ['nucmer -t 6 -p %s %s %s'%(CDSspecies+'nuc',root+'referenceGenomes/%s/'%CDSspecies+fastaNucOld,sample+'.fa'),
                  'delta-filter -m -q -i 85 -u 50 %snuc.delta > %snuc2.delta'%(CDSspecies,CDSspecies),'show-tiling -a %snuc2.delta > %snuc.tiling'%(CDSspecies,CDSspecies)]
-    bbCommands = [headSh] + ['bbmap.sh fastareadlen=300 threads=6 ref=%s.fa in=%s minid=0.97 ef=0.01 outm=BBmapped.bam ambiguous=toss'%(sample,root+'referenceGenomes/%s/'%CDSspecies+fastaNucOld),
+    bbCommands = [headSh.replace('module load samtools/1.3.1\n','module unload samtools\nmodule load samtools/1.4\n')] + ['rm -r ref'] + ['bbmap.sh fastareadlen=300 threads=6 in=%s.fa ref=%s minid=0.97 ef=0.01 outm=BBmapped.bam ambiguous=toss'%(sample,root+'referenceGenomes/%s/'%CDSspecies+fastaNucOld),
                              'python -m jcvi.formats.sam bed BBmapped.bed BBmapped.bam']
     commands1 = [headSh]+['rm *.anchors *.last *.filtered *.prj']+\
                 ['nohup python -m jcvi.compara.catalog ortholog %s %s\nmv %s %s'%(ref,sample,'%s.%s.lifted.anchors'%(ref,sample),'%s.%s.lifted.anchors'%(sample,ref)) for ref in weights.keys()]

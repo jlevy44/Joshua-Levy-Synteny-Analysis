@@ -1,5 +1,5 @@
 version = v0
-writeSh = 0
+writeSh = 1
 buildSample = 0
 buildRef = 0
 nuc = 0
