@@ -2,15 +2,10 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="87dadfdf-9689-45cf-b4af-5fd342ee0ae6" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/SubgenomeClustering/clusteringWork.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/SubgenomeClustering/deepLearningClustering.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/SubgenomeClustering/houghClusteringTest.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/SubgenomeClustering/transformData.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/SubgenomeClustering/transform_plot.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/SubgenomeClustering/kmeansCluster.py" afterPath="$PROJECT_DIR$/SubgenomeClustering/kmeansCluster.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/SubgenomeClustering/subgenomeClustering.py" afterPath="$PROJECT_DIR$/SubgenomeClustering/subgenomeClustering.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/genomeAssembly/scaffoldConfig.txt" afterPath="$PROJECT_DIR$/genomeAssembly/scaffoldConfig.txt" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/SubgenomeClustering/clusteringWork.py" afterPath="$PROJECT_DIR$/SubgenomeClustering/clusteringWork.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/genomeAssembly/com1_2.py" afterPath="$PROJECT_DIR$/genomeAssembly/com1_2.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/genomeAssembly/pipelineFunctions.py" afterPath="$PROJECT_DIR$/genomeAssembly/pipelineFunctions.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/genomeAssembly/scaffoldPipeline.nf" afterPath="$PROJECT_DIR$/genomeAssembly/scaffoldPipeline.nf" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/genomeAssembly/writeShFiles.py" afterPath="$PROJECT_DIR$/genomeAssembly/writeShFiles.py" />
     </list>
@@ -40,8 +35,8 @@
       <file leaf-file-name="transform_plot.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/SubgenomeClustering/transform_plot.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="270">
-              <caret line="24" column="86" lean-forward="false" selection-start-line="24" selection-start-column="86" selection-end-line="24" selection-end-column="86" />
+            <state relative-caret-position="135">
+              <caret line="9" column="16" lean-forward="true" selection-start-line="9" selection-start-column="16" selection-end-line="9" selection-end-column="16" />
               <folding>
                 <element signature="e#0#51#0" expanded="true" />
               </folding>
@@ -52,8 +47,8 @@
       <file leaf-file-name="scaffoldPipeline.nf" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/genomeAssembly/scaffoldPipeline.nf">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="3120">
-              <caret line="208" column="18" lean-forward="false" selection-start-line="208" selection-start-column="18" selection-end-line="208" selection-end-column="18" />
+            <state relative-caret-position="304">
+              <caret line="292" column="0" lean-forward="false" selection-start-line="292" selection-start-column="0" selection-end-line="292" selection-end-column="0" />
               <folding />
             </state>
           </provider>
@@ -62,7 +57,7 @@
       <file leaf-file-name="kmeansCluster.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/SubgenomeClustering/kmeansCluster.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1665">
+            <state relative-caret-position="15">
               <caret line="119" column="35" lean-forward="false" selection-start-line="116" selection-start-column="4" selection-end-line="119" selection-end-column="35" />
               <folding>
                 <element signature="e#0#32#0" expanded="true" />
@@ -71,21 +66,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="com1_2.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/genomeAssembly/com1_2.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="390">
-              <caret line="26" column="37" lean-forward="false" selection-start-line="26" selection-start-column="37" selection-end-line="26" selection-end-column="37" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="clusteringWork.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="clusteringWork.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/SubgenomeClustering/clusteringWork.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="469">
-              <caret line="109" column="98" lean-forward="false" selection-start-line="109" selection-start-column="67" selection-end-line="109" selection-end-column="98" />
+            <state relative-caret-position="337">
+              <caret line="164" column="80" lean-forward="false" selection-start-line="164" selection-start-column="80" selection-end-line="164" selection-end-column="80" />
               <folding>
                 <element signature="e#0#54#0" expanded="true" />
               </folding>
@@ -93,21 +78,31 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="writeShFiles.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/genomeAssembly/writeShFiles.py">
+      <file leaf-file-name="com1_2.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/genomeAssembly/com1_2.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1320">
-              <caret line="88" column="21" lean-forward="false" selection-start-line="88" selection-start-column="21" selection-end-line="88" selection-end-column="21" />
+            <state relative-caret-position="240">
+              <caret line="16" column="25" lean-forward="false" selection-start-line="16" selection-start-column="25" selection-end-line="16" selection-end-column="25" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="pipelineFunctions.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="writeShFiles.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/genomeAssembly/writeShFiles.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="529">
+              <caret line="100" column="0" lean-forward="true" selection-start-line="100" selection-start-column="0" selection-end-line="100" selection-end-column="0" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="pipelineFunctions.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/genomeAssembly/pipelineFunctions.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2085">
-              <caret line="140" column="38" lean-forward="false" selection-start-line="140" selection-start-column="38" selection-end-line="140" selection-end-column="38" />
+            <state relative-caret-position="169">
+              <caret line="73" column="38" lean-forward="true" selection-start-line="73" selection-start-column="38" selection-end-line="73" selection-end-column="38" />
               <folding />
             </state>
           </provider>
@@ -128,8 +123,8 @@
       <file leaf-file-name="scaffoldConfig.txt" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/genomeAssembly/scaffoldConfig.txt">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="225">
-              <caret line="15" column="6" lean-forward="false" selection-start-line="15" selection-start-column="6" selection-end-line="15" selection-end-column="6" />
+            <state relative-caret-position="255">
+              <caret line="17" column="0" lean-forward="true" selection-start-line="17" selection-start-column="0" selection-end-line="17" selection-end-column="0" />
               <folding />
             </state>
           </provider>
@@ -146,7 +141,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>ErrF</find>
       <find>ERRT</find>
       <find>kmeans</find>
       <find>== 3</find>
@@ -176,6 +170,7 @@
       <find>feather</find>
       <find>3</find>
       <find>n_clu</find>
+      <find>cluster</find>
     </findStrings>
     <replaceStrings>
       <replace>val</replace>
@@ -223,25 +218,25 @@
         <option value="$PROJECT_DIR$/SubgenomeClustering/kmerRelatedHistogram.py" />
         <option value="$PROJECT_DIR$/SubgenomeClustering/runCluster.sh.py" />
         <option value="$PROJECT_DIR$/SubgenomeClustering/runCluster.sh" />
-        <option value="$PROJECT_DIR$/genomeAssembly/com1_2.py" />
-        <option value="$PROJECT_DIR$/genomeAssembly/pipelineFunctions.py" />
         <option value="$PROJECT_DIR$/genomeAssembly/generateCentromereBeds.py" />
         <option value="$PROJECT_DIR$/SubgenomeClustering/subgenomeClustering.py" />
         <option value="$PROJECT_DIR$/SubgenomeClustering/kmeansCluster.py" />
         <option value="$PROJECT_DIR$/SubgenomeClustering/transformData.py" />
         <option value="$PROJECT_DIR$/SubgenomeClustering/houghClusteringTest.py" />
         <option value="$PROJECT_DIR$/SubgenomeClustering/deepLearningClustering.py" />
-        <option value="$PROJECT_DIR$/genomeAssembly/scaffoldPipeline.nf" />
-        <option value="$PROJECT_DIR$/genomeAssembly/scaffoldConfig.txt" />
         <option value="$PROJECT_DIR$/SubgenomeClustering/transform_plot.py" />
+        <option value="$PROJECT_DIR$/genomeAssembly/scaffoldPipeline.nf" />
         <option value="$PROJECT_DIR$/genomeAssembly/writeShFiles.py" />
+        <option value="$PROJECT_DIR$/genomeAssembly/scaffoldConfig.txt" />
         <option value="$PROJECT_DIR$/SubgenomeClustering/clusteringWork.py" />
+        <option value="$PROJECT_DIR$/genomeAssembly/com1_2.py" />
+        <option value="$PROJECT_DIR$/genomeAssembly/pipelineFunctions.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="-1556" />
-    <option name="y" value="186" />
+    <option name="x" value="-1437" />
+    <option name="y" value="96" />
     <option name="width" value="1438" />
     <option name="height" value="685" />
   </component>
@@ -260,8 +255,8 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scratches" />
       <pane id="Scope" />
+      <pane id="Scratches" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -681,7 +676,14 @@
       <option name="project" value="LOCAL" />
       <updated>1501713675106</updated>
     </task>
-    <option name="localTasksCounter" value="26" />
+    <task id="LOCAL-00026" summary="continuing to make changes to scaffolding pipeline and clustering algorithm. Tested different clustering algorithms and adding classifier support">
+      <created>1502321168329</created>
+      <option name="number" value="00026" />
+      <option name="presentableId" value="LOCAL-00026" />
+      <option name="project" value="LOCAL" />
+      <updated>1502321168329</updated>
+    </task>
+    <option name="localTasksCounter" value="27" />
     <servers />
   </component>
   <component name="TodoView">
@@ -694,8 +696,8 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="-1556" y="186" width="1438" height="685" extended-state="0" />
-    <editor active="false" />
+    <frame x="-1437" y="96" width="1438" height="685" extended-state="0" />
+    <editor active="true" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.23157163" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.20314735" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
@@ -740,7 +742,8 @@
     <MESSAGE value="working with clustering algorithms" />
     <MESSAGE value="working on subgenome clustering and scaffolding pipelines" />
     <MESSAGE value="made changes to scaffolding pipeline and clustering algorithm" />
-    <option name="LAST_COMMIT_MESSAGE" value="made changes to scaffolding pipeline and clustering algorithm" />
+    <MESSAGE value="continuing to make changes to scaffolding pipeline and clustering algorithm. Tested different clustering algorithms and adding classifier support" />
+    <option name="LAST_COMMIT_MESSAGE" value="continuing to make changes to scaffolding pipeline and clustering algorithm. Tested different clustering algorithms and adding classifier support" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1005,14 +1008,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/genomeAssembly/scaffoldConfig.txt">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="225">
-          <caret line="15" column="6" lean-forward="false" selection-start-line="15" selection-start-column="6" selection-end-line="15" selection-end-column="6" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/SubgenomeClustering/deepLearningClustering.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="285">
@@ -1023,10 +1018,20 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/SubgenomeClustering/kmeansCluster.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="15">
+          <caret line="119" column="35" lean-forward="false" selection-start-line="116" selection-start-column="4" selection-end-line="119" selection-end-column="35" />
+          <folding>
+            <element signature="e#0#32#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/SubgenomeClustering/transform_plot.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="270">
-          <caret line="24" column="86" lean-forward="false" selection-start-line="24" selection-start-column="86" selection-end-line="24" selection-end-column="86" />
+        <state relative-caret-position="135">
+          <caret line="9" column="16" lean-forward="true" selection-start-line="9" selection-start-column="16" selection-end-line="9" selection-end-column="16" />
           <folding>
             <element signature="e#0#51#0" expanded="true" />
           </folding>
@@ -1035,53 +1040,51 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/genomeAssembly/scaffoldPipeline.nf">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3120">
-          <caret line="208" column="18" lean-forward="false" selection-start-line="208" selection-start-column="18" selection-end-line="208" selection-end-column="18" />
+        <state relative-caret-position="304">
+          <caret line="292" column="0" lean-forward="false" selection-start-line="292" selection-start-column="0" selection-end-line="292" selection-end-column="0" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/SubgenomeClustering/kmeansCluster.py">
+    <entry file="file://$PROJECT_DIR$/genomeAssembly/scaffoldConfig.txt">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1665">
-          <caret line="119" column="35" lean-forward="false" selection-start-line="116" selection-start-column="4" selection-end-line="119" selection-end-column="35" />
-          <folding>
-            <element signature="e#0#32#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/genomeAssembly/com1_2.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="390">
-          <caret line="26" column="37" lean-forward="false" selection-start-line="26" selection-start-column="37" selection-end-line="26" selection-end-column="37" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/genomeAssembly/pipelineFunctions.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2085">
-          <caret line="140" column="38" lean-forward="false" selection-start-line="140" selection-start-column="38" selection-end-line="140" selection-end-column="38" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/genomeAssembly/writeShFiles.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1320">
-          <caret line="88" column="21" lean-forward="false" selection-start-line="88" selection-start-column="21" selection-end-line="88" selection-end-column="21" />
+        <state relative-caret-position="255">
+          <caret line="17" column="0" lean-forward="true" selection-start-line="17" selection-start-column="0" selection-end-line="17" selection-end-column="0" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/SubgenomeClustering/clusteringWork.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="469">
-          <caret line="109" column="98" lean-forward="false" selection-start-line="109" selection-start-column="67" selection-end-line="109" selection-end-column="98" />
+        <state relative-caret-position="337">
+          <caret line="164" column="80" lean-forward="false" selection-start-line="164" selection-start-column="80" selection-end-line="164" selection-end-column="80" />
           <folding>
             <element signature="e#0#54#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/genomeAssembly/writeShFiles.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="529">
+          <caret line="100" column="0" lean-forward="true" selection-start-line="100" selection-start-column="0" selection-end-line="100" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/genomeAssembly/com1_2.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="240">
+          <caret line="16" column="25" lean-forward="false" selection-start-line="16" selection-start-column="25" selection-end-line="16" selection-end-column="25" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/genomeAssembly/pipelineFunctions.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="169">
+          <caret line="73" column="38" lean-forward="true" selection-start-line="73" selection-start-column="38" selection-end-line="73" selection-end-column="38" />
+          <folding />
         </state>
       </provider>
     </entry>

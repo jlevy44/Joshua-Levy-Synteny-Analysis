@@ -258,10 +258,11 @@ script:
 if(BB)
 """
 #!/bin/bash
+export _JAVA_OPTIONS='-Xmx15G'
 touch done
 module load bedtools/2.25.0
 cd ${workingDir}/${version}/${sample}
-sh BB_build.sh
+sh BB_build.sh > nohup.out
 """
 else
 """touch done"""

@@ -28,7 +28,6 @@ def parseConfigFindPath(stringFind,configFile):
 
 def replaceGeneNames(sample,ref,count=0,nuc=0,BB=0):
     refGeneCount = 0
-    synmap = '%s.%s.lifted.anchors' % (sample, ref)
     if nuc:
         nucAdd = 'nuc'
         synmap = 'nucMap.bed'
@@ -42,6 +41,7 @@ def replaceGeneNames(sample,ref,count=0,nuc=0,BB=0):
         sampbed = sample + '_BBSyn.bed'
         a, b = 1, 0
     else:
+        synmap = '%s.%s.lifted.anchors' % (sample, ref)
         nucAdd = ''
         refbed = ref + '.bed'
         sampbed = sample + '.bed'
@@ -89,7 +89,7 @@ def replaceGeneNames(sample,ref,count=0,nuc=0,BB=0):
     with open('nucMap.bed','r') as f:
         print f.readlines()[0:10]
     """
-    if nuc == 0:
+    if nuc == 0 and BB == 0:
         for writeTuple in [(ref+'_syn'+'.bed',refBedOut),(sample+'_%ssyn'%ref+'.bed',sampBedOut),(synmap,synOut)]:
             with open(writeTuple[0],'w') as f:
                 f.writelines(writeTuple[1])
