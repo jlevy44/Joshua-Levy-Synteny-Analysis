@@ -2,6 +2,8 @@ from sklearn.neural_network import BernoulliRBM as RBM
 from sklearn import linear_model, datasets, metrics
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
+from sklearn import model_selection
+from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import kneighbors_graph
 from sklearn.preprocessing import StandardScaler
 from sklearn.neural_network import MLPClassifier
@@ -14,6 +16,7 @@ from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
 from sklearn import cluster
+from mlxtend.classifier import StackingCVClassifier
 import numpy as np
 import time
 import pandas as pd
@@ -57,48 +60,53 @@ def classify(classifier,testClusterData, testCluster_scaffolds, trainData, train
                                           marker=dict(color=c2[key], size=2), text=cluster_scaffolds))
         fig = go.Figure(data=plots)
         py.plot(fig, filename=name + Tname + 'n%d' % n_clusters + class_name + 'ClassifierClusterTest.html')
+
+        scores = model_selection.cross_val_score(clf,trainData,trainLabels,cv=3,scoring='accuracy')
+        print("Accuracy: %0.2f (+/- %0.2f) [%s]"
+              % (scores.mean(), scores.std(), name + Tname + 'n%d' % n_clusters + class_name + 'ClassifierClusterTest.html'))
         return name + Tname + 'n%d' % n_clusters + class_name + 'ClassifierClusterTest.html'
     except:
         return 'Unable to classify using options %s, %s, %d and %s' % (Tname, name, n_clusters, class_name)
 
 def clusterfy(file):
     global scaffolds
+
     Tname = file.split('3D')[1].split('.npy')[0]
     transformed_data = np.load(file)
 
     transformed_data = StandardScaler().fit_transform(transformed_data)
 
-    connectivity = kneighbors_graph(transformed_data, n_neighbors=10, include_self=False)
-    connectivity = 0.5 * (connectivity + connectivity.T)
+    connectivity = kneighbors_graph(transformed_data, n_neighbors=30, include_self=False)
+    #connectivity = 0.5 * (connectivity + connectivity.T)
     bandwidth = cluster.estimate_bandwidth(transformed_data, quantile=0.3)
 
 
-    clustering_names = [
-        'MiniBatchKMeans', 'AffinityPropagation', 'MeanShift',
-        'SpectralClustering', 'Ward', 'AgglomerativeClustering',
-        'DBSCAN', 'Birch']
+    clustering_names = ['SpectralClustering']
+    #    'MiniBatchKMeans', 'AffinityPropagation',
+    #    'SpectralClustering','AgglomerativeClustering']
+        #, 'MeanShift','Ward', 'AgglomerativeClustering',
+        #'DBSCAN', 'Birch']
     n_clusters = 3
-    ms = cluster.MeanShift(bandwidth=bandwidth, bin_seeding=True)
-    two_means = cluster.MiniBatchKMeans(n_clusters=n_clusters)
-    ward = cluster.AgglomerativeClustering(n_clusters=n_clusters, linkage='ward',
-                                           connectivity=connectivity)
+    #ms = cluster.MeanShift(bandwidth=bandwidth, bin_seeding=True)
+    #two_means = cluster.MiniBatchKMeans(n_clusters=n_clusters)
+    #ward = cluster.AgglomerativeClustering(n_clusters=n_clusters, linkage='ward',
+    #                                       connectivity=connectivity)
     spectral = cluster.SpectralClustering(n_clusters=n_clusters,
                                           eigen_solver='arpack',
-                                          affinity="nearest_neighbors")#
-    dbscan = cluster.DBSCAN(eps=.2)
-    affinity_propagation = cluster.AffinityPropagation(damping=.9,
-                                                       preference=-200)
+                                          affinity="nearest_neighbors",gamma=0.3)#
+    #dbscan = cluster.DBSCAN(eps=.2)
+    #affinity_propagation = cluster.AffinityPropagation(damping=.6,
+    #                                                   preference=-400)
 
-    average_linkage = cluster.AgglomerativeClustering(
-        linkage="average", affinity="cityblock", n_clusters=n_clusters,
-        connectivity=connectivity)
+    #average_linkage = cluster.AgglomerativeClustering(
+    #    linkage="average", affinity="euclidean", n_clusters=n_clusters,
+    #    connectivity=connectivity)#cityblock
 
-    birch = cluster.Birch(n_clusters=n_clusters)
+    #birch = cluster.Birch(n_clusters=n_clusters)
 
 
-    clustering_algorithms = [
-            two_means, affinity_propagation, ms, spectral, ward, average_linkage,
-            dbscan, birch]
+    clustering_algorithms = [spectral]#[two_means, affinity_propagation, spectral, average_linkage]
+    #dbscan,  ms, spectral, ward, birch
 
     for name, algorithm in zip(clustering_names, clustering_algorithms):
         try:
@@ -142,21 +150,22 @@ def clusterfy(file):
             trainData_scaffolds = np.array(scaffolds)[y_pred != testCluster]
             trainLabels = y_pred[y_pred != testCluster]
 
-            class_names = ["NearestNeighbors", "LinearSVM", "RBFSVM", "GaussianProcess",
-                     "DecisionTree", "RandomForest", "NeuralNet", "AdaBoost",
-                     "NaiveBayes", "QDA"]
-
+            class_names = ["NearestNeighbors", "LinearSVM", "RBFSVM",
+                     "DecisionTree", "NeuralNet", "AdaBoost",
+                     "NaiveBayes", "QDA","Stacked"]
+            #"GaussianProcess", "RandomForest",
+            lr = LogisticRegression()
             classifiers = [
                 KNeighborsClassifier(3),
-                SVC(kernel="linear", C=0.025,verbose=1),
-                SVC(gamma=2, C=1,verbose=1),
-                GaussianProcessClassifier(1.0 * RBF(1.0), warm_start=True),
+                SVC(kernel="linear", C=0.025),
+                SVC(gamma=2, C=1),
                 DecisionTreeClassifier(max_depth=5),
-                RandomForestClassifier(max_depth=5, n_estimators=10, max_features=1,verbose=1),
-                MLPClassifier(alpha=1,verbose=1),
+                MLPClassifier(alpha=1),
                 AdaBoostClassifier(),
                 GaussianNB(),
                 QuadraticDiscriminantAnalysis()]
+            classifiers += [StackingCVClassifier(classifiers=[AdaBoostClassifier(),QuadraticDiscriminantAnalysis(),RandomForestClassifier(random_state=42)],meta_classifier=lr)]
+            #RandomForestClassifier(max_depth=5, n_estimators=10, max_features=1,verbose=1),GaussianProcessClassifier(1.0 * RBF(1.0), warm_start=True),
 
             output = [classify(classifier,testClusterData, testCluster_scaffolds, trainData, trainData_scaffolds, trainLabels, Tname, n_clusters, name) for classifier in zip(class_names,classifiers)]
             with open('classifyOut_%s_%s.txt' % (Tname, name), 'w') as f:
@@ -174,6 +183,7 @@ def log_result(result):
     results.append(result)
 
 if __name__ == '__main__':
+    files = [file2 for file2 in files if file2.split('3D')[1].split('.npy')[0] in ['factor','kpca']]#,'spectral']]
     p = Pool(len(files))
     for file in files:
         p.apply_async(clusterfy, args=(file,), callback=log_result)

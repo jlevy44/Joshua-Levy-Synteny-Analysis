@@ -1,4 +1,4 @@
-import os
+import os, sys
 import subprocess, shutil
 import pybedtools
 from pyfaidx import Fasta
@@ -133,7 +133,7 @@ def writeBlast(genome, blastPath, kmercountPath, fastaPath):
         outFileName = f[:f.rfind('.')]+'.BLASTtsv.txt'
         lineOutputList = [genomeName, inputFile, blastPath, outFileName]
         blast = open(blastscriptName, 'w')
-        blast.write('#!/bin/bash\nmodule load blast+\nblastn -db ./%s.blast_db -query %s -task "blastn-short" -outfmt 6 -out %s/%s -num_threads 8 -evalue 1e-2\n' % tuple(lineOutputList))
+        blast.write('#!/bin/bash\nmodule load blast+/2.6.0\nblastn -db ./%s.blast_db -query %s -task "blastn-short" -outfmt 6 -out %s/%s -num_threads 8 -evalue 1e-2\n' % tuple(lineOutputList))
         blast.close()
         """ send blast jobs"""
         try:
@@ -241,7 +241,7 @@ def findScaffolds():
 
 def findKmerNames(kmercountPath,genome):
     for file in os.listdir(kmercountPath):
-        if file.startswith(genome) and (file.endswith('.fa') or file.endswith('.fasta')):
+        if file.startswith(genome[:genome.find('.fa')]) and (file.endswith('.fa') or file.endswith('.fasta')):
             print file
             with open(kmercountPath + file,'r') as f:
                 listKmer = sorted([line.strip('\n') for line in f.readlines()[1::2] if line])
@@ -331,6 +331,12 @@ def real_main():
     fastaPath = parseConfigFindPath('fastaPath', configFile)
     fastaFiles = os.listdir(fastaPath)#filter(None, str(subprocess.Popen(['ls', '%s' % fastaPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout.read()).split('\n'))
     genome = parseConfigFindPath('genome', configFile)
+    kmercountPath = parseConfigFindPath('kmercountPath', configFile)
+    blastPath = parseConfigFindPath('blastPath', configFile)
+    try:
+        preprocess = int(parseConfigFindPath('preprocess', configFile))
+    except:
+        preprocess = 1
     print fastaFiles
     # make fixed windows across the genome in bed format
     #genomewindows(genome)
@@ -339,21 +345,22 @@ def real_main():
     # use something like python ../GenomeKmerComp/fetch.tobacco_subgenome_sequences.py
     # we should automate this soon
 
-    # run kmercountexact.sh on each subgenome to yield kmercount_files
-    # write the shell scripts for generating kmercounts
-    # pass fastaFiles to bbtools for running kmerCounts
-    kmercountPath = parseConfigFindPath('kmercountPath',configFile)
-    writeKmercount(fastaPath, fastaFiles, kmercountPath)
+    if preprocess:
+        # run kmercountexact.sh on each subgenome to yield kmercount_files
+        # write the shell scripts for generating kmercounts
+        # pass fastaFiles to bbtools for running kmerCounts
 
-    kmercountFiles = [file for file in os.listdir(kmercountPath) if file.endswith('.kcount')]#filter(None,str(subprocess.Popen(['ls', '%s' % kmercountPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout.read()).split('\n'))
-    # kmercount_files are input to compareKmers function
-    # output are fasta files of 23mers ending with PAM
-    kmer2Fasta(kmercountPath)
+        writeKmercount(fastaPath, fastaFiles, kmercountPath)
 
-    # blast fasta files against the whole genome
-    # could filter BLAST output, if needed
-    blastPath = parseConfigFindPath('blastPath',configFile)
-    writeBlast(genome, blastPath, kmercountPath, fastaPath)
+        kmercountFiles = [file for file in os.listdir(kmercountPath) if file.endswith('.kcount')]#filter(None,str(subprocess.Popen(['ls', '%s' % kmercountPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout.read()).split('\n'))
+        # kmercount_files are input to compareKmers function
+        # output are fasta files of 23mers ending with PAM
+        kmer2Fasta(kmercountPath)
+
+        # blast fasta files against the whole genome
+        # could filter BLAST output, if needed
+
+        writeBlast(genome, blastPath, kmercountPath, fastaPath)
 
     # check for BLAST output
     blastFiles = filter(None,str(subprocess.Popen(['ls', '%s' % blastPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout.read()).split('\n'))
