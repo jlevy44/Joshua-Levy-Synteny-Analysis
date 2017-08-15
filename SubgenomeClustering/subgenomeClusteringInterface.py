@@ -21,6 +21,14 @@ import cPickle as pickle
 from sklearn.neighbors import KernelDensity
 from collections import defaultdict
 from scipy.signal import argrelextrema
+#from sklearn.feature_selection import SelectKBest
+from sklearn.cluster import FeatureAgglomeration
+from sklearn.decomposition import FactorAnalysis
+from sklearn.decomposition import KernelPCA
+import plotly.graph_objs as go
+import plotly.offline as py
+from sklearn.preprocessing import StandardScaler
+from sklearn.cluster import SpectralClustering
 
 
 
@@ -225,7 +233,8 @@ def generateClusteringMatrixAndKmerPrevalence(args):
     scaffolds = findScaffolds(1)
     kmerDict = {kmer: [kmer] for kmer in kmers}
     # print kmerDict
-    d = defaultdict(list)
+    #d = defaultdict(list)
+    dfMatrix = pd.DataFrame(columns=kmers,index=scaffolds)
     with open('blasted_merged.bed', 'r') as f:
         for line in f:
             if line:
@@ -245,7 +254,14 @@ def generateClusteringMatrixAndKmerPrevalence(args):
 
                     # print kmerDict[key]
                     counts[key] /= interval
-                d[listLine[0]] = counts
+                try:
+                    dfMatrix.loc[listLine[0]] = pd.Series(counts)
+                except:
+                    for key in counts:
+                        if key not in kmers:
+                            del counts[key]
+                    dfMatrix.loc[listLine[0]] = pd.Series(counts)
+                #d[listLine[0]] = counts
                 # dfMatrix.set_value(scaffold, key, float(counts[key])/interval)
 
     with open('kmerPrevalence.txt', 'w') as f:
@@ -254,7 +270,8 @@ def generateClusteringMatrixAndKmerPrevalence(args):
 
     del kmerDict
 
-    dfMatrix = pd.DataFrame(d).fillna(0.).T
+    #dfMatrix = pd.DataFrame(d).fillna(0.).T
+    dfMatrix = dfMatrix.fillna(0.)
     dfMatrix = dfMatrix.reset_index()
     dfMatrix.to_feather('clusteringMatrix.feather')
     # dfMatrix.to_csv('clusteringMatrix3.csv', index=True)
@@ -264,6 +281,8 @@ def generateClusteringMatrixAndKmerPrevalence(args):
         f.write('\n'.join('\t'.join([str(i), scaffolds[i]]) for i in range(len(scaffolds))))
     with open('colNames.txt', 'w') as f:
         f.write('\n'.join('\t'.join([str(i), kmers[i]]) for i in range(len(kmers))))
+    pickle.dump(scaffolds,open('scaffolds.p','wb'),protocol=2)
+    pickle.dump(kmers,open('kmers.p','wb'),protocol=2)
 
 
 def peakClusteringMatrix(args):
@@ -277,9 +296,13 @@ def peakClusteringMatrix(args):
 
     b = pybedtools.BedTool('%s_blasted.bed'%peakFasta.split('_')[0]).sort().merge(c=4, o='collapse', )
     b.saveas('%s_blasted_merged.bed'%peakFasta.split('_')[0])
+    with open(peakFasta,'r') as f:
+        kmers = f.readlines()[1::2]
+    scaffolds = pickle.load(open('scaffolds.p','rb'))
     save = int(save)
     # print kmerDict
-    d = defaultdict(list)
+    #d = defaultdict(list)
+    dfMatrix = pd.DataFrame(columns=kmers,index=scaffolds)
     with open('%s_blasted_merged.bed'%peakFasta.split('_')[0], 'r') as f:
         for line in f:
             if line:
@@ -291,13 +314,20 @@ def peakClusteringMatrix(args):
                 # print scaffold, counts
                 for key in counts:
                     counts[key] /= interval
-                d[listLine[0]] = counts
+                try:
+                    dfMatrix.loc[listLine[0]] = pd.Series(counts)
+                except:
+                    for key in counts:
+                        if key not in kmers:
+                            del counts[key]
+                    dfMatrix.loc[listLine[0]] = pd.Series(counts)
+                #d[listLine[0]] = counts
                 # dfMatrix.set_value(scaffold, key, float(counts[key])/interval)
 
 
-    dfMatrix = pd.DataFrame(d).fillna(0.).T
+    dfMatrix = dfMatrix.fillna(0.)
     dfMatrix = dfMatrix.reset_index()
-    dfMatrix.to_feather('clusteringMatrix.feather')
+    dfMatrix.to_feather('%s_clusteringMatrix.feather'%peakFasta.split('_')[0])
     # dfMatrix.to_csv('clusteringMatrix3.csv', index=True)
     kmers = list(dfMatrix.axes[1])
     scaffolds = list(dfMatrix.axes[0])
@@ -305,8 +335,92 @@ def peakClusteringMatrix(args):
         f.write('\n'.join('\t'.join([str(i), scaffolds[i]]) for i in range(len(scaffolds))))
     with open('colNames.txt', 'w') as f:
         f.write('\n'.join('\t'.join([str(i), kmers[i]]) for i in range(len(kmers))))
+    transform_plot('1')
 
-os.chdir('../../..')
+
+def transform_plot(args):
+    peak = args[0]
+    if peak == '1':
+        df = pd.read_feather('clusteringMatrix.feather')
+        peak = 'main'
+    else:
+        df = pd.read_feather('%s_clusteringMatrix.feather'%peak)
+    df = df.set_index(['index'])
+    scaffolds = list(df.axes[0])
+    dimensionalityReducers = {'kpca':KernelPCA(n_components=3),'factor':FactorAnalysis(n_components=3),'feature':FeatureAgglomeration(n_clusters=3)}
+    data = StandardScaler().fit_transform(df)
+    for model in dimensionalityReducers:
+        try:
+            transformed_data = dimensionalityReducers[model].fit_transform(df)
+            np.save('%s_%s_transformed3D.npy'%(peak,model), transformed_data)
+            plots = []
+            plots.append(
+                go.Scatter3d(x=transformed_data[:, 0], y=transformed_data[:, 1], z=transformed_data[:, 2], name='Data',
+                             mode='markers',
+                             marker=dict(color='b', size=2), text=scaffolds))
+            fig = go.Figure(data=plots)
+            py.plot(fig, filename=peak + '_' + model + 'Reduction.html')
+        except:
+            pass
+
+def cluster(args):
+    file = args[0]
+    global scaffolds
+
+    Tname = file.split('transformed3D')[0]
+    transformed_data = np.load(file)
+
+    transformed_data = StandardScaler().fit_transform(transformed_data)
+
+    clustering_names = ['SpectralClustering']
+    n_clusters = 3
+    spectral = SpectralClustering(n_clusters=n_clusters,
+                                          eigen_solver='arpack',
+                                          affinity="nearest_neighbors", gamma=0.3)
+
+    clustering_algorithms = [spectral]
+
+    for name, algorithm in zip(clustering_names, clustering_algorithms):
+        try:
+            algorithm.fit(transformed_data)
+            if hasattr(algorithm, 'labels_'):
+                y_pred = algorithm.labels_.astype(np.int)
+            else:
+                y_pred = algorithm.predict(transformed_data)
+            N = len(set(y_pred))
+            c = ['hsl(' + str(h) + ',50%' + ',50%)' for h in np.linspace(0, 360, N)]
+            # plot
+            plots = []
+            clusterSize = defaultdict(list)
+            for key in set(y_pred):
+                # print key
+                cluster_scaffolds = np.array(scaffolds)[y_pred == key]
+                if list(cluster_scaffolds):
+                    clusterSize[key] = len(cluster_scaffolds)
+                    if clusterSize[key] == max(clusterSize.values()):
+                        testCluster = key
+                    plots.append(
+                        go.Scatter3d(x=transformed_data[y_pred == key, 0], y=transformed_data[y_pred == key, 1],
+                                     z=transformed_data[y_pred == key, 2],
+                                     name='Cluster %d, %d points' % (key, len(cluster_scaffolds)), mode='markers',
+                                     marker=dict(color=c[key], size=2), text=cluster_scaffolds))
+
+            if hasattr(algorithm, 'cluster_centers_'):
+                centers = algorithm.cluster_centers_
+                plots.append(
+                    go.Scatter3d(x=centers[:, 0], y=centers[:, 1], z=centers[:, 2], mode='markers',
+                                 marker=dict(color='purple', symbol='circle', size=12),
+                                 opacity=0.4,
+                                 name='Centroids'))
+
+            fig = go.Figure(data=plots)
+            py.plot(fig, filename=name + Tname + 'n%d' % n_clusters + 'ClusterTest.html')
+
+        except:
+            print 'Unable to cluster completely using ' + name + ' for ' + Tname
+
+
+#os.chdir('../../..')
 
 funct = sys.argv[1]
 arguments = sys.argv[2:]
@@ -321,8 +435,12 @@ options = {
     'kmerRelatedHistogram':kmerRelatedHistogram,
     'splitFasta':splitFasta,
     'genClusterKmer':generateClusteringMatrixAndKmerPrevalence,
-    'genPeakMatrix': peakClusteringMatrix
+    'genPeakMatrix': peakClusteringMatrix,
+    'transform_plot': transform_plot,
+    'cluster': cluster
 }
 
 def main():
     options[funct](tuple(arguments))
+
+main()
