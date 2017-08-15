@@ -29,6 +29,7 @@ import plotly.graph_objs as go
 import plotly.offline as py
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import SpectralClustering
+import scipy.sparse as sps
 
 
 
@@ -125,7 +126,8 @@ def kmerRelatedHistogram(args):
         load = 1
     if save:
         with open('kmerPrevalence.txt', 'r') as f:
-            kmerDict = {line.split('\t')[0]: line.count(',') for line in f if line}
+            kmerDict = {line.split('\t')[0]: int(line.split('\t')[1]) for line in f if line}
+            #kmerDict = {line.split('\t')[0]: line.count(',') for line in f if line}
         pickle.dump(kmerDict, open('kmerDict.p', 'wb'))
     if load:
         kmerDict = pickle.load(open('kmerDict.p', 'rb'))
@@ -227,62 +229,92 @@ def splitFasta(args):
     print args[0].split('.fa')[0]+'_split.fa'
 
 def generateClusteringMatrixAndKmerPrevalence(args):
-    kmercountPath, genome, save = args
+    kmercountPath, save, genome = args
     save = int(save)
     kmers = findKmerNames((kmercountPath, genome))
     scaffolds = findScaffolds(1)
-    kmerDict = {kmer: [kmer] for kmer in kmers}
+    scaffoldIdx = {scaffold:i for i,scaffold in enumerate(scaffolds)}
+    kmerIdx = {kmer:i for i,kmer in enumerate(kmers)}
     # print kmerDict
     #d = defaultdict(list)
-    dfMatrix = pd.DataFrame(columns=kmers,index=scaffolds)
+    #dfMatrix = pd.DataFrame(columns=kmers,index=scaffolds)
+
+    #open('kmerPrevalence.bed','w').close()
+    #open('Progress.txt', 'w').close()
+    #data = np.zeros((len(scaffolds),len(kmers)),dtype=float)
+    row_idx = []
+    column_idx = []
+    values = []
+    kmer_SparseMatrix = sps.dok_matrix((len(kmers),len(kmers)),dtype=np.int)
+    #kmer_SparseMatrix = [[i] for i in range(len(kmers))]
+    #f2 = open('kmerPrevalence.bed','a')
+    #f3 = open('Progress.txt', 'a')
+    #c = 0
+    #d=0
     with open('blasted_merged.bed', 'r') as f:
         for line in f:
             if line:
-                # print scaffold
                 listLine = line.rstrip('\n').split('\t')
-                # scaffold = listLine[0]
                 counts = Counter(listLine[-1].split(','))
                 interval = (abs(float(listLine[2]) - float(listLine[1]))) / 5000.
-                # print scaffold, counts
+                #kmerText = ','.join(counts.keys())
+                kmerCountsNames = counts.keys()
                 for key in counts:
-                    try:
-                        kmerDict[key] += counts.keys()
-                        kmerDict[key] = list(set(kmerDict[key]))
-                    except:
-                        with open('keyErrors.txt', 'a') as f2:
-                            f2.write(listLine[0] + ' ' + key + '\n')
+                    #f2.write('%s\t0\t100\t%s\n'%(key,kmerText))
+                    row_idx.append(scaffoldIdx[listLine[0]])
+                    column_idx.append(kmerIdx[key])
+                    values.append(counts[key] / interval)
+                    for kmername in kmerCountsNames:
+                        kmer_SparseMatrix[kmerIdx[key],kmerIdx[kmername]] = 1
+                #c += 1
+                #if c > 500:
+                #    d += c
+                #    print line
 
-                    # print kmerDict[key]
-                    counts[key] /= interval
-                try:
-                    dfMatrix.loc[listLine[0]] = pd.Series(counts)
-                except:
-                    for key in counts:
-                        if key not in kmers:
-                            del counts[key]
-                    dfMatrix.loc[listLine[0]] = pd.Series(counts)
-                #d[listLine[0]] = counts
-                # dfMatrix.set_value(scaffold, key, float(counts[key])/interval)
+                    #f2.close()
+                    #f3.write(str(d) + '\n' + line + '\n' + str(counts) + '\n')
+                    #BedTool('kmerPrevalence.bed').sort().merge(c=4, o='distinct', delim=',').saveas(
+                    #    'kmerPrevalence.bed')
+                    #f2 = open('kmerPrevalence.bed','a')
+                #    c = 0
 
-    with open('kmerPrevalence.txt', 'w') as f:
-        for key in kmerDict:
-            f.write('%s\t%s\t%d\n' % (key, ','.join(kmer for kmer in kmerDict[key]), len(kmerDict[key])))
+                    #data[scaffoldIdx[listLine[0]],kmerIdx[key]] = counts[key] / interval
+    #f2.close()
+    #f3.close()
+    with open('kmerPrevalence.txt','w') as f:
+        for kmer, count in zip(kmers,list(np.vectorize(int)(np.asarray(np.squeeze((kmer_SparseMatrix.sum(axis=1))))[0]))):
+            f.write('%s\t%d\n'%(kmer,count))
+    #data = data[:,~np.all(data==0.,axis=0)]
+    #BedTool('kmerPrevalence.bed').sort().merge(c=4,o='distinct',delim=',').saveas('kmerPrevalence.bed')
 
-    del kmerDict
+    #with open('kmerPrevalence.bed') as f, open('kmerPrevalence.txt', 'w') as f2:
+    #    for line in f:
+    #        if line:
+    #            lineList = line.strip('\n').split('\t')
+    #            f2.write('%s\t%s\n'%(lineList[0],','.join(set(lineList[-1].split(',')))))
+        #for key in kmerDict:
+        #    f.write('%s\t%s\t%d\n' % (key, ','.join(kmer for kmer in kmerDict[key]), len(kmerDict[key])))
 
+    #del scaffoldIdx,kmerIdx
+    data = sps.coo_matrix((values, (row_idx, column_idx)), (len(scaffolds), len(kmers)))
+    del scaffoldIdx, kmerIdx, values, row_idx, column_idx
     #dfMatrix = pd.DataFrame(d).fillna(0.).T
-    dfMatrix = dfMatrix.fillna(0.)
-    dfMatrix = dfMatrix.reset_index()
-    dfMatrix.to_feather('clusteringMatrix.feather')
+    #dfMatrix = pd.DataFrame(data,index=scaffolds)
+    #del data
+    #dfMatrix = dfMatrix.reset_index()
+    #dfMatrix.to_feather('clusteringMatrix.feather')
     # dfMatrix.to_csv('clusteringMatrix3.csv', index=True)
-    kmers = list(dfMatrix.axes[1])
-    scaffolds = list(dfMatrix.axes[0])
+    #kmers = list(dfMatrix.axes[1])
+    #scaffolds = list(dfMatrix.axes[0])
+    sps.save_npz('clusteringMatrix.npz',data)
     with open('rowNames.txt', 'w') as f:
         f.write('\n'.join('\t'.join([str(i), scaffolds[i]]) for i in range(len(scaffolds))))
     with open('colNames.txt', 'w') as f:
         f.write('\n'.join('\t'.join([str(i), kmers[i]]) for i in range(len(kmers))))
     pickle.dump(scaffolds,open('scaffolds.p','wb'),protocol=2)
     pickle.dump(kmers,open('kmers.p','wb'),protocol=2)
+    transform_plot(('1'))
+
 
 
 def peakClusteringMatrix(args):
@@ -293,65 +325,69 @@ def peakClusteringMatrix(args):
                 l1 = line.split('\t')[1]
                 f2.write('\t'.join(
                     [l1] + ['0', str(int(l1.split('_')[-1]) - int(l1.split('_')[-2]))] + [line.split('\t')[0]]) + '\n')
-
     b = pybedtools.BedTool('%s_blasted.bed'%peakFasta.split('_')[0]).sort().merge(c=4, o='collapse', )
     b.saveas('%s_blasted_merged.bed'%peakFasta.split('_')[0])
     with open(peakFasta,'r') as f:
         kmers = f.readlines()[1::2]
     scaffolds = pickle.load(open('scaffolds.p','rb'))
+    scaffoldIdx = {scaffold: i for i, scaffold in enumerate(scaffolds)}
+    kmerIdx = {kmer: i for i, kmer in enumerate(kmers)}
     save = int(save)
     # print kmerDict
     #d = defaultdict(list)
-    dfMatrix = pd.DataFrame(columns=kmers,index=scaffolds)
+    #dfMatrix = pd.DataFrame(columns=kmers,index=scaffolds)
+    #data = np.zeros((len(scaffolds), len(kmers)), dtype=float)
+    row_idx = []
+    column_idx = []
+    values = []
     with open('%s_blasted_merged.bed'%peakFasta.split('_')[0], 'r') as f:
         for line in f:
             if line:
-                # print scaffold
                 listLine = line.rstrip('\n').split('\t')
-                # scaffold = listLine[0]
                 counts = Counter(listLine[-1].split(','))
                 interval = (abs(float(listLine[2]) - float(listLine[1]))) / 5000.
-                # print scaffold, counts
                 for key in counts:
-                    counts[key] /= interval
-                try:
-                    dfMatrix.loc[listLine[0]] = pd.Series(counts)
-                except:
-                    for key in counts:
-                        if key not in kmers:
-                            del counts[key]
-                    dfMatrix.loc[listLine[0]] = pd.Series(counts)
-                #d[listLine[0]] = counts
-                # dfMatrix.set_value(scaffold, key, float(counts[key])/interval)
+                    row_idx.append(scaffoldIdx[listLine[0]])
+                    column_idx.append(kmerIdx[key])
+                    values.append(counts[key] / interval)
+                    #data[scaffoldIdx[listLine[0]],kmerIdx[key]] = counts[key] / interval
 
-
-    dfMatrix = dfMatrix.fillna(0.)
-    dfMatrix = dfMatrix.reset_index()
-    dfMatrix.to_feather('%s_clusteringMatrix.feather'%peakFasta.split('_')[0])
+    #data = data[:,~np.all(data==0.,axis=0)]
+    data = sps.coo_matrix((values,(row_idx,column_idx)),(len(scaffolds),len(kmers)))
+    del scaffoldIdx, kmerIdx, values, row_idx, column_idx
+    # dfMatrix = pd.DataFrame(d).fillna(0.).T
+    #dfMatrix = pd.SparseDataFrame(data, index=scaffolds)
+    sps.save_npz('%s_clusteringMatrix.npz'%peakFasta.split('_')[0],data)
+    #dfMatrix = dfMatrix.fillna(0.)
+    #dfMatrix = dfMatrix.reset_index()
+    #dfMatrix.to_feather('%s_clusteringMatrix.feather'%peakFasta.split('_')[0])
     # dfMatrix.to_csv('clusteringMatrix3.csv', index=True)
-    kmers = list(dfMatrix.axes[1])
-    scaffolds = list(dfMatrix.axes[0])
+
+    #kmers = list(dfMatrix.axes[1])
+    #scaffolds = list(dfMatrix.axes[0])
     with open('rowNames.txt', 'w') as f:
         f.write('\n'.join('\t'.join([str(i), scaffolds[i]]) for i in range(len(scaffolds))))
-    with open('colNames.txt', 'w') as f:
-        f.write('\n'.join('\t'.join([str(i), kmers[i]]) for i in range(len(kmers))))
-    transform_plot('1')
+    #with open('colNames.txt', 'w') as f:
+    #    f.write('\n'.join('\t'.join([str(i), kmers[i]]) for i in range(len(kmers))))
 
 
 def transform_plot(args):
     peak = args[0]
+    scaffolds = pickle.load(open('scaffolds.p', 'rb'))
     if peak == '1':
-        df = pd.read_feather('clusteringMatrix.feather')
+        #df = pd.read_feather('clusteringMatrix.feather')
+        data = sps.load_npz('clusteringMatrix.npz')
         peak = 'main'
     else:
-        df = pd.read_feather('%s_clusteringMatrix.feather'%peak)
-    df = df.set_index(['index'])
-    scaffolds = list(df.axes[0])
+        #df = pd.read_feather('%s_clusteringMatrix.feather'%peak)
+        data = sps.load_npz('%s_clusteringMatrix.npz'%peak)
+    #df = df.set_index(['index'])
+    #scaffolds = #list(df.axes[0])
     dimensionalityReducers = {'kpca':KernelPCA(n_components=3),'factor':FactorAnalysis(n_components=3),'feature':FeatureAgglomeration(n_clusters=3)}
-    data = StandardScaler().fit_transform(df)
+    data = StandardScaler().fit_transform(data)
     for model in dimensionalityReducers:
         try:
-            transformed_data = dimensionalityReducers[model].fit_transform(df)
+            transformed_data = dimensionalityReducers[model].fit_transform(data)
             np.save('%s_%s_transformed3D.npy'%(peak,model), transformed_data)
             plots = []
             plots.append(
@@ -365,7 +401,7 @@ def transform_plot(args):
 
 def cluster(args):
     file = args[0]
-    global scaffolds
+    scaffolds = pickle.load(open('scaffolds.p', 'rb'))
 
     Tname = file.split('transformed3D')[0]
     transformed_data = np.load(file)

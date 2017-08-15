@@ -67,7 +67,7 @@ check = Channel.from(genomeSplitName,genomeFullPath,kmercountName,blastName,work
 //gCh = Channel.from(genome)
 //            .subscribe {println it + 'aaaa'}
 
-genomeChan = Channel.from(genome)
+genomeChan = Channel.from(genome - '\n')
 
 genomeChan2 = Channel.create()
 
@@ -230,7 +230,7 @@ if(genMat == 1)
     """
     #!/bin/bash
     cd ${workingDir}
-    python subgenomeClusteringInterface.py genClusterKmer ${kmercountPath} ${genomeName} ${save}
+    python subgenomeClusteringInterface.py genClusterKmer ${kmercountPath} ${save} ${genomeName}
     """
 else
     """
