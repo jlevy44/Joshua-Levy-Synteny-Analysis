@@ -139,7 +139,7 @@ input:
 
 output:
     val genomeName into genomeChan5
-    val genomeName into genomeChan55
+    //val genomeName into genomeChan55
 
 
 script:
@@ -162,7 +162,10 @@ else
 //Channel.watchPath(kmercountPath+kmercountName, 'create,modify')
 genomeChan5.map{it -> file(kmercountPath+kmercountName)}
                     .splitFasta(by: 50000,file: true)
-                    .set { kmerFasta }
+                    .into {kmerFasta; kFast2}
+                    //.set { kmerFasta }
+
+kFast2.subscribe {println it}
 
 blast_result = Channel.create()
 
@@ -172,7 +175,7 @@ clusterOptions = { writeBlast == 1 ? '-P plant-analysis.p -cwd -q normal.q -pe p
 
 input:
     file 'query.fa' from kmerFasta
-    val genomeName from genomeChan55
+    //each genomeName from genomeChan55.toList()
 
 output:
     file blast_result
@@ -184,7 +187,7 @@ if(writeBlast == 1)
     """
     #!/bin/bash
     cd ${workingDir}
-    blastn -db ./${genomeName}.blast_db -query query.fa -task "blastn-short" -outfmt 6 -num_threads 8 -evalue 1e-2 > blast_result
+    blastn -db ./${genomeSplitName}.blast_db -query query.fa -task "blastn-short" -outfmt 6 -num_threads 8 -evalue 1e-2 > blast_result
     """
 else
     """

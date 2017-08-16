@@ -327,16 +327,20 @@ def generateClusteringMatrixAndKmerPrevalence(args):
     # dfMatrix.to_csv('clusteringMatrix3.csv', index=True)
     #kmers = list(dfMatrix.axes[1])
     #scaffolds = list(dfMatrix.axes[0])
-    sps.save_npz('clusteringMatrix.npz',data)
+    sps.save_npz('clusteringMatrix.npz',data.tocoo())
     with open('rowNames.txt', 'w') as f:
         f.write('\n'.join('\t'.join([str(i), scaffolds[i]]) for i in range(len(scaffolds))))
     with open('colNames.txt', 'w') as f:
         f.write('\n'.join('\t'.join([str(i), kmers[i]]) for i in range(len(kmers))))
     pickle.dump(scaffolds,open('scaffolds.p','wb'),protocol=2)
     pickle.dump(kmers,open('kmers.p','wb'),protocol=2)
+
+def transform_main(args): #FIXME
+    try:
+        null = args[0]
+    except:
+        pass
     transform_plot(('1'))
-
-
 
 def peakClusteringMatrix(args):
     kmercountPath, peakFasta, blastFile, save = args
@@ -494,7 +498,8 @@ options = {
     'genClusterKmer':generateClusteringMatrixAndKmerPrevalence,
     'genPeakMatrix': peakClusteringMatrix,
     'transform_plot': transform_plot,
-    'cluster': cluster
+    'cluster': cluster,
+    'transform_main': transform_main
 }
 
 def main():
