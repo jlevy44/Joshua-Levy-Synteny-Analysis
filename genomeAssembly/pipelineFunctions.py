@@ -147,11 +147,11 @@ def BB2bed(BBfile,ref,sample,centromereBed):
                 #int1[0] -= 1
                 if '_part_' in lineList[3]:
                     sampChr,part = tuple(lineList[3].split('_part_'))
-                    int2 = [(int(part)-1)*300]
-                    int2.append(int2[0] + 300)
+                    int2 = [(int(part)-1)*600]#300]
+                    int2.append(int2[0] + 600)#300)
                 else:
                     sampChr = lineList[3]
-                    int2 = [0,300]
+                    int2 = [0,600]#300]
                 #int2[0] -= 1
                 f1.write('\t'.join([refChr]+map(str,int1)+['_'.join([refChr]+map(str,int1)),'0','+']) + '\n')
                 f2.write('\t'.join([sampChr]+map(str,int2)+['_'.join([sampChr]+map(str,int2)),'0','+']) + '\n')

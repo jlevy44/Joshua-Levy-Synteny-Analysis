@@ -5,7 +5,7 @@ from pyfaidx import Fasta
 import pandas as pd
 import multiprocessing as mp
 import numpy as np
-from time import time, clock
+from time import clock
 from collections import Counter, defaultdict
 from sklearn.decomposition import PCA
 from sklearn.cluster import KMeans
@@ -30,6 +30,8 @@ import plotly.offline as py
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import SpectralClustering
 import scipy.sparse as sps
+import networkx as nx
+from itertools import combinations
 
 
 
@@ -119,12 +121,12 @@ def blast2bed(args):
     #return b
 
 def kmerRelatedHistogram(args):
-    save = int(args[0])
-    if save == 1:
+    kmercountName, save = args
+    if int(save) == 1:
         load = 0
     else:
         load = 1
-    if save:
+    if int(save):
         with open('kmerPrevalence.txt', 'r') as f:
             kmerDict = {line.split('\t')[0]: int(line.split('\t')[1]) for line in f if line}
             #kmerDict = {line.split('\t')[0]: line.count(',') for line in f if line}
@@ -165,19 +167,20 @@ def kmerRelatedHistogram(args):
                     (xplot[idxs_valleys[-1]][0], xplot[-1][0])]
     counts = np.array(reverseLookup.keys())
     #print reverseLookup
-    for interval in enumerate(intervals):
-        try:
-            #print interval
-            keys = counts[np.where((counts <= np.floor(interval[1][1])) & (counts >= np.ceil(interval[1][0])))]
-            #print keys
-            # np.vectorize(lambda x: x <= interval[1] and x >= interval[0])(counts)
-            with open('Peak%d_CountInt_%d_%d.fa' % tuple([interval[0] + 1] + map(int, list(interval[1]))), 'w') as f:
-                for key in keys:
-                    f.write('\n'.join('>%s\n%s' % (val, val) for val in reverseLookup[key]) + '\n')
-            print 'Peak%d_CountInt_%d_%d.fa' % tuple([interval[0] + 1] + map(int, list(interval[1])))
-        except:
-            with open('ErrFile.txt', 'a') as f:
-                f.write(str(interval[0]) + '\t%s' % str(interval[1]) + '\n')
+    with open('PeaksOutNames.txt','w') as f2:
+        for interval in enumerate(intervals):
+            try:
+                #print interval
+                keys = counts[np.where((counts <= np.floor(interval[1][1])) & (counts >= np.ceil(interval[1][0])))]
+                #print keys
+                # np.vectorize(lambda x: x <= interval[1] and x >= interval[0])(counts)
+                with open('Peak%d_CountInt_%d_%d.fa' % tuple([interval[0] + 1] + map(int, list(interval[1]))), 'w') as f:
+                    for key in keys:
+                        f.write('\n'.join('>%s\n%s' % (val, val) for val in reverseLookup[key]) + '\n')
+                f2.write('Peak%d_CountInt_%d_%d.fa' % tuple([interval[0] + 1] + map(int, list(interval[1]))) + '\n')
+            except:
+                with open('ErrFile.txt', 'a') as f:
+                    f.write(str(interval[0]) + '\t%s' % str(interval[1]) + '\n')
 
 def splitFasta(args):
     fastaFile = Fasta(args[0])
@@ -234,41 +237,59 @@ def generateClusteringMatrixAndKmerPrevalence(args):
     kmers = findKmerNames((kmercountPath, genome))
     scaffolds = findScaffolds(1)
     scaffoldIdx = {scaffold:i for i,scaffold in enumerate(scaffolds)}
-    kmerIdx = {kmer:i for i,kmer in enumerate(kmers)}
+    kmerIdx = {kmer:i for i,kmer in enumerate(kmers)} # np.uint32(
+    kmerCount = {kmer:[0.,0] for kmer in kmers}
     # print kmerDict
     #d = defaultdict(list)
     #dfMatrix = pd.DataFrame(columns=kmers,index=scaffolds)
 
     #open('kmerPrevalence.bed','w').close()
-    #open('Progress.txt', 'w').close()
+    open('Progress.txt', 'w').close()
     #data = np.zeros((len(scaffolds),len(kmers)),dtype=float)
-    row_idx = []
-    column_idx = []
-    values = []
-    kmer_SparseMatrix = sps.dok_matrix((len(kmers),len(kmers)),dtype=np.int)
+    #row_idx = []
+    #column_idx = []
+    #values = []
+    #kmer_SparseMatrix = sps.dok_matrix((len(kmers),len(kmers)),dtype=np.int8)
     #kmer_SparseMatrix = [[i] for i in range(len(kmers))]
     #f2 = open('kmerPrevalence.bed','a')
-    #f3 = open('Progress.txt', 'a')
-    #c = 0
-    #d=0
+    data = sps.dok_matrix((len(scaffolds), len(kmers)),dtype=np.float32)
+    #f3 = open('Progress.txt', 'w')
+    #kmerGraph = nx.Graph()
+    c = 0
+    d=0
+    start = clock()
+    #f3.write(str(start) + '\n')
     with open('blasted_merged.bed', 'r') as f:
         for line in f:
             if line:
                 listLine = line.rstrip('\n').split('\t')
                 counts = Counter(listLine[-1].split(','))
                 interval = (abs(float(listLine[2]) - float(listLine[1]))) / 5000.
+                #scalingFactor = interval * 5000. / len(kmers)
                 #kmerText = ','.join(counts.keys())
-                kmerCountsNames = counts.keys()
+                kmerCountsNum = len(counts.keys())
+                #f3.write(listLine[0] + '\n')
+                #kmerCountsNumbers = [kmerIdx[kmer] for kmer in kmerCountsNames]
+                #kmerGraph.add_edges_from(list(combinations(kmerCountsNumbers, 2)))
                 for key in counts:
                     #f2.write('%s\t0\t100\t%s\n'%(key,kmerText))
-                    row_idx.append(scaffoldIdx[listLine[0]])
-                    column_idx.append(kmerIdx[key])
-                    values.append(counts[key] / interval)
-                    for kmername in kmerCountsNames:
-                        kmer_SparseMatrix[kmerIdx[key],kmerIdx[kmername]] = 1
-                #c += 1
-                #if c > 500:
+                    try:
+                        #row_idx.append(scaffoldIdx[listLine[0]])
+                        #column_idx.append(kmerIdx[key])
+                        #values.append(counts[key] / interval)
+                        data[scaffoldIdx[listLine[0]], kmerIdx[key]] = counts[key] / interval
+                        kmerCount[key][0] += kmerCountsNum #/ scalingFactor
+                        kmerCount[key][1] += 1
+                    except:
+                        pass
+                #[(np.uint32(kmerIdx[key]),np.uint32(kmerIdx[kmername])) for kmername in kmerCountsNames])
+                    #for kmername in kmerCountsNames:
+                    #    kmer_SparseMatrix[kmerIdx[key],kmerIdx[kmername]] = 1
+                c += 1
+                #if c > 100:
                 #    d += c
+                #f3.write(str(d) + '\t' + str(clock()-start) + '\n')
+                #    c=0
                 #    print line
 
                     #f2.close()
@@ -282,7 +303,7 @@ def generateClusteringMatrixAndKmerPrevalence(args):
     #f2.close()
     #f3.close()
     with open('kmerPrevalence.txt','w') as f:
-        for kmer, count in zip(kmers,list(np.vectorize(int)(np.asarray(np.squeeze((kmer_SparseMatrix.sum(axis=1))))[0]))):
+        for kmer, count in {key:(int(np.ceil(float(kmerCount[key][0])/kmerCount[key][1])) if kmerCount[key][1] > 0 else 0) for key in kmerCount}.items():#[(kmers[i],kmerGraph.degree(i)) for i in kmerGraph.nodes()]:#zip([kmers[i] for i in kmerGraph.nodes()],[len(kmerGraph.neighbors(kmer2)) for kmer2 in kmerGraph.nodes()]): #list(np.vectorize(int)(np.asarray(np.squeeze((kmer_SparseMatrix.sum(axis=1))))[0]))
             f.write('%s\t%d\n'%(kmer,count))
     #data = data[:,~np.all(data==0.,axis=0)]
     #BedTool('kmerPrevalence.bed').sort().merge(c=4,o='distinct',delim=',').saveas('kmerPrevalence.bed')
@@ -296,8 +317,8 @@ def generateClusteringMatrixAndKmerPrevalence(args):
         #    f.write('%s\t%s\t%d\n' % (key, ','.join(kmer for kmer in kmerDict[key]), len(kmerDict[key])))
 
     #del scaffoldIdx,kmerIdx
-    data = sps.coo_matrix((values, (row_idx, column_idx)), (len(scaffolds), len(kmers)))
-    del scaffoldIdx, kmerIdx, values, row_idx, column_idx
+    #data = sps.coo_matrix((values, (row_idx, column_idx)), (len(scaffolds), len(kmers)))
+    del scaffoldIdx, kmerIdx#, values, row_idx, column_idx
     #dfMatrix = pd.DataFrame(d).fillna(0.).T
     #dfMatrix = pd.DataFrame(data,index=scaffolds)
     #del data

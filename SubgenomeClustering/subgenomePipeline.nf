@@ -71,7 +71,7 @@ genomeChan = Channel.from(genome - '\n')
 
 genomeChan2 = Channel.create()
 
-process splitFasta {
+process splitFastaProcess {
 executor = 'local'
 clusterOptions = { splitFast == 1 ? '-P plant-analysis.p -cwd -q normal.q -pe pe_slots 2 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt' }
 
@@ -128,6 +128,7 @@ else
 }
 
 genomeChan5 = Channel.create()
+genomeChan55 = Channel.create()
 
 process kmer2Fasta {
 executor = 'local'
@@ -138,6 +139,7 @@ input:
 
 output:
     val genomeName into genomeChan5
+    val genomeName into genomeChan55
 
 
 script:
@@ -145,7 +147,9 @@ if(fromFasta == 1)
     """
     #!/bin/bash
     cd ${workingDir}
+    module load blast+/2.6.0
     python subgenomeClusteringInterface.py kmer2Fasta ${kmercountPath}
+    makeblastdb -in ${genomeFullPath} -dbtype nucl -out ${genomeName}.blast_db
     """
 else
     """
@@ -155,35 +159,50 @@ else
 }
 
 
-genomeChan6 = Channel.create()
+//Channel.watchPath(kmercountPath+kmercountName, 'create,modify')
+genomeChan5.map{it -> file(kmercountPath+kmercountName)}
+                    .splitFasta(by: 50000,file: true)
+                    .set { kmerFasta }
+
+blast_result = Channel.create()
 
 process BlastOff {
 
 clusterOptions = { writeBlast == 1 ? '-P plant-analysis.p -cwd -q normal.q -pe pe_slots 9 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt' }
 
 input:
-    val genomeName from genomeChan5
+    file 'query.fa' from kmerFasta
+    val genomeName from genomeChan55
 
 output:
-    val genomeName into genomeChan6
-
+    file blast_result
+    //val genomeName into genomeChan6
+    //${kmercountPath}${kmercountName}
 
 script:
 if(writeBlast == 1)
     """
     #!/bin/bash
     cd ${workingDir}
-    module load blast+/2.6.0
-    makeblastdb -in ${genomeFullPath} -dbtype nucl -out ${genomeName}.blast_db
-    blastn -db ./${genomeName}.blast_db -query ${kmercountName} -task "blastn-short" -outfmt 6 -out ${blastPath}/${blastName} -num_threads 8 -evalue 1e-2
+    blastn -db ./${genomeName}.blast_db -query query.fa -task "blastn-short" -outfmt 6 -num_threads 8 -evalue 1e-2 > blast_result
     """
 else
     """
-    touch done
+    touch blast_result
     """
 
 }
 
+if (writeBlast == 1){
+blast_result.collectFile(name: blastPath + blastName)
+            .map {file -> genomeSplitName}
+            .set {genomeChan6}
+            }
+else {
+blast_result.collectFile()
+            .map {file -> genomeSplitName}
+            .set {genomeChan6}
+}
 
 genomeChan7 = Channel.create()
 
@@ -239,7 +258,10 @@ else
 
 }
 
-peaks = Channel.create()//.watchPath(peakPath+'*.fa')
+peaks = Channel.create()//genomeChan8.last()
+        //            .subscribe {println it}
+        //            .fromPath()
+                    //.watchPath(peakPath+'*.fa')
 
 process kmerHist {
 
@@ -249,7 +271,7 @@ input:
     val genomeName from genomeChan8
 
 output:
-    stdout peaks
+    file 'PeaksOutNames.txt' into peaks
 
 
 script:
@@ -257,19 +279,28 @@ if(kHist == 1)
     """
     #!/bin/bash
     cd ${workingDir}
-    python subgenomeClusteringInterface.py kmerRelatedHistogram ${save}
+    python subgenomeClusteringInterface.py kmerRelatedHistogram ${kmercountName} ${save}
+    touch PeaksOutNames.txt
     """
 else
     """
-    echo ${kmercountName}
+    #!/bin/bash
+    cd ${workingDir}
+    touch PeaksOutNames.txt
     """
 
 }
 
-peaksWait = peaks.last()
+//peaksWait = peaks.last()
 
-peaksFinal = Channel.watchPath(peakPath+'*.fa','create')
-                    .flatMap{file -> tuple(file.name, file.name - '.fa' + '.BLASTtsv.txt')}
+peaksFinal = peaks.splitText()
+                  .flatMap{it -> tuple(it, it - '.fa' + '.BLASTtsv.txt')}
+                //.flatMap{file -> tuple(file.name, file.name - '.fa' + '.BLASTtsv.txt')}
+
+                    //.last()
+                    //.subscribe {println it}
+                    //.fromPath(peakPath+'*.fa')
+                    //.watchPath(peakPath+'*.fa','create')
                     //.flatMap{file -> tuple(file, file.name, file.name - '.fa' + '.BLASTtsv.txt')}
                     //.splitText(by: 5000, file: True)
                     //.set { chunksChannel }
@@ -303,6 +334,8 @@ else
 }
 
 // can try .collectFile().subscribe { merged_file -> merged_file.copyTo(out_dir) }
+
+
 
 peaks3 = Channel.create()
 
@@ -355,12 +388,15 @@ if(trans == 1)
     """
 else
     """
-    touch done
+    #!/bin/bash
+    cd ${workingDir}
+    touch *transformed3D.npy
     """
 
 }
 
-transformedData = Channel.watchPath('*transformed3D.npy','create')
+transformedData = Channel.watchPath('*transformed3D.npy','create,modify')
+                         .unique()
 
 process cluster {
 
