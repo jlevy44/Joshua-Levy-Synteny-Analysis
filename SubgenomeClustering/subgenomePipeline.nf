@@ -235,6 +235,7 @@ else
 }
 
 genomeChan8 = Channel.create()
+genomeChan85 = Channel.create()
 
 process genClusterMatrix_kmerPrevalence {
 
@@ -245,6 +246,7 @@ input:
 
 output:
     val genomeName into genomeChan8
+    val genomeName into genomeChan85
 
 
 script:
@@ -367,6 +369,28 @@ else
 
 }
 
+process transform_main {
+
+clusterOptions = { trans == 1 ? '-P plant-analysis.p -cwd -q normal.q -pe pe_slots 2 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt' }
+
+input:
+    val genomeName from genomeChan85
+
+script:
+if(trans == 1)
+    """
+    #!/bin/bash
+    cd ${workingDir}
+    python subgenomeClusteringInterface.py transform_main 1
+    """
+else
+    """
+    #!/bin/bash
+    cd ${workingDir}
+    touch *transformed3D.npy
+    """
+
+}
 
 
 peaks4 = peaks3.map { it -> findPeak(it) }

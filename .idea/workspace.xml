@@ -3,9 +3,9 @@
   <component name="ChangeListManager">
     <list default="true" id="87dadfdf-9689-45cf-b4af-5fd342ee0ae6" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/SubgenomeClustering/kmerCountCompare.txt" afterPath="$PROJECT_DIR$/SubgenomeClustering/kmerCountCompare.txt" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/SubgenomeClustering/subgenomeClusteringInterface.py" afterPath="$PROJECT_DIR$/SubgenomeClustering/subgenomeClusteringInterface.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/SubgenomeClustering/subgenomePipeline.nf" afterPath="$PROJECT_DIR$/SubgenomeClustering/subgenomePipeline.nf" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/genomeAssembly/scaffoldConfig.txt" afterPath="$PROJECT_DIR$/genomeAssembly/scaffoldConfig.txt" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -30,21 +30,21 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="subgenomePipeline.nf" pinned="false" current-in-tab="false">
+      <file leaf-file-name="subgenomePipeline.nf" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/SubgenomeClustering/subgenomePipeline.nf">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="165">
-              <caret line="224" column="7" lean-forward="true" selection-start-line="224" selection-start-column="7" selection-end-line="224" selection-end-column="7" />
+            <state relative-caret-position="192">
+              <caret line="379" column="14" lean-forward="true" selection-start-line="379" selection-start-column="14" selection-end-line="379" selection-end-column="14" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="subgenomeClusteringInterface.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="subgenomeClusteringInterface.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/SubgenomeClustering/subgenomeClusteringInterface.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="270">
-              <caret line="337" column="32" lean-forward="false" selection-start-line="337" selection-start-column="32" selection-end-line="337" selection-end-column="32" />
+            <state relative-caret-position="255">
+              <caret line="417" column="25" lean-forward="true" selection-start-line="417" selection-start-column="25" selection-end-line="417" selection-end-column="25" />
               <folding>
                 <element signature="e#0#14#0" expanded="true" />
               </folding>
@@ -77,8 +77,8 @@
       <file leaf-file-name="runCluster.sh" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/SubgenomeClustering/runCluster.sh">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="60">
-              <caret line="4" column="41" lean-forward="false" selection-start-line="4" selection-start-column="41" selection-end-line="4" selection-end-column="41" />
+            <state relative-caret-position="75">
+              <caret line="5" column="38" lean-forward="true" selection-start-line="5" selection-start-column="38" selection-end-line="5" selection-end-column="38" />
               <folding />
             </state>
           </provider>
@@ -87,8 +87,8 @@
       <file leaf-file-name="kmerCountCompare.txt" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/SubgenomeClustering/kmerCountCompare.txt">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="300">
-              <caret line="20" column="5" lean-forward="false" selection-start-line="20" selection-start-column="5" selection-end-line="20" selection-end-column="5" />
+            <state relative-caret-position="345">
+              <caret line="23" column="0" lean-forward="true" selection-start-line="23" selection-start-column="0" selection-end-line="23" selection-end-column="0" />
               <folding />
             </state>
           </provider>
@@ -115,7 +115,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>write</find>
       <find>writeblast</find>
       <find>CDSspecies</find>
       <find>N</find>
@@ -145,6 +144,7 @@
       <find>genomeChan6</find>
       <find>data</find>
       <find>kmercountN</find>
+      <find>Stan</find>
     </findStrings>
     <replaceStrings>
       <replace>val</replace>
@@ -202,18 +202,18 @@
         <option value="$PROJECT_DIR$/SubgenomeClustering/runCluster.sh" />
         <option value="$PROJECT_DIR$/SubgenomeClustering/transform_plot.py" />
         <option value="$PROJECT_DIR$/genomeAssembly/writeShFiles.py" />
-        <option value="$PROJECT_DIR$/SubgenomeClustering/kmerCountCompare.txt" />
         <option value="$PROJECT_DIR$/SubgenomeClustering/nextflow.config" />
         <option value="$PROJECT_DIR$/genomeAssembly/pipelineFunctions.py" />
-        <option value="$PROJECT_DIR$/SubgenomeClustering/subgenomePipeline.nf" />
         <option value="$PROJECT_DIR$/genomeAssembly/scaffoldConfig.txt" />
+        <option value="$PROJECT_DIR$/SubgenomeClustering/kmerCountCompare.txt" />
         <option value="$PROJECT_DIR$/SubgenomeClustering/subgenomeClusteringInterface.py" />
+        <option value="$PROJECT_DIR$/SubgenomeClustering/subgenomePipeline.nf" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds">
     <option name="x" value="208" />
-    <option name="y" value="180" />
+    <option name="y" value="317" />
     <option name="width" value="1080" />
     <option name="height" value="619" />
   </component>
@@ -732,7 +732,14 @@
       <option name="project" value="LOCAL" />
       <updated>1502910970444</updated>
     </task>
-    <option name="localTasksCounter" value="32" />
+    <task id="LOCAL-00032" summary="more changes">
+      <created>1502922118316</created>
+      <option name="number" value="00032" />
+      <option name="presentableId" value="LOCAL-00032" />
+      <option name="project" value="LOCAL" />
+      <updated>1502922118316</updated>
+    </task>
+    <option name="localTasksCounter" value="33" />
     <servers />
   </component>
   <component name="TodoView">
@@ -745,7 +752,7 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="208" y="180" width="1080" height="619" extended-state="0" />
+    <frame x="208" y="317" width="1080" height="619" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.23148148" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
@@ -771,7 +778,6 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Updates to scaffolding process..." />
     <MESSAGE value="Fixes to Scaffolding" />
     <MESSAGE value="Changed Scaffolding Pipeline to run using NextFlow&#10;&#10;Currently Debugging" />
     <MESSAGE value="Some nextflow scripts.. ScaffoldPipeline is the real deal" />
@@ -796,7 +802,8 @@
     <MESSAGE value="build Clustering pipeline up until clustering capabilities" />
     <MESSAGE value="Made updates to scaffolding pipeline to handle memory storing issues" />
     <MESSAGE value="more changes to clustering pipeline, also modified parameter (BB mapping size) in scaffolding algorithm" />
-    <option name="LAST_COMMIT_MESSAGE" value="more changes to clustering pipeline, also modified parameter (BB mapping size) in scaffolding algorithm" />
+    <MESSAGE value="more changes" />
+    <option name="LAST_COMMIT_MESSAGE" value="more changes" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1084,22 +1091,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/SubgenomeClustering/runCluster.sh">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="60">
-          <caret line="4" column="41" lean-forward="false" selection-start-line="4" selection-start-column="41" selection-end-line="4" selection-end-column="41" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/SubgenomeClustering/kmerCountCompare.txt">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="300">
-          <caret line="20" column="5" lean-forward="false" selection-start-line="20" selection-start-column="5" selection-end-line="20" selection-end-column="5" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/SubgenomeClustering/clusteringWork.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="364">
@@ -1118,21 +1109,37 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/SubgenomeClustering/subgenomePipeline.nf">
+    <entry file="file://$PROJECT_DIR$/SubgenomeClustering/kmerCountCompare.txt">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="165">
-          <caret line="224" column="7" lean-forward="true" selection-start-line="224" selection-start-column="7" selection-end-line="224" selection-end-column="7" />
+        <state relative-caret-position="345">
+          <caret line="23" column="0" lean-forward="true" selection-start-line="23" selection-start-column="0" selection-end-line="23" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/SubgenomeClustering/runCluster.sh">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="75">
+          <caret line="5" column="38" lean-forward="true" selection-start-line="5" selection-start-column="38" selection-end-line="5" selection-end-column="38" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/SubgenomeClustering/subgenomeClusteringInterface.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="270">
-          <caret line="337" column="32" lean-forward="false" selection-start-line="337" selection-start-column="32" selection-end-line="337" selection-end-column="32" />
+        <state relative-caret-position="255">
+          <caret line="417" column="25" lean-forward="true" selection-start-line="417" selection-start-column="25" selection-end-line="417" selection-end-column="25" />
           <folding>
             <element signature="e#0#14#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/SubgenomeClustering/subgenomePipeline.nf">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="192">
+          <caret line="379" column="14" lean-forward="true" selection-start-line="379" selection-start-column="14" selection-end-line="379" selection-end-column="14" />
+          <folding />
         </state>
       </provider>
     </entry>

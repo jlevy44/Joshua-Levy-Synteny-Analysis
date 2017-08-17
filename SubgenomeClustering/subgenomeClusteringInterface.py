@@ -409,7 +409,7 @@ def transform_plot(args):
     #df = df.set_index(['index'])
     #scaffolds = #list(df.axes[0])
     dimensionalityReducers = {'kpca':KernelPCA(n_components=3),'factor':FactorAnalysis(n_components=3),'feature':FeatureAgglomeration(n_clusters=3)}
-    data = StandardScaler().fit_transform(data)
+    data = StandardScaler(with_mean=False).fit_transform(data)
     for model in dimensionalityReducers:
         try:
             transformed_data = dimensionalityReducers[model].fit_transform(data)
