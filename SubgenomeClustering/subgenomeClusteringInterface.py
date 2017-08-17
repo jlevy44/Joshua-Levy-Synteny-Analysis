@@ -18,6 +18,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import cPickle as pickle
 #import peakutils
+from sklearn.feature_selection import SelectKBest
 from sklearn.neighbors import KernelDensity
 from collections import defaultdict
 from scipy.signal import argrelextrema
@@ -71,7 +72,7 @@ def writeBlast(args):
     blastdb = open(dbscriptName, 'w')
     database_list = [fastaPath+genome, genomeName] #FIXME add genome path
     blastdb.write(
-        '#!/bin/bash\nmodule load blast+\nmakeblastdb -in %s -dbtype nucl -out %s.blast_db\n' % tuple(database_list))
+        '#!/bin/bash\nmodule load blast+/2.6.0\nmakeblastdb -in %s -dbtype nucl -out %s.blast_db\n' % tuple(database_list))
     blastdb.close()
     try:
         subprocess.call('nohup sh %s' % dbscriptName, shell=True)
@@ -238,13 +239,13 @@ def generateClusteringMatrixAndKmerPrevalence(args):
     scaffolds = findScaffolds(1)
     scaffoldIdx = {scaffold:i for i,scaffold in enumerate(scaffolds)}
     kmerIdx = {kmer:i for i,kmer in enumerate(kmers)} # np.uint32(
-    kmerCount = {kmer:[0.,0] for kmer in kmers}
+    #kmerCount = {kmer:[0.,0] for kmer in kmers}
     # print kmerDict
     #d = defaultdict(list)
     #dfMatrix = pd.DataFrame(columns=kmers,index=scaffolds)
 
     #open('kmerPrevalence.bed','w').close()
-    open('Progress.txt', 'w').close()
+    #open('Progress.txt', 'w').close()
     #data = np.zeros((len(scaffolds),len(kmers)),dtype=float)
     #row_idx = []
     #column_idx = []
@@ -255,8 +256,8 @@ def generateClusteringMatrixAndKmerPrevalence(args):
     data = sps.dok_matrix((len(scaffolds), len(kmers)),dtype=np.float32)
     #f3 = open('Progress.txt', 'w')
     #kmerGraph = nx.Graph()
-    c = 0
-    d=0
+    #c = 0
+    #d=0
     start = clock()
     #f3.write(str(start) + '\n')
     with open('blasted_merged.bed', 'r') as f:
@@ -267,7 +268,7 @@ def generateClusteringMatrixAndKmerPrevalence(args):
                 interval = (abs(float(listLine[2]) - float(listLine[1]))) / 5000.
                 #scalingFactor = interval * 5000. / len(kmers)
                 #kmerText = ','.join(counts.keys())
-                kmerCountsNum = len(counts.keys())
+                #kmerCountsNum = len(counts.keys())
                 #f3.write(listLine[0] + '\n')
                 #kmerCountsNumbers = [kmerIdx[kmer] for kmer in kmerCountsNames]
                 #kmerGraph.add_edges_from(list(combinations(kmerCountsNumbers, 2)))
@@ -278,14 +279,14 @@ def generateClusteringMatrixAndKmerPrevalence(args):
                         #column_idx.append(kmerIdx[key])
                         #values.append(counts[key] / interval)
                         data[scaffoldIdx[listLine[0]], kmerIdx[key]] = counts[key] / interval
-                        kmerCount[key][0] += kmerCountsNum #/ scalingFactor
-                        kmerCount[key][1] += 1
+                        #kmerCount[key][0] += kmerCountsNum #/ scalingFactor
+                        #kmerCount[key][1] += 1
                     except:
                         pass
                 #[(np.uint32(kmerIdx[key]),np.uint32(kmerIdx[kmername])) for kmername in kmerCountsNames])
                     #for kmername in kmerCountsNames:
                     #    kmer_SparseMatrix[kmerIdx[key],kmerIdx[kmername]] = 1
-                c += 1
+                #c += 1
                 #if c > 100:
                 #    d += c
                 #f3.write(str(d) + '\t' + str(clock()-start) + '\n')
@@ -302,9 +303,9 @@ def generateClusteringMatrixAndKmerPrevalence(args):
                     #data[scaffoldIdx[listLine[0]],kmerIdx[key]] = counts[key] / interval
     #f2.close()
     #f3.close()
-    with open('kmerPrevalence.txt','w') as f:
-        for kmer, count in {key:(int(np.ceil(float(kmerCount[key][0])/kmerCount[key][1])) if kmerCount[key][1] > 0 else 0) for key in kmerCount}.items():#[(kmers[i],kmerGraph.degree(i)) for i in kmerGraph.nodes()]:#zip([kmers[i] for i in kmerGraph.nodes()],[len(kmerGraph.neighbors(kmer2)) for kmer2 in kmerGraph.nodes()]): #list(np.vectorize(int)(np.asarray(np.squeeze((kmer_SparseMatrix.sum(axis=1))))[0]))
-            f.write('%s\t%d\n'%(kmer,count))
+    #with open('kmerPrevalence.txt','w') as f:
+    #    for kmer, count in {key:(int(np.ceil(float(kmerCount[key][0])/kmerCount[key][1])) if kmerCount[key][1] > 0 else 0) for key in kmerCount}.items():#[(kmers[i],kmerGraph.degree(i)) for i in kmerGraph.nodes()]:#zip([kmers[i] for i in kmerGraph.nodes()],[len(kmerGraph.neighbors(kmer2)) for kmer2 in kmerGraph.nodes()]): #list(np.vectorize(int)(np.asarray(np.squeeze((kmer_SparseMatrix.sum(axis=1))))[0]))
+    #        f.write('%s\t%d\n'%(kmer,count))
     #data = data[:,~np.all(data==0.,axis=0)]
     #BedTool('kmerPrevalence.bed').sort().merge(c=4,o='distinct',delim=',').saveas('kmerPrevalence.bed')
 
@@ -340,7 +341,7 @@ def transform_main(args): #FIXME
         null = args[0]
     except:
         pass
-    transform_plot(('1'))
+    transform_plot(('1','null'))
 
 def peakClusteringMatrix(args):
     kmercountPath, peakFasta, blastFile, save = args
@@ -397,7 +398,7 @@ def peakClusteringMatrix(args):
 
 
 def transform_plot(args):
-    peak = args[0]
+    peak, reclusterFolder = args
     scaffolds = pickle.load(open('scaffolds.p', 'rb'))
     if peak == '1':
         #df = pd.read_feather('clusteringMatrix.feather')
@@ -405,81 +406,163 @@ def transform_plot(args):
         peak = 'main'
     else:
         #df = pd.read_feather('%s_clusteringMatrix.feather'%peak)
-        data = sps.load_npz('%s_clusteringMatrix.npz'%peak)
+        data = sps.load_npz('%s/%s_clusteringMatrix.npz'%(reclusterFolder,peak))
     #df = df.set_index(['index'])
     #scaffolds = #list(df.axes[0])
     dimensionalityReducers = {'kpca':KernelPCA(n_components=3),'factor':FactorAnalysis(n_components=3),'feature':FeatureAgglomeration(n_clusters=3)}
     data = StandardScaler(with_mean=False).fit_transform(data)
     for model in dimensionalityReducers:
         try:
-            transformed_data = dimensionalityReducers[model].fit_transform(data)
-            np.save('%s_%s_transformed3D.npy'%(peak,model), transformed_data)
-            plots = []
-            plots.append(
-                go.Scatter3d(x=transformed_data[:, 0], y=transformed_data[:, 1], z=transformed_data[:, 2], name='Data',
-                             mode='markers',
-                             marker=dict(color='b', size=2), text=scaffolds))
-            fig = go.Figure(data=plots)
-            py.plot(fig, filename=peak + '_' + model + 'Reduction.html')
+            if os.path.isfile(peak + '_' + model + 'Reduction.html') == 0:
+                transformed_data = dimensionalityReducers[model].fit_transform(data)
+                np.save('%s_%s_transformed3D.npy'%(peak,model), transformed_data)
+                plots = []
+                plots.append(
+                    go.Scatter3d(x=transformed_data[:, 0], y=transformed_data[:, 1], z=transformed_data[:, 2], name='Data',
+                                 mode='markers',
+                                 marker=dict(color='b', size=2), text=scaffolds))
+                fig = go.Figure(data=plots)
+                py.plot(fig, filename=peak + '_' + model + 'Reduction.html')
         except:
             pass
 
 def cluster(args):
-    file = args[0]
-    scaffolds = pickle.load(open('scaffolds.p', 'rb'))
+    file, reclusterFolder, kmer50Path = args
+    if 'recluster' not in file:
+        dataOld = sps.load_npz('clusteringMatrix.npz')
+        scaffolds = pickle.load(open('scaffolds.p', 'rb'))
+        kmers = pickle.load(open('kmers.p', 'rb'))
+        #kmerIdx = {i : kmer for i, kmer in enumerate(kmers)}
+        Tname = file.split('transformed3D')[0]
+        transformed_data = np.load(file)
 
-    Tname = file.split('transformed3D')[0]
-    transformed_data = np.load(file)
+        transformed_data = StandardScaler().fit_transform(transformed_data)
 
-    transformed_data = StandardScaler().fit_transform(transformed_data)
+        clustering_names = ['SpectralClustering','KMeans']
+        n_clusters = 3
 
-    clustering_names = ['SpectralClustering']
-    n_clusters = 3
-    spectral = SpectralClustering(n_clusters=n_clusters,
-                                          eigen_solver='arpack',
-                                          affinity="nearest_neighbors", gamma=0.3)
+        clustering_algorithms = [SpectralClustering(n_clusters=n_clusters,eigen_solver='arpack',affinity="nearest_neighbors", gamma=1),KMeans(n_clusters=3)]
 
-    clustering_algorithms = [spectral]
+        for name, algorithm in zip(clustering_names, clustering_algorithms):
+            try:
+                if os.path.isfile(name + Tname + 'n%d' % n_clusters + 'ClusterTest.html') == 0:
+                    algorithm.fit(transformed_data)
+                    if hasattr(algorithm, 'labels_'):
+                        y_pred = algorithm.labels_.astype(np.int)
+                    else:
+                        y_pred = algorithm.predict(transformed_data)
+                    N = len(set(y_pred))
+                    c = ['hsl(' + str(h) + ',50%' + ',50%)' for h in np.linspace(0, 360, N)]
+                    # plot
+                    plots = []
+                    clusterSize = defaultdict(list)
+                    os.mkdir('analysisOutputs/' + name + Tname + 'n%d' % n_clusters)
+                    for key in set(y_pred):
+                        # print key
+                        cluster_scaffolds = np.array(scaffolds)[y_pred == key]
+                        if list(cluster_scaffolds):
+                            clusterSize[key] = np.mean(np.apply_along_axis(lambda x: np.linalg.norm(x),1,transformed_data[y_pred == key,:]))#len(cluster_scaffolds)
+                            if clusterSize[key] == max(clusterSize.values()):
+                                testCluster = key
+                            plots.append(
+                                go.Scatter3d(x=transformed_data[y_pred == key, 0], y=transformed_data[y_pred == key, 1],
+                                             z=transformed_data[y_pred == key, 2],
+                                             name='Cluster %d, %d points' % (key, len(cluster_scaffolds)), mode='markers',
+                                             marker=dict(color=c[key], size=2), text=cluster_scaffolds))
 
-    for name, algorithm in zip(clustering_names, clustering_algorithms):
-        try:
-            algorithm.fit(transformed_data)
-            if hasattr(algorithm, 'labels_'):
-                y_pred = algorithm.labels_.astype(np.int)
-            else:
-                y_pred = algorithm.predict(transformed_data)
-            N = len(set(y_pred))
-            c = ['hsl(' + str(h) + ',50%' + ',50%)' for h in np.linspace(0, 360, N)]
-            # plot
-            plots = []
-            clusterSize = defaultdict(list)
-            for key in set(y_pred):
-                # print key
-                cluster_scaffolds = np.array(scaffolds)[y_pred == key]
-                if list(cluster_scaffolds):
-                    clusterSize[key] = len(cluster_scaffolds)
-                    if clusterSize[key] == max(clusterSize.values()):
-                        testCluster = key
-                    plots.append(
-                        go.Scatter3d(x=transformed_data[y_pred == key, 0], y=transformed_data[y_pred == key, 1],
-                                     z=transformed_data[y_pred == key, 2],
-                                     name='Cluster %d, %d points' % (key, len(cluster_scaffolds)), mode='markers',
-                                     marker=dict(color=c[key], size=2), text=cluster_scaffolds))
+                    if hasattr(algorithm, 'cluster_centers_'):
+                        centers = algorithm.cluster_centers_
+                        plots.append(
+                            go.Scatter3d(x=centers[:, 0], y=centers[:, 1], z=centers[:, 2], mode='markers',
+                                         marker=dict(color='purple', symbol='circle', size=12),
+                                         opacity=0.4,
+                                         name='Centroids'))
+                    for key in set(y_pred)-{testCluster}:
+                        with open('analysisOutputs/' + name + Tname + 'n%d' % n_clusters + '/subgenome_%d.txt' % key) as f:
+                            f.write('\n'.join(np.array(scaffolds)[y_pred == key]))
 
-            if hasattr(algorithm, 'cluster_centers_'):
-                centers = algorithm.cluster_centers_
-                plots.append(
-                    go.Scatter3d(x=centers[:, 0], y=centers[:, 1], z=centers[:, 2], mode='markers',
-                                 marker=dict(color='purple', symbol='circle', size=12),
-                                 opacity=0.4,
-                                 name='Centroids'))
+                    fig = go.Figure(data=plots)
+                    py.plot(fig, filename=name + Tname + 'n%d' % n_clusters + 'ClusterTest.html')
 
-            fig = go.Figure(data=plots)
-            py.plot(fig, filename=name + Tname + 'n%d' % n_clusters + 'ClusterTest.html')
+                    #trainData = transformed_data[y_pred != testCluster]
+                    #trainData_scaffolds = np.array(scaffolds)[y_pred != testCluster]
 
-        except:
-            print 'Unable to cluster completely using ' + name + ' for ' + Tname
 
+                    trainLabels = y_pred[y_pred != testCluster]
+                    trainData = dataOld[y_pred != testCluster]
+                    kbest = SelectKBest(k = 50)
+                    kbest.fit(trainData,trainLabels)
+                    bestFeatures = kbest.pvalues_.argsort()[:50]
+                    best_50_kmers = [kmers[i] for i in bestFeatures]
+                    sps.save_npz('%s/recluster%s_clusteringMatrix.npz' %(reclusterFolder, name + Tname + 'n%d' % n_clusters), dataOld.tocsc()[:,bestFeatures].tocoo())
+                    with open('%s/kmer50Best_%s.fa'%(kmer50Path,name + Tname + 'n%d' % n_clusters),'w') as f:
+                        f.write('\n'.join('>%s\n%s'%(kmer,kmer) for kmer in best_50_kmers))
+
+            except:
+                print 'Unable to cluster completely using ' + name + ' for ' + Tname
+    else:
+        scaffolds = pickle.load(open('scaffolds.p', 'rb'))
+        # kmerIdx = {i : kmer for i, kmer in enumerate(kmers)}
+        Tname = file.split('transformed3D')[0]
+        transformed_data = np.load(file)
+
+        transformed_data = StandardScaler().fit_transform(transformed_data)
+
+        clustering_names = ['SpectralClustering', 'KMeans']
+        n_clusters = 3
+
+        clustering_algorithms = [
+            SpectralClustering(n_clusters=n_clusters, eigen_solver='arpack', affinity="nearest_neighbors", gamma=1),
+            KMeans(n_clusters=3)]
+
+        for name, algorithm in zip(clustering_names, clustering_algorithms):
+            try:
+                if os.path.isfile(name + Tname + 'n%d' % n_clusters + '50kmerreclusterTest.html') == 0:
+                    algorithm.fit(transformed_data)
+                    if hasattr(algorithm, 'labels_'):
+                        y_pred = algorithm.labels_.astype(np.int)
+                    else:
+                        y_pred = algorithm.predict(transformed_data)
+                    N = len(set(y_pred))
+                    c = ['hsl(' + str(h) + ',50%' + ',50%)' for h in np.linspace(0, 360, N)]
+                    # plot
+                    plots = []
+                    clusterSize = defaultdict(list)
+                    os.mkdir('analysisOutputs/' + name + Tname + 'n%d' % n_clusters)
+                    for key in set(y_pred):
+                        # print key
+                        cluster_scaffolds = np.array(scaffolds)[y_pred == key]
+                        with open('analysisOutputs/' + name + Tname + 'n%d' % n_clusters + '/recluster_subgenome_%d.txt'%key) as f:
+                            f.write('\n'.join(cluster_scaffolds))
+                        if list(cluster_scaffolds):
+                            clusterSize[key] = np.mean(np.apply_along_axis(lambda x: np.linalg.norm(x), 1,
+                                                                           transformed_data[y_pred == key,
+                                                                           :]))  # len(cluster_scaffolds)
+                            if clusterSize[key] == max(clusterSize.values()):
+                                testCluster = key
+                            plots.append(
+                                go.Scatter3d(x=transformed_data[y_pred == key, 0],
+                                             y=transformed_data[y_pred == key, 1],
+                                             z=transformed_data[y_pred == key, 2],
+                                             name='Cluster %d, %d points' % (key, len(cluster_scaffolds)),
+                                             mode='markers',
+                                             marker=dict(color=c[key], size=2), text=cluster_scaffolds))
+
+                    if hasattr(algorithm, 'cluster_centers_'):
+                        centers = algorithm.cluster_centers_
+                        plots.append(
+                            go.Scatter3d(x=centers[:, 0], y=centers[:, 1], z=centers[:, 2], mode='markers',
+                                         marker=dict(color='purple', symbol='circle', size=12),
+                                         opacity=0.4,
+                                         name='Centroids'))
+                    for key in set(y_pred)-{testCluster}:
+                        with open('analysisOutputs/' + name + Tname + 'n%d' % n_clusters + '/subgenome_%d.txt' % key) as f:
+                            f.write('\n'.join(np.array(scaffolds)[y_pred == key]))
+
+                    fig = go.Figure(data=plots)
+                    py.plot(fig, filename=name + Tname + 'n%d' % n_clusters + '50kmerreclusterTest.html')
+            except:
+                print 'Unable to cluster completely using ' + name + ' for ' + Tname
 
 #os.chdir('../../..')
 

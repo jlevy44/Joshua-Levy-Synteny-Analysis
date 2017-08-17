@@ -26,6 +26,8 @@ pythonPath = findValue('pythonPath ' );
 systemPath = findValue('systemPath ' );
 blastPath = findValue('blastPath ' );
 kmercountPath = findValue('kmercountPath ' );
+reclusterPath = findValue('reclusterPath ');
+best50kmerPath = findValue('kmer50BestPath ');
 fastaPath = findValue('fastaPath ' );
 bedPath = findValue('bedPath ' );
 sortPath = findValue('sortPath ' );
@@ -52,7 +54,9 @@ kHist = findValue('kmerHistogram ').asType(Integer);
 bPeak = findValue('blastPeaks ').asType(Integer);
 bPeak2 = findValue('peakClusterMatrix ').asType(Integer);
 trans = findValue('transformData ').asType(Integer);
+trans2 = findValue('transformDataChildren ').asType(Integer);
 clust = findValue('ClusterAll ').asType(Integer);
+
 
 
 genomeSplitName = genome - '_split' - '.fa' + '_split.fa';
@@ -171,7 +175,7 @@ blast_result = Channel.create()
 
 process BlastOff {
 
-clusterOptions = { writeBlast == 1 ? '-P plant-analysis.p -cwd -q normal.q -pe pe_slots 9 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt' }
+clusterOptions = { writeBlast == 1 ? '-P plant-analysis.p -cwd -q normal.q -pe pe_slots 16 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt' }
 
 input:
     file 'query.fa' from kmerFasta
@@ -186,8 +190,9 @@ script:
 if(writeBlast == 1)
     """
     #!/bin/bash
-    cd ${workingDir}
-    blastn -db ./${genomeSplitName}.blast_db -query query.fa -task "blastn-short" -outfmt 6 -num_threads 8 -evalue 1e-2 > blast_result
+    module load blast+/2.6.0
+    #cd ${workingDir}
+    blastn -db ${workingDir}/${genomeSplitName}.blast_db -query query.fa -task "blastn-short" -outfmt 6 -num_threads 15 -evalue 1e-2 > blast_result
     """
 else
     """
@@ -235,7 +240,7 @@ else
 }
 
 genomeChan8 = Channel.create()
-genomeChan85 = Channel.create()
+//genomeChan85 = Channel.create()
 
 process genClusterMatrix_kmerPrevalence {
 
@@ -246,7 +251,7 @@ input:
 
 output:
     val genomeName into genomeChan8
-    val genomeName into genomeChan85
+    //val genomeName into genomeChan85
 
 
 script:
@@ -263,125 +268,23 @@ else
 
 }
 
-peaks = Channel.create()//genomeChan8.last()
-        //            .subscribe {println it}
-        //            .fromPath()
-                    //.watchPath(peakPath+'*.fa')
 
-process kmerHist {
-
-clusterOptions = { kHist == 1 ? '-P plant-analysis.p -cwd -q normal.q -pe pe_slots 2 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt' }
-
-input:
-    val genomeName from genomeChan8
-
-output:
-    file 'PeaksOutNames.txt' into peaks
-
-
-script:
-if(kHist == 1)
-    """
-    #!/bin/bash
-    cd ${workingDir}
-    python subgenomeClusteringInterface.py kmerRelatedHistogram ${kmercountName} ${save}
-    touch PeaksOutNames.txt
-    """
-else
-    """
-    #!/bin/bash
-    cd ${workingDir}
-    touch PeaksOutNames.txt
-    """
-
-}
-
-//peaksWait = peaks.last()
-
-peaksFinal = peaks.splitText()
-                  .flatMap{it -> tuple(it, it - '.fa' + '.BLASTtsv.txt')}
-                //.flatMap{file -> tuple(file.name, file.name - '.fa' + '.BLASTtsv.txt')}
-
-                    //.last()
-                    //.subscribe {println it}
-                    //.fromPath(peakPath+'*.fa')
-                    //.watchPath(peakPath+'*.fa','create')
-                    //.flatMap{file -> tuple(file, file.name, file.name - '.fa' + '.BLASTtsv.txt')}
-                    //.splitText(by: 5000, file: True)
-                    //.set { chunksChannel }
-
-peaks2 = Channel.create()
-
-process blastPeaks {
-
-clusterOptions = { bPeak == 1 ? '-P plant-analysis.p -cwd -q normal.q -pe pe_slots 9 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt' }
-
-input:
-    set peakName, peakBlastName from peaksFinal
-
-output:
-    set peakName, peakBlastName into peaks2
-
-//-out ${blastPath}/${peakBlastName} >>
-script:
-if(bPeak == 1)
-    """
-    #!/bin/bash
-    cd ${workingDir}
-    module load blast+/2.6.0
-    blastn -db ./${genomeName}.blast_db -query ${peakName} -task "blastn-short" -outfmt 6 -num_threads 8 -evalue 1e-2 -out ${blastPath}/${peakBlastName}
-    """
-else
-    """
-    touch done
-    """
-
-}
-
-// can try .collectFile().subscribe { merged_file -> merged_file.copyTo(out_dir) }
-
-
-
-peaks3 = Channel.create()
-
-process genPeakCluster {
-
-clusterOptions = { bPeak2 == 1 ? '-P plant-analysis.p -cwd -q normal.q -pe pe_slots 2 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt' }
-
-input:
-    set peakName, peakBlastName from peaks2
-
-output:
-    val peakName into peaks3
-
-
-script:
-if(bPeak2 == 1)
-    """
-    #!/bin/bash
-    cd ${workingDir}
-    python subgenomeClusteringInterface.py peakClusteringMatrix ${kmercountPath} ${peakName} ${peakBlastName} ${save}
-    """
-else
-    """
-    touch done
-    """
-
-}
 
 process transform_main {
+
+executor = 'local'
 
 clusterOptions = { trans == 1 ? '-P plant-analysis.p -cwd -q normal.q -pe pe_slots 2 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt' }
 
 input:
-    val genomeName from genomeChan85
+    val genomeName from genomeChan8
 
 script:
 if(trans == 1)
     """
     #!/bin/bash
     cd ${workingDir}
-    python subgenomeClusteringInterface.py transform_main 1
+    python subgenomeClusteringInterface.py transform_main 1 ${reclusterPath}
     """
 else
     """
@@ -393,25 +296,27 @@ else
 }
 
 
-peaks4 = peaks3.map { it -> findPeak(it) }
+//peaks4 = peaks3.map { it -> findPeak(it) }
+bestKmerMatrices = Channel.watchPath(reclusterPath+'*.npz','create,modify')
+                          .map { file -> findPeak(file.name) }
 
 process transform {
 
-clusterOptions = { trans == 1 ? '-P plant-analysis.p -cwd -q normal.q -pe pe_slots 2 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt' }
+clusterOptions = { trans2 == 1 ? '-P plant-analysis.p -cwd -q normal.q -pe pe_slots 2 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt' }
 
 input:
-    val peak from peaks4
+    val kmerMat from bestKmerMatrices
 
 //output:
 //    val peakName into peaks3
 
 
 script:
-if(trans == 1)
+if(trans2 == 1)
     """
     #!/bin/bash
     cd ${workingDir}
-    python subgenomeClusteringInterface.py transform_plot ${peak}
+    python subgenomeClusteringInterface.py transform_plot ${kmerMat} ${reclusterPath}
     """
 else
     """
@@ -441,7 +346,7 @@ if(clust == 1)
     """
     #!/bin/bash
     cd ${workingDir}
-    python subgenomeClusteringInterface.py cluster ${transformedData}
+    python subgenomeClusteringInterface.py cluster ${transformedData} ${reclusterPath} ${best50kmerPath}
     """
 else
     """
