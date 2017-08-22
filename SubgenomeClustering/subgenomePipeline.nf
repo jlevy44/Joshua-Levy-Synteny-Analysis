@@ -60,6 +60,7 @@ clust = findValue('ClusterAll ').asType(Integer);
 
 
 genomeSplitName = genome - '_split' - '.fa' + '_split.fa';
+blastDBName = genomeSplitName - '.fa'
 genomeFullPath = fastaPath + genomeSplitName;
 kmercountName = genomeSplitName - '.fa' + '.kcount' + '.fa';
 blastName = kmercountName - '.fa' + '.BLASTtsv.txt';
@@ -153,7 +154,7 @@ if(fromFasta == 1)
     cd ${workingDir}
     module load blast+/2.6.0
     python subgenomeClusteringInterface.py kmer2Fasta ${kmercountPath}
-    makeblastdb -in ${genomeFullPath} -dbtype nucl -out ${genomeName}.blast_db
+    makeblastdb -in ${genomeFullPath} -dbtype nucl -out ${blastDBName}.blast_db
     """
 else
     """
@@ -192,7 +193,7 @@ if(writeBlast == 1)
     #!/bin/bash
     module load blast+/2.6.0
     #cd ${workingDir}
-    blastn -db ${workingDir}/${genomeSplitName}.blast_db -query query.fa -task "blastn-short" -outfmt 6 -num_threads 15 -evalue 1e-2 > blast_result
+    blastn -db ${workingDir}/${blastDBName}.blast_db -query query.fa -task "blastn-short" -outfmt 6 -num_threads 15 -evalue 1e-2 > blast_result
     """
 else
     """
@@ -268,7 +269,8 @@ else
 
 }
 
-
+reduction_techniques = ['factor','kpca']
+//,'feature']
 
 process transform_main {
 
@@ -278,13 +280,14 @@ clusterOptions = { trans == 1 ? '-P plant-analysis.p -cwd -q normal.q -pe pe_slo
 
 input:
     val genomeName from genomeChan8
+    each technique from reduction_techniques
 
 script:
 if(trans == 1)
     """
     #!/bin/bash
     cd ${workingDir}
-    python subgenomeClusteringInterface.py transform_main 1 ${reclusterPath}
+    python subgenomeClusteringInterface.py transform_main 1 ${reclusterPath} ${technique}
     """
 else
     """
@@ -306,6 +309,7 @@ clusterOptions = { trans2 == 1 ? '-P plant-analysis.p -cwd -q normal.q -pe pe_sl
 
 input:
     val kmerMat from bestKmerMatrices
+    each technique from reduction_techniques
 
 //output:
 //    val peakName into peaks3
@@ -316,7 +320,7 @@ if(trans2 == 1)
     """
     #!/bin/bash
     cd ${workingDir}
-    python subgenomeClusteringInterface.py transform_plot ${kmerMat} ${reclusterPath}
+    python subgenomeClusteringInterface.py transform_plot ${kmerMat} ${reclusterPath} ${technique}
     """
 else
     """

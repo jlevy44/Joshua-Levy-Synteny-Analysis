@@ -168,3 +168,8 @@ def BB2bed(BBfile,ref,sample,centromereBed):
             pass
     with open('BBMap.bed','w') as f:
         f.write('\n'.join('%s\t%s\t100'%item[::-1] for item in genesDict.items() if item))
+
+def filterBB(BBbed):
+    with open(BBbed,'r') as f:
+        change = 1
+        #FIXME one to three per gene/scaffold

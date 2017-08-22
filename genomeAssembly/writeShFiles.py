@@ -6,11 +6,23 @@ print root
 
 
 with open('scaffoldConfig.txt','r') as f:
-    (version,buildSample,buildRef,constructSample,CDSspecies,CDSOld,CDSgeneNaming) = tuple([parseConfigFindPath(x,f) for x in
-                                                        ['version','buildSample','buildRef','constructSample','CDS','CDSFasta','geneNameOld']])
+    (version,buildSample,buildRef,constructSample,CDSspecies,CDSOld,CDSgeneNaming, BB, nuc) = tuple([parseConfigFindPath(x,f) for x in
+                                                        ['version','buildSample','buildRef','constructSample','CDS','CDSFasta','geneNameOld','com_bb','com_Nuc']])
     weights = parseConfigFindList('weights',f)
-weightsText = '\n'.join([weights[0]]+[CDSspecies+'nuc ' + str(int(weights[1].split()[-1]))]+[CDSspecies+'BB ' + str(int(weights[1].split()[-1]))]+weights[1:])
+
+try:
+    BB = int(BB)
+except:
+    BB = 0
+
+try:
+    nuc = int(nuc)
+except:
+    nuc = 0
+
+weightsText = '\n'.join([weights[0]]+[item for item in [CDSspecies+'nuc ' + str(int(weights[1].split()[-1]))] if nuc]+[item for item in [CDSspecies+'BB ' + str(int(weights[1].split()[-1]))] if BB]+weights[1:])
 weights = {line.split()[0]:int(line.split()[-1]) for line in weights}
+
 with open('references.txt','w') as f:
     f.write('['+','.join("'%s'"%ref for ref in weights.keys())+']')
 
@@ -78,11 +90,11 @@ for sample in listSamples:
                              'python -m jcvi.formats.sam bed BBmapped.bed BBmapped.bam']#threads=6
     commands1 = [headSh]+['rm *.anchors *.last *.filtered *.prj']+\
                 ['nohup python -m jcvi.compara.catalog ortholog %s %s\nmv %s %s'%(ref,sample,'%s.%s.lifted.anchors'%(ref,sample),'%s.%s.lifted.anchors'%(sample,ref)) for ref in weights.keys()]
-    commands2=[headSh]+['rm multipleMapping.bed','\n'.join('python -m jcvi.assembly.syntenypath bed %s --switch --scale=10000 --qbed=%s --sbed=%s -o %s'%('%s.%s.lifted.anchors'%(sample,ref),ref+'_syn'+'.bed',sample+'_%ssyn'%ref+'.bed','%s.synteny.bed'%(ref)) for ref in weights.keys()),
-                                      'python -m jcvi.assembly.syntenypath bed %s --switch --scale=10000 --qbed=%s --sbed=%s -o %snuc.synteny.bed'%('nucMap.bed',CDSspecies+'_nucSyn.bed',sample+'_nucSyn.bed',CDSspecies),
-                        'python -m jcvi.assembly.syntenypath bed %s --switch --scale=10000 --qbed=%s --sbed=%s -o %sBB.synteny.bed' % (
-                        'BBMap.bed', CDSspecies + '_BBSyn.bed', sample + '_BBSyn.bed', CDSspecies),
-         'nohup python -m jcvi.assembly.allmaps mergebed %s -o %s'%(' '.join(['%s.synteny.bed'%(ref) for ref in (weights.keys() + [CDSspecies+'nuc',CDSspecies+'BB'])]),'multipleMapping.bed')]
+    commands2=[headSh]+['rm multipleMapping.bed','\n'.join('python -m jcvi.assembly.syntenypath bed %s --switch --scale=10000 --qbed=%s --sbed=%s -o %s'%('%s.%s.lifted.anchors'%(sample,ref),ref+'_syn'+'.bed',sample+'_%ssyn'%ref+'.bed','%s.synteny.bed'%(ref)) for ref in weights.keys())] \
+              + [item for item in ['python -m jcvi.assembly.syntenypath bed %s --switch --scale=10000 --qbed=%s --sbed=%s -o %snuc.synteny.bed'%('nucMap.bed',CDSspecies+'_nucSyn.bed',sample+'_nucSyn.bed',CDSspecies)] if nuc] \
+              + [item for item in ['python -m jcvi.assembly.syntenypath bed %s --switch --scale=10000 --qbed=%s --sbed=%s -o %sBB.synteny.bed' % (
+                        'BBMap.bed', CDSspecies + '_BBSyn.bed', sample + '_BBSyn.bed', CDSspecies)] if BB] \
+              + ['nohup python -m jcvi.assembly.allmaps mergebed %s -o %s'%(' '.join(['%s.synteny.bed'%(ref) for ref in (weights.keys() + [item for item in [CDSspecies+'nuc'] if nuc] + [item for item in [CDSspecies+'BB'] if BB])]),'multipleMapping.bed')]
     qsub=[headSh]+['python -m jcvi.assembly.allmaps path --skipconcorde --cpus=32 --ngen=400 --npop=60 multipleMapping.bed %s.fa' % (sample),
          'mv multipleMapping.fasta %s%s/%s/%s.fa' % (root,nextVersion,sample.replace(version, nextVersion), sample.replace(version, nextVersion))]
 

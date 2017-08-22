@@ -8,7 +8,7 @@ import numpy as np
 from time import clock
 from collections import Counter, defaultdict
 from sklearn.decomposition import PCA
-from sklearn.cluster import KMeans
+from sklearn.cluster import KMeans, MiniBatchKMeans
 from sklearn import metrics
 import subprocess
 from pyfaidx import Fasta
@@ -19,6 +19,7 @@ import matplotlib.pyplot as plt
 import cPickle as pickle
 #import peakutils
 from sklearn.feature_selection import SelectKBest
+from sklearn.pipeline import Pipeline
 from sklearn.neighbors import KernelDensity
 from collections import defaultdict
 from scipy.signal import argrelextrema
@@ -30,6 +31,7 @@ import plotly.graph_objs as go
 import plotly.offline as py
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import SpectralClustering
+from sklearn.feature_selection import chi2
 import scipy.sparse as sps
 import networkx as nx
 from itertools import combinations
@@ -50,7 +52,7 @@ def writeKmercount(args):
             bbtoolsI.write('#!/bin/bash\nmodule load bbtools\nkmercountexact.sh overwrite=true fastadump=f mincount=3 in=%s/%s out=%s/%s k=23 -Xmx100g\n' % tuple(lineOutputList))
             bbtoolsI.close()
             try:
-                subprocess.call('nohup sh %s' % scriptName, shell=True)
+                subprocess.call('sh %s' % scriptName, shell=True)#nohup
             except:
                 print 'Unable to run %s via command line..' % outFileName
 
@@ -328,7 +330,7 @@ def generateClusteringMatrixAndKmerPrevalence(args):
     # dfMatrix.to_csv('clusteringMatrix3.csv', index=True)
     #kmers = list(dfMatrix.axes[1])
     #scaffolds = list(dfMatrix.axes[0])
-    sps.save_npz('clusteringMatrix.npz',data.tocoo())
+    sps.save_npz('clusteringMatrix.npz',data.tocsc())
     with open('rowNames.txt', 'w') as f:
         f.write('\n'.join('\t'.join([str(i), scaffolds[i]]) for i in range(len(scaffolds))))
     with open('colNames.txt', 'w') as f:
@@ -338,10 +340,10 @@ def generateClusteringMatrixAndKmerPrevalence(args):
 
 def transform_main(args): #FIXME
     try:
-        null = args[0]
+        main, reclusterFolder, model  = args
     except:
-        pass
-    transform_plot(('1','null'))
+        main, reclusterFolder, model = ('1','null','kpca')
+    transform_plot((main,reclusterFolder,model))
 
 def peakClusteringMatrix(args):
     kmercountPath, peakFasta, blastFile, save = args
@@ -351,7 +353,7 @@ def peakClusteringMatrix(args):
                 l1 = line.split('\t')[1]
                 f2.write('\t'.join(
                     [l1] + ['0', str(int(l1.split('_')[-1]) - int(l1.split('_')[-2]))] + [line.split('\t')[0]]) + '\n')
-    b = pybedtools.BedTool('%s_blasted.bed'%peakFasta.split('_')[0]).sort().merge(c=4, o='collapse', )
+    b = pybedtools.BedTool('%s_blasted.bed'%peakFasta.split('_')[0]).sort().merge(c=4, o='collapse' )
     b.saveas('%s_blasted_merged.bed'%peakFasta.split('_')[0])
     with open(peakFasta,'r') as f:
         kmers = f.readlines()[1::2]
@@ -398,7 +400,7 @@ def peakClusteringMatrix(args):
 
 
 def transform_plot(args):
-    peak, reclusterFolder = args
+    peak, reclusterFolder, model = args
     scaffolds = pickle.load(open('scaffolds.p', 'rb'))
     if peak == '1':
         #df = pd.read_feather('clusteringMatrix.feather')
@@ -408,23 +410,24 @@ def transform_plot(args):
         #df = pd.read_feather('%s_clusteringMatrix.feather'%peak)
         data = sps.load_npz('%s/%s_clusteringMatrix.npz'%(reclusterFolder,peak))
     #df = df.set_index(['index'])
-    #scaffolds = #list(df.axes[0])
+    #scaffolds = list(df.axes[0])
     dimensionalityReducers = {'kpca':KernelPCA(n_components=3),'factor':FactorAnalysis(n_components=3),'feature':FeatureAgglomeration(n_clusters=3)}
     data = StandardScaler(with_mean=False).fit_transform(data)
-    for model in dimensionalityReducers:
-        try:
-            if os.path.isfile(peak + '_' + model + 'Reduction.html') == 0:
-                transformed_data = dimensionalityReducers[model].fit_transform(data)
-                np.save('%s_%s_transformed3D.npy'%(peak,model), transformed_data)
-                plots = []
-                plots.append(
-                    go.Scatter3d(x=transformed_data[:, 0], y=transformed_data[:, 1], z=transformed_data[:, 2], name='Data',
-                                 mode='markers',
-                                 marker=dict(color='b', size=2), text=scaffolds))
-                fig = go.Figure(data=plots)
-                py.plot(fig, filename=peak + '_' + model + 'Reduction.html')
-        except:
-            pass
+    #for model in dimensionalityReducers:
+
+    if os.path.isfile(peak + '_' + model + 'Reduction.html') == 0:
+        if model != 'kpca':
+            data = KernelPCA(n_components=49).fit_transform(data)
+        transformed_data = dimensionalityReducers[model].fit_transform(data)
+        np.save('%s_%s_transformed3D.npy'%(peak,model), transformed_data)
+        plots = []
+        plots.append(
+            go.Scatter3d(x=transformed_data[:, 0], y=transformed_data[:, 1], z=transformed_data[:, 2], name='Data',
+                         mode='markers',
+                         marker=dict(color='b', size=2), text=scaffolds))
+        fig = go.Figure(data=plots)
+        py.plot(fig, filename=peak + '_' + model + 'Reduction.html')
+
 
 def cluster(args):
     file, reclusterFolder, kmer50Path = args
@@ -441,7 +444,7 @@ def cluster(args):
         clustering_names = ['SpectralClustering','KMeans']
         n_clusters = 3
 
-        clustering_algorithms = [SpectralClustering(n_clusters=n_clusters,eigen_solver='arpack',affinity="nearest_neighbors", gamma=1),KMeans(n_clusters=3)]
+        clustering_algorithms = [SpectralClustering(n_clusters=n_clusters,eigen_solver='arpack',affinity="nearest_neighbors", gamma=1),MiniBatchKMeans(n_clusters=3)]
 
         for name, algorithm in zip(clustering_names, clustering_algorithms):
             try:
@@ -490,11 +493,11 @@ def cluster(args):
 
                     trainLabels = y_pred[y_pred != testCluster]
                     trainData = dataOld[y_pred != testCluster]
-                    kbest = SelectKBest(k = 50)
+                    kbest = SelectKBest(chi2,k = 50)
                     kbest.fit(trainData,trainLabels)
                     bestFeatures = kbest.pvalues_.argsort()[:50]
                     best_50_kmers = [kmers[i] for i in bestFeatures]
-                    sps.save_npz('%s/recluster%s_clusteringMatrix.npz' %(reclusterFolder, name + Tname + 'n%d' % n_clusters), dataOld.tocsc()[:,bestFeatures].tocoo())
+                    sps.save_npz('%s/recluster%s_clusteringMatrix.npz' %(reclusterFolder, name + Tname + 'n%d' % n_clusters), dataOld[:,bestFeatures])#.tocsc()#.tocoo())
                     with open('%s/kmer50Best_%s.fa'%(kmer50Path,name + Tname + 'n%d' % n_clusters),'w') as f:
                         f.write('\n'.join('>%s\n%s'%(kmer,kmer) for kmer in best_50_kmers))
 
@@ -563,6 +566,51 @@ def cluster(args):
                     py.plot(fig, filename=name + Tname + 'n%d' % n_clusters + '50kmerreclusterTest.html')
             except:
                 print 'Unable to cluster completely using ' + name + ' for ' + Tname
+
+def fai2bed(args):
+    genome = args[0]
+    Fasta(genome)
+    bedFastaDict = defaultdict(list)
+    with open(genome+'.fai','r') as f, open(genome + '.bed','w') as f2:
+        for line in f:
+            if line:
+                lineList = line.split('\t')
+                bedline = '%s\t%s\t%s\n'%(lineList[0],'0',lineList[1])
+                f2.write(bedline)
+                bedFastaDict[lineList[0]] = [bedline]
+    return bedFastaDict
+
+def writeKmerCountSubgenome((args)):
+    subgenomeFolder,  = args
+    try:
+        os.mkdir(subgenomeFolder+'kmercount_files/')
+    except:
+        pass
+    kmercountPath = subgenomeFolder+'kmercount_files/'
+    for fastaFile in os.listdir(subgenomeFolder):
+        if fastaFile.endswith('.fa') or fastaFile.endswith('.fasta'):
+            f = fastaFile.rstrip()
+            print f
+            scriptName = f[:f.rfind('.')] + '.sh'
+            outFileName = f[:f.rfind('.')] + '.kcount'
+            lineOutputList = [subgenomeFolder, fastaFile, kmercountPath, outFileName]
+            subprocess.call('module load bbtools && kmercountexact.sh overwrite=true fastadump=f mincount=3 in=%s/%s out=%s/%s k=23 -Xmx60g' % tuple(
+                    lineOutputList),shell=True)
+
+
+
+def subgenomeExtraction(args):
+    subgenome_folder, fastaPath, genomeName, model, originalKmerCount = args
+    bedDict = fai2bed((fastaPath+genomeName,))
+
+    for file in os.listdir(subgenome_folder):
+        if file and file.endswith('.txt'):
+            with open(subgenome_folder+file,'r') as f,open(subgenome_folder+file.replace('.txt','.bed'),'w') as f2:
+                for line in f:
+                    if line:
+                        f2.write(bedDict[line.strip('\n')][0])
+            subprocess.call('bedtools getfasta -fi %s -fo %s -bed %s -name'%(fastaPath+genomeName,subgenome_folder + '%s_'%(model)+file.replace('.txt','.fa'),subgenome_folder+file.replace('.txt','.bed')),shell=True)
+
 
 #os.chdir('../../..')
 
