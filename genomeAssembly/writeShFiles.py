@@ -95,7 +95,7 @@ for sample in listSamples:
               + [item for item in ['python -m jcvi.assembly.syntenypath bed %s --switch --scale=10000 --qbed=%s --sbed=%s -o %sBB.synteny.bed' % (
                         'BBMap.bed', CDSspecies + '_BBSyn.bed', sample + '_BBSyn.bed', CDSspecies)] if BB] \
               + ['nohup python -m jcvi.assembly.allmaps mergebed %s -o %s'%(' '.join(['%s.synteny.bed'%(ref) for ref in (weights.keys() + [item for item in [CDSspecies+'nuc'] if nuc] + [item for item in [CDSspecies+'BB'] if BB])]),'multipleMapping.bed')]
-    qsub=[headSh]+['python -m jcvi.assembly.allmaps path --skipconcorde --cpus=32 --ngen=400 --npop=60 multipleMapping.bed %s.fa' % (sample),
+    qsub=[headSh]+['python -m jcvi.assembly.allmaps path --skipconcorde --cpus=16 --ngen=400 --npop=60 multipleMapping.bed %s.fa' % (sample),
          'mv multipleMapping.fasta %s%s/%s/%s.fa' % (root,nextVersion,sample.replace(version, nextVersion), sample.replace(version, nextVersion))]
 
     with open('build.sh','w') as f:

@@ -47,6 +47,7 @@ old = findValue('old ');
 splitFast = findValue('splitFasta ').asType(Integer);
 writeKmer = findValue('writeKmer ').asType(Integer);
 fromFasta = findValue('kmer2Fasta ').asType(Integer);
+original = findValue('original ').asType(Integer);
 writeBlast = findValue('writeBlast ').asType(Integer);
 b2b = findValue('blast2bed ').asType(Integer);
 genMat = findValue('generateClusteringMatrix ').asType(Integer);
@@ -56,15 +57,18 @@ bPeak2 = findValue('peakClusterMatrix ').asType(Integer);
 trans = findValue('transformData ').asType(Integer);
 trans2 = findValue('transformDataChildren ').asType(Integer);
 clust = findValue('ClusterAll ').asType(Integer);
+extract = findValue('extract ').asType(Integer);
 
 
 
 genomeSplitName = genome - '_split' - '.fa' + '_split.fa';
 blastDBName = genomeSplitName - '.fa'
 genomeFullPath = fastaPath + genomeSplitName;
+originalGenome = { original ? fastaPath + genome : genomeFullPath };
 kmercountName = genomeSplitName - '.fa' + '.kcount' + '.fa';
 blastName = kmercountName - '.fa' + '.BLASTtsv.txt';
 workingDir = new File('').getAbsolutePath();
+blastDBName2 = {original == 1 ? genome - '.fa' : blastDBName }
 
 check = Channel.from(genomeSplitName,genomeFullPath,kmercountName,blastName,workingDir)
                 .subscribe{println it}
@@ -144,7 +148,7 @@ input:
 
 output:
     val genomeName into genomeChan5
-    //val genomeName into genomeChan55
+    val genomeName into genomeChan55
 
 
 script:
@@ -155,6 +159,28 @@ if(fromFasta == 1)
     module load blast+/2.6.0
     python subgenomeClusteringInterface.py kmer2Fasta ${kmercountPath}
     makeblastdb -in ${genomeFullPath} -dbtype nucl -out ${blastDBName}.blast_db
+    """
+else
+    """
+    touch done
+    """
+
+}
+
+process createOrigDB {
+executor = 'local'
+clusterOptions = { original == 1 ? '-P plant-analysis.p -cwd -q normal.q -pe pe_slots 2 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt' }
+
+input:
+    val genomeName from genomeChan55
+
+script:
+if(original == 1)
+    """
+    #!/bin/bash
+    cd ${workingDir}
+    module load blast+/2.6.0
+    makeblastdb -in ${originalGenome} -dbtype nucl -out ${blastDBName2}.blast_db
     """
 else
     """
@@ -359,3 +385,32 @@ else
 
 }
 
+subgenomeFolders = Channel.watchPath('analysisOutputs/*.txt')
+                          .map {file -> file.name - '.txt'}
+
+process subgenomeExtraction {
+
+
+clusterOptions = { extract == 1 ? '-P plant-analysis.p -cwd -q normal.q -pe pe_slots 9 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt' }
+
+input:
+    val subgenomeFolder from subgenomeFolders
+
+//output:
+//    val peakName into peaks3
+
+
+script:
+if(extract == 1)
+    """
+    #!/bin/bash
+    cd ${workingDir}
+    python subgenomeClusteringInterface.py subgenomeExtraction ${subgenomeFolder} ${fastaPath} ${genomeSplitName} ${genome}
+    """
+else
+    """
+    touch done
+    """
+
+
+}
