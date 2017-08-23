@@ -14,8 +14,10 @@ for( line in allLines ) {
 
 String findPeak(String peakfname){
 
-    String[] parts = peakfname.split("_");
-    String peakfinalname = parts[0];
+    //String[] parts = peakfname.split("_");
+    //String peakfinalname = parts[0];
+    int finalPosition = peakfname.lastIndexOf('_');
+    String peakfinalname = peakfname.substring(0,finalPosition);
     return peakfinalname;
 
 }
@@ -27,7 +29,7 @@ systemPath = findValue('systemPath ' );
 blastPath = findValue('blastPath ' );
 kmercountPath = findValue('kmercountPath ' );
 reclusterPath = findValue('reclusterPath ');
-best50kmerPath = findValue('kmer50BestPath ');
+best500kmerPath = findValue('kmer500BestPath ');
 fastaPath = findValue('fastaPath ' );
 bedPath = findValue('bedPath ' );
 sortPath = findValue('sortPath ' );
@@ -58,6 +60,8 @@ trans = findValue('transformData ').asType(Integer);
 trans2 = findValue('transformDataChildren ').asType(Integer);
 clust = findValue('ClusterAll ').asType(Integer);
 extract = findValue('extract ').asType(Integer);
+kmerBlast = findValue('kmerBlast ').asType(Integer);
+kmerGraph = findValue('kmerGraph ').asType(Integer);
 
 
 
@@ -298,6 +302,12 @@ else
 reduction_techniques = ['factor','kpca']
 //,'feature']
 
+/*
+if(trans == 0){
+genomeChan8 = genomeChan8.take(1)
+}
+*/
+
 process transform_main {
 
 executor = 'local'
@@ -319,7 +329,7 @@ else
     """
     #!/bin/bash
     cd ${workingDir}
-    touch *transformed3D.npy
+    touch main_${technique}_transformed3D.npy
     """
 
 }
@@ -328,10 +338,11 @@ else
 //peaks4 = peaks3.map { it -> findPeak(it) }
 bestKmerMatrices = Channel.watchPath(reclusterPath+'*.npz','create,modify')
                           .map { file -> findPeak(file.name) }
+                          .unique()
 
 process transform {
 
-clusterOptions = { trans2 == 1 ? '-P plant-analysis.p -cwd -q normal.q -pe pe_slots 2 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt' }
+clusterOptions = { trans2 == 1 ? '-P plant-analysis.p -cwd -l high.c -pe pe_slots 2 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt' }
 
 input:
     val kmerMat from bestKmerMatrices
@@ -352,13 +363,16 @@ else
     """
     #!/bin/bash
     cd ${workingDir}
-    touch *transformed3D.npy
+    touch ${kmerMat}_${technique}_transformed3D.npy
     """
 
 }
 
 transformedData = Channel.watchPath('*transformed3D.npy','create,modify')
                          .unique()
+                         //.filter((file.name).startsWith('main'))
+
+clusterModels = ['KMeans','SpectralClustering']
 
 process cluster {
 
@@ -366,6 +380,7 @@ clusterOptions = { clust == 1 ? '-P plant-analysis.p -cwd -q normal.q -pe pe_slo
 
 input:
     file transformedData
+    each model from clusterModels
 
 //output:
 //    val peakName into peaks3
@@ -376,7 +391,7 @@ if(clust == 1)
     """
     #!/bin/bash
     cd ${workingDir}
-    python subgenomeClusteringInterface.py cluster ${transformedData} ${reclusterPath} ${best50kmerPath}
+    python subgenomeClusteringInterface.py cluster ${transformedData} ${reclusterPath} ${best500kmerPath} ${model}
     """
 else
     """
@@ -405,12 +420,64 @@ if(extract == 1)
     """
     #!/bin/bash
     cd ${workingDir}
-    python subgenomeClusteringInterface.py subgenomeExtraction ${subgenomeFolder} ${fastaPath} ${genomeSplitName} ${genome}
+    python subgenomeClusteringInterface.py subgenomeExtraction ./analysisOutputs/${subgenomeFolder} ${fastaPath} ${genomeSplitName} ${genome}
     """
 else
     """
     touch done
     """
+}
 
+kmerBest500Files = Channel.watchPath(best500kmerPath + '/*.fa')
+                          .unique()
+                          .flatMap { file -> tuple(file.name, file.name - '.fa') }
+
+kmer_blasted = Channel.create()
+
+process kmerBlastOff {
+
+clusterOptions = { kmerBlast == 1 ? '-P plant-analysis.p -cwd -q normal.q -pe pe_slots 16 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt' }
+
+input:
+    set query, queryFolder from kmerBest500Files
+
+output:
+    val queryFolder into kmer_blasted
+
+script:
+if(kmerBlast == 1)
+    """
+    #!/bin/bash
+    module load blast+/2.6.0
+    cd ${workingDir}
+    mkdir ${best500kmerPath}/${queryFolder}
+    blastn -db ${workingDir}/${blastDBName}.blast_db -query ${best500kmerPath}/${query} -task "blastn-short" -outfmt 6 -num_threads 15 -evalue 1e-2 > ${best500kmerPath}/${queryFolder}/${queryFolder}.blast.txt
+    """
+else
+    """
+    touch blast_result
+    """
+
+}
+
+process kmerGraphs {
+
+clusterOptions = { kmerGraph == 1 ? '-P plant-analysis.p -cwd -q normal.q -pe pe_slots 2 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt' }
+
+input:
+    val queryFolder from kmer_blasted
+
+script:
+if(kmerGraph == 1)
+    """
+    #!/bin/bash
+    cd ${workingDir}
+    mkdir ${best500kmerPath}/${queryFolder}
+    python subgenomeClusteringInterface.py generateKmerGraph ${best500kmerPath} ${queryFolder}
+    """
+else
+    """
+    touch blast_result
+    """
 
 }
