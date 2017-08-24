@@ -44,7 +44,7 @@ peakPath = findValue(' peakPath');
 save = findValue('save ');
 old = findValue('old ');
 
-
+slurm = findValue('slurm ').asType(Integer);
 
 splitFast = findValue('splitFasta ').asType(Integer);
 writeKmer = findValue('writeKmer ').asType(Integer);
@@ -86,7 +86,7 @@ genomeChan2 = Channel.create()
 
 process splitFastaProcess {
 executor = 'local'
-clusterOptions = { splitFast == 1 ? '-P plant-analysis.p -cwd -q normal.q -pe pe_slots 2 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt' }
+clusterOptions = { slurm == 0 ? { splitFast == 1 ? '-P plant-analysis.p -cwd -q normal.q -pe pe_slots 2 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt' } : '' }//'-N 2 -p regular -D . '}
 
 input:
     val genomeName from genomeChan
@@ -117,7 +117,7 @@ genomeChan4 = Channel.create()
 
 process writeKmerCount {
 
-clusterOptions = { writeKmer == 1 ? '-P plant-analysis.p -cwd -q normal.q -pe pe_slots 9 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt' }
+clusterOptions = { slurm == 0 ? { writeKmer == 1 ? '-P plant-analysis.p -cwd -q normal.q -pe pe_slots 9 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt' } : '-N 9 -p regular -D . '}
 
 input:
     val genomeName from genomeChan3
@@ -145,7 +145,7 @@ genomeChan55 = Channel.create()
 
 process kmer2Fasta {
 executor = 'local'
-clusterOptions = { fromFasta == 1 ? '-P plant-analysis.p -cwd -q normal.q -pe pe_slots 2 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt' }
+clusterOptions = { slurm == 0 ? { fromFasta == 1 ? '-P plant-analysis.p -cwd -q normal.q -pe pe_slots 2 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt' } : '-N 2 -p regular -D . '}
 
 input:
     val genomeName from genomeChan4
@@ -173,7 +173,7 @@ else
 
 process createOrigDB {
 executor = 'local'
-clusterOptions = { original == 1 ? '-P plant-analysis.p -cwd -q normal.q -pe pe_slots 2 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt' }
+clusterOptions = { slurm == 0 ? { original == 1 ? '-P plant-analysis.p -cwd -q normal.q -pe pe_slots 2 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt' } : '-N 2 -p regular -D . '}
 
 input:
     val genomeName from genomeChan55
@@ -206,7 +206,7 @@ blast_result = Channel.create()
 
 process BlastOff {
 
-clusterOptions = { writeBlast == 1 ? '-P plant-analysis.p -cwd -q normal.q -pe pe_slots 16 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt' }
+clusterOptions = {slurm == 0 ? { writeBlast == 1 ? '-P plant-analysis.p -cwd -l h_rt=24:00:00 -pe pe_slots 16 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt' } : { writeBlast == 1 ? '-N 16 -p regular -D . ' : '-N 1 -p regular -D . ' }}
 
 input:
     file 'query.fa' from kmerFasta
@@ -247,7 +247,7 @@ genomeChan7 = Channel.create()
 
 process blast2bed {
 executor = 'local'
-clusterOptions = { b2b == 1 ? '-P plant-analysis.p -cwd -q normal.q -pe pe_slots 2 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt' }
+clusterOptions = {slurm == 0 ? { b2b == 1 ? '-P plant-analysis.p -cwd -q normal.q -pe pe_slots 2 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt' } : '-N 2 -p regular -D . '}
 
 input:
     val genomeName from genomeChan6
@@ -275,7 +275,7 @@ genomeChan8 = Channel.create()
 
 process genClusterMatrix_kmerPrevalence {
 
-clusterOptions = { genMat == 1 ? '-P plant-analysis.p -cwd -q normal.q -pe pe_slots 2 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt' }
+clusterOptions = {slurm == 0 ? { genMat == 1 ? '-P plant-analysis.p -cwd -q normal.q -pe pe_slots 2 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt' } : '-N 2 -p regular -D . '}
 
 input:
     val genomeName from genomeChan7
@@ -312,7 +312,7 @@ process transform_main {
 
 executor = 'local'
 
-clusterOptions = { trans == 1 ? '-P plant-analysis.p -cwd -q normal.q -pe pe_slots 2 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt' }
+clusterOptions = { slurm == 0 ? { trans == 1 ? '-P plant-analysis.p -cwd -q normal.q -pe pe_slots 2 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt' } : '-N 2 -p regular -D . '}
 
 input:
     val genomeName from genomeChan8
@@ -342,7 +342,7 @@ bestKmerMatrices = Channel.watchPath(reclusterPath+'*.npz','create,modify')
 
 process transform {
 
-clusterOptions = { trans2 == 1 ? '-P plant-analysis.p -cwd -l high.c -pe pe_slots 2 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt' }
+clusterOptions = { slurm == 0 ? { trans2 == 1 ? '-P plant-analysis.p -cwd -l high.c -pe pe_slots 2 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt' } : '-N 2 -p regular -D . '}
 
 input:
     val kmerMat from bestKmerMatrices
@@ -376,7 +376,7 @@ clusterModels = ['KMeans','SpectralClustering']
 
 process cluster {
 
-clusterOptions = { clust == 1 ? '-P plant-analysis.p -cwd -q normal.q -pe pe_slots 2 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt' }
+clusterOptions = { slurm == 0 ? { clust == 1 ? '-P plant-analysis.p -cwd -q normal.q -pe pe_slots 2 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt' } : '-N 2 -p regular -D . '}
 
 input:
     file transformedData
@@ -406,7 +406,7 @@ subgenomeFolders = Channel.watchPath('analysisOutputs/*.txt')
 process subgenomeExtraction {
 
 
-clusterOptions = { extract == 1 ? '-P plant-analysis.p -cwd -q normal.q -pe pe_slots 9 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt' }
+clusterOptions = { slurm == 0 ? { extract == 1 ? '-P plant-analysis.p -cwd -q normal.q -pe pe_slots 9 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt' } : '-N 9 -p regular -D . '}
 
 input:
     val subgenomeFolder from subgenomeFolders
@@ -436,7 +436,7 @@ kmer_blasted = Channel.create()
 
 process kmerBlastOff {
 
-clusterOptions = { kmerBlast == 1 ? '-P plant-analysis.p -cwd -q normal.q -pe pe_slots 16 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt' }
+clusterOptions = { slurm == 0 ? { kmerBlast == 1 ? '-P plant-analysis.p -cwd -q normal.q -pe pe_slots 16 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt' } : '-N 16 -p regular -D . '}
 
 input:
     set query, queryFolder from kmerBest500Files
@@ -462,7 +462,7 @@ else
 
 process kmerGraphs {
 
-clusterOptions = { kmerGraph == 1 ? '-P plant-analysis.p -cwd -q normal.q -pe pe_slots 2 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt' }
+clusterOptions = { slurm == 0 ? { kmerGraph == 1 ? '-P plant-analysis.p -cwd -q normal.q -pe pe_slots 2 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt' } : '-N 2 -p regular -D . '}
 
 input:
     val queryFolder from kmer_blasted

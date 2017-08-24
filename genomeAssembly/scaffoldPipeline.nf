@@ -306,7 +306,7 @@ else
 }
 //linkageChannel4 = linkageChannel4.take(1)
 process Allmaps {
-clusterOptions = '-P plant-analysis.p -cwd -l h_rt=6:00:00 -pe pe_slots 16 -e OutputFile.txt'
+clusterOptions = '-P plant-analysis.p -cwd -l h_rt=24:00:00 -pe pe_slots 16 -e OutputFile.txt'
 queue = 'long'
 errorStrategy = 'ignore'
 

@@ -178,7 +178,7 @@ def kmerRelatedHistogram(args):
                     f.write(str(interval[0]) + '\t%s' % str(interval[1]) + '\n')
 
 def splitFasta(args):
-    fastaFile = Fasta(args[0])
+    fastaFile = Fasta(args[1] + args[0])
 
     global inputStr
     global key
@@ -206,12 +206,12 @@ def splitFasta(args):
                 print key
             except:
                 print 'length scaffold very small'"""
-            if __name__ == '__main__':
-                p=mp.Pool(processes=8)
-                splitLines = p.map(grabLine,posFinal)
-                p.close()
-                p.join()
-                #print wrappedLines[0:10]
+            #if __name__ == '__main__':
+            #p=mp.Pool(processes=8)
+            splitLines = map(grabLine,posFinal)
+            #p.close()
+            #p.join()
+            #print wrappedLines[0:10]
             return splitLines
         else:
             return ''
@@ -222,7 +222,7 @@ def splitFasta(args):
     with open('correspondence.bed','w') as f:
         f.write('\n'.join(bedText))
     BedTool('correspondence.bed').sort().saveas('correspondence.bed')
-    subprocess.call('bedtools getfasta -fi %s -fo %s -bed %s -name'%(args[0],args[1] + args[0].split('.fa')[0]+'_split.fa','correspondence.bed'),shell=True)
+    subprocess.call('bedtools getfasta -fi %s -fo %s -bed %s -name'%(args[1] + args[0],args[1] + args[0].split('.fa')[0]+'_split.fa','correspondence.bed'),shell=True)
     Fasta((args[1] + args[0]).split('.fa')[0]+'_split.fa')
     print args[0].split('.fa')[0]+'_split.fa'
 
@@ -621,7 +621,7 @@ def compareKmers(subgenomeFolder,kmercountPath):
     dictOfGenes = {}
     ratio_threshold = 20
     end_dinucleotide = 'GG'
-    kmercountFiles = os.listdir(kmercountPath)
+    kmercountFiles = [file for file in os.listdir(kmercountPath) if file.endswith('.kcount')]
     for file in kmercountFiles:
         # creates a dictionary that associates a species to its dictionary of the kmer : count key value pairs
         # kmercounttodict function is called to create the kmer : count key value pairs
