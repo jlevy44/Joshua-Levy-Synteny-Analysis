@@ -621,7 +621,7 @@ def compareKmers(subgenomeFolder,kmercountPath):
     dictOfGenes = {}
     ratio_threshold = 20
     end_dinucleotide = 'GG'
-    kmercountFiles = [file for file in os.listdir(kmercountPath) if file.endswith('.kcount')]
+    kmercountFiles = [file for file in os.listdir(kmercountPath) if file.endswith('.kcount') and '_split' not in file]
     for file in kmercountFiles:
         # creates a dictionary that associates a species to its dictionary of the kmer : count key value pairs
         # kmercounttodict function is called to create the kmer : count key value pairs
