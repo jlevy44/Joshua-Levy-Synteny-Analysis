@@ -595,7 +595,7 @@ def writeKmerCountSubgenome(args):
         pass
     kmercountPath = subgenomeFolder+'/kmercount_files/'
     for fastaFile in os.listdir(subgenomeFolder):
-        if 'higher.kmers' not in fastaFile and (fastaFile.endswith('.fa') or fastaFile.endswith('.fasta')):
+        if 'higher.kmers' not in fastaFile and '_split' not in fastaFile and (fastaFile.endswith('.fa') or fastaFile.endswith('.fasta')):
             f = fastaFile.rstrip()
             print f
             outFileName = f[:f.rfind('.')] + '.kcount'
@@ -694,9 +694,9 @@ def blast2bed3(subgenomeFolder,blastPath, bedPath, sortPath, genome):
             os.makedirs(sortPath)
         b = BedTool(si)
         # if chromosomes, then use the 1Mb window
-        if not os.path.exists(genome.replace('.fai','.bed')):
-            fai2bed((genome))
-        shutil.copy(genome.replace('.fai','.bed'),subgenomeFolder)
+        if not os.path.exists(genome.replace('.fai','')+'.bed'):
+            fai2bed((genome,))
+        shutil.copy(genome.replace('.fai','')+'.bed',subgenomeFolder)
         windows = '%s.bed' % genome
         a = BedTool(subgenomeFolder + '/' + windows)
         b.sort().saveas(so)
@@ -859,11 +859,36 @@ def generateKmerGraph(args):
 
     plt.figure()
     plt.axis('off')
-    nx.draw(kmerGraph, pos=nx.spectral_layout(kmerGraph), nodecolor='r', edge_color='b')
+    nx.draw_networkx(kmerGraph, pos=nx.spring_layout(kmerGraph), edge_color='b')#nodecolor='r'
     plt.savefig(blastPath + 'kmerGraph_%s.png'%(kmerName), bbox_inches="tight")
 
+    intervals = [(0., xplot[idxs_valleys[0]][0])] + [(xplot[idxs_valleys[i]][0], xplot[idxs_valleys[i + 1]][0]) for i in
+                                                     range(len(idxs_valleys) - 1)] + [
+                    (xplot[idxs_valleys[-1]][0], xplot[-1][0])]
 
-
+    kmerCountData = np.array([[kmer, int(kmerGraph.degree(kmer))] for kmer in kmerGraph.nodes()])
+    print intervals
+    allCounts = np.vectorize(int)(kmerCountData[:,1])
+    #print kmerCountData
+    for interval in intervals:
+        try:
+            print np.where((kmerCountData[:, 1] <= np.floor(interval[1])) & (kmerCountData[:, 1] >= np.ceil(interval[0])))
+            nodesData = kmerCountData[:,0][np.where(( allCounts <= np.floor(interval[1])) & (allCounts >= np.ceil(interval[0])))]
+            counts = allCounts[np.where(( allCounts <= np.floor(interval[1])) & (allCounts >= np.ceil(interval[0])))]
+            nodesData = nodesData[np.argsort(counts)]
+            counts = counts[np.argsort(counts)]
+            print nodesData
+            nodes = list(nodesData)
+            G = kmerGraph.copy()
+            G.remove_nodes_from(nodes)
+            plt.figure()
+            plt.axis('off')
+            nx.draw_networkx(G, pos=nx.spring_layout(G), edge_color='b',with_labels=False)  # nodecolor='r'
+            plt.savefig(blastPath + 'kmerGraph_Interval_%d_%d.png' % (int(np.ceil(interval[0])),int(np.floor(interval[1]))), bbox_inches="tight")
+            with open(blastPath + 'kmers_Interval_%d_%d.txt' % (int(np.ceil(interval[0])),int(np.floor(interval[1]))),'w') as f:
+                f.write('\n'.join('%s\t%d'%(nodesData[i],counts[i]) for i in range(len(nodesData))))# nodesData[np.argsort(nodesData[:,1])]))
+        except:
+            print interval
 
 #os.chdir('../../..')
 

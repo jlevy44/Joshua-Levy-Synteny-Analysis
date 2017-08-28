@@ -14,13 +14,15 @@ with open('kmerCountCompare.txt','r') as f:
 
 if slurm == 1:
     executor = "'slurm'"
-    clusterOptions = ''#'-N 3 -p regular -D . '
+    clusterOptions = '-D .'#'-N 3 -p regular -D . '
+
 elif (slurm, local) == (0,1):
-    executor = 'local'
-    clusterOptions = '-P plant-analysis.p -cwd -l exclusive.c -pe pe_slots 3 -e OutputFile.txt'
+    executor = "'local'"
+    clusterOptions = '-P plant-analysis.p -cwd'# -l exclusive.c -pe pe_slots 3 -e OutputFile.txt'
+
 else:
-    executor = 'sge'
-    clusterOptions = '-P plant-analysis.p -cwd -l exclusive.c -pe pe_slots 3 -e OutputFile.txt'
+    executor = "'sge'"
+    clusterOptions = '-P plant-analysis.p -cwd'# -l exclusive.c -pe pe_slots 3 -e OutputFile.txt'
 
 with open('nextflow.config','r') as f:
     configLines = f.readlines()
@@ -30,4 +32,4 @@ for i, line in enumerate(configLines):
         configLines[i] = 'executor = %s'%(executor)
 
 with open('nextflow.config','w') as f:
-    f.write('\n'.join(configLines))
+    f.write('\n'.join([line for line in configLines if line]))
