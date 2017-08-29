@@ -4,7 +4,6 @@
     <list default="true" id="87dadfdf-9689-45cf-b4af-5fd342ee0ae6" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/SubgenomeClustering/compareKmerGraph.py" afterPath="$PROJECT_DIR$/SubgenomeClustering/compareKmerGraph.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/SubgenomeClustering/runCluster.sh" afterPath="$PROJECT_DIR$/SubgenomeClustering/runCluster.sh" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/SubgenomeClustering/subgenomeClusteringInterface.py" afterPath="$PROJECT_DIR$/SubgenomeClustering/subgenomeClusteringInterface.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/SubgenomeClustering/subgenomePipeline.nf" afterPath="$PROJECT_DIR$/SubgenomeClustering/subgenomePipeline.nf" />
     </list>
@@ -34,18 +33,18 @@
       <file leaf-file-name="subgenomePipeline.nf" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/SubgenomeClustering/subgenomePipeline.nf">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="227">
-              <caret line="461" column="6" lean-forward="false" selection-start-line="461" selection-start-column="2" selection-end-line="461" selection-end-column="6" />
+            <state relative-caret-position="107">
+              <caret line="50" column="32" lean-forward="true" selection-start-line="50" selection-start-column="32" selection-end-line="50" selection-end-column="32" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="subgenomeClusteringInterface.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="subgenomeClusteringInterface.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/SubgenomeClustering/subgenomeClusteringInterface.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="540">
-              <caret line="701" column="19" lean-forward="false" selection-start-line="701" selection-start-column="19" selection-end-line="701" selection-end-column="19" />
+            <state relative-caret-position="201">
+              <caret line="1055" column="39" lean-forward="true" selection-start-line="1055" selection-start-column="39" selection-end-line="1055" selection-end-column="39" />
               <folding>
                 <element signature="e#0#14#0" expanded="true" />
               </folding>
@@ -53,11 +52,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="compareKmerGraph.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="compareKmerGraph.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/SubgenomeClustering/compareKmerGraph.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="240">
-              <caret line="16" column="77" lean-forward="true" selection-start-line="16" selection-start-column="77" selection-end-line="16" selection-end-column="77" />
+            <state relative-caret-position="180">
+              <caret line="12" column="0" lean-forward="true" selection-start-line="12" selection-start-column="0" selection-end-line="12" selection-end-column="0" />
               <folding>
                 <element signature="e#0#32#0" expanded="true" />
               </folding>
@@ -117,10 +116,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>xplot</find>
-      <find>histData</find>
-      <find>50</find>
-      <find>subgenomeExtra</find>
       <find>subgenome_folder</find>
       <find>499</find>
       <find>Spectr</find>
@@ -147,6 +142,10 @@
       <find>blast2bed</find>
       <find>kmer</find>
       <find>kmergrap</find>
+      <find>text</find>
+      <find>kmerGra</find>
+      <find>transform</find>
+      <find>n_subgenomes</find>
     </findStrings>
     <replaceStrings>
       <replace>val</replace>
@@ -210,16 +209,16 @@
         <option value="$PROJECT_DIR$/genomeAssembly/scaffoldPipeline.nf" />
         <option value="$PROJECT_DIR$/SubgenomeClustering/updateNextflowConfig.py" />
         <option value="$PROJECT_DIR$/SubgenomeClustering/nextflow.config" />
-        <option value="$PROJECT_DIR$/SubgenomeClustering/compareKmerGraph.py" />
         <option value="$PROJECT_DIR$/SubgenomeClustering/runCluster.sh" />
         <option value="$PROJECT_DIR$/SubgenomeClustering/subgenomePipeline.nf" />
         <option value="$PROJECT_DIR$/SubgenomeClustering/subgenomeClusteringInterface.py" />
+        <option value="$PROJECT_DIR$/SubgenomeClustering/compareKmerGraph.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="-1661" />
-    <option name="y" value="-71" />
+    <option name="x" value="-1586" />
+    <option name="y" value="274" />
     <option name="width" value="1436" />
     <option name="height" value="819" />
   </component>
@@ -728,7 +727,14 @@
       <option name="project" value="LOCAL" />
       <updated>1503963039056</updated>
     </task>
-    <option name="localTasksCounter" value="42" />
+    <task id="LOCAL-00042" summary="adding polyploid over 2 subgenomes option">
+      <created>1504035078302</created>
+      <option name="number" value="00042" />
+      <option name="presentableId" value="LOCAL-00042" />
+      <option name="project" value="LOCAL" />
+      <updated>1504035078302</updated>
+    </task>
+    <option name="localTasksCounter" value="43" />
     <servers />
   </component>
   <component name="TodoView">
@@ -741,7 +747,7 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="-1661" y="-71" width="1436" height="819" extended-state="0" />
+    <frame x="-1586" y="274" width="1436" height="819" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.1740947" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
@@ -767,7 +773,6 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="More bugs to fix on scaffolding pipeline" />
     <MESSAGE value="mkdir added to pipeline, new versioning" />
     <MESSAGE value="working on characterizing/clustering scaffolds by subgenome" />
     <MESSAGE value="subgenome clustering" />
@@ -792,7 +797,8 @@
     <MESSAGE value="updates for the day" />
     <MESSAGE value="update temp" />
     <MESSAGE value="added peak analysis of 500 best kmers as well as matching them up with differential kmers, need help getting pipeline to work with slurm" />
-    <option name="LAST_COMMIT_MESSAGE" value="added peak analysis of 500 best kmers as well as matching them up with differential kmers, need help getting pipeline to work with slurm" />
+    <MESSAGE value="adding polyploid over 2 subgenomes option" />
+    <option name="LAST_COMMIT_MESSAGE" value="adding polyploid over 2 subgenomes option" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1151,30 +1157,30 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/SubgenomeClustering/compareKmerGraph.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="240">
-          <caret line="16" column="77" lean-forward="true" selection-start-line="16" selection-start-column="77" selection-end-line="16" selection-end-column="77" />
-          <folding>
-            <element signature="e#0#32#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/SubgenomeClustering/subgenomePipeline.nf">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="227">
-          <caret line="461" column="6" lean-forward="false" selection-start-line="461" selection-start-column="2" selection-end-line="461" selection-end-column="6" />
+        <state relative-caret-position="107">
+          <caret line="50" column="32" lean-forward="true" selection-start-line="50" selection-start-column="32" selection-end-line="50" selection-end-column="32" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/SubgenomeClustering/subgenomeClusteringInterface.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="540">
-          <caret line="701" column="19" lean-forward="false" selection-start-line="701" selection-start-column="19" selection-end-line="701" selection-end-column="19" />
+        <state relative-caret-position="201">
+          <caret line="1055" column="39" lean-forward="true" selection-start-line="1055" selection-start-column="39" selection-end-line="1055" selection-end-column="39" />
           <folding>
             <element signature="e#0#14#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/SubgenomeClustering/compareKmerGraph.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="180">
+          <caret line="12" column="0" lean-forward="true" selection-start-line="12" selection-start-column="0" selection-end-line="12" selection-end-column="0" />
+          <folding>
+            <element signature="e#0#32#0" expanded="true" />
           </folding>
         </state>
       </provider>

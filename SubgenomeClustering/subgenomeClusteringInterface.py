@@ -332,10 +332,10 @@ def generateClusteringMatrixAndKmerPrevalence(args):
 
 def transform_main(args): #FIXME
     try:
-        main, reclusterFolder, model  = args
+        main, reclusterFolder, model, n_subgenomes  = args
     except:
-        main, reclusterFolder, model = ('1','null','kpca')
-    transform_plot((main,reclusterFolder,model))
+        main, reclusterFolder, model,n_subgenomes = ('1','null','kpca','2')
+    transform_plot((main,reclusterFolder,model,n_subgenomes))
 
 def peakClusteringMatrix(args):
     kmercountPath, peakFasta, blastFile, save = args
@@ -853,7 +853,11 @@ def subgenomeExtraction(args):
     #make_plots(genome, bedFiles)
 
 def generateKmerGraph(args):
-    kmerPath, kmerName = args
+    kmerPath, kmerName, n_subgenomes = args
+    try:
+        n_subgenomes = int(n_subgenomes)
+    except:
+        n_subgenomes = 2
     blastPath = kmerPath + '/' + kmerName + '/'
     with open(blastPath+ kmerName + '.blast.txt', 'r') as f, open(blastPath + 'blasted.bed', 'w') as f2:
         for line in f:
@@ -952,7 +956,7 @@ def generateKmerGraph(args):
             nx.draw_networkx(G, pos=nx.spring_layout(G), edge_color='b',with_labels=False)  # nodecolor='r'
             plt.savefig(blastPath + 'kmerGraph_Interval_%d_%d.png' % (int(np.ceil(interval[0])),int(np.floor(interval[1]))), bbox_inches="tight")
             with open(blastPath + 'kmers_Interval_%d_%d.txt' % (int(np.ceil(interval[0])),int(np.floor(interval[1]))),'w') as f:
-                f.write('\n'.join('%s\t%d'%(nodesData[i],counts[i]) for i in range(len(nodesData))))# nodesData[np.argsort(nodesData[:,1])]))
+                f.write('\n'.join('%s\t%d'%(nodesData[j],counts[j]) for j in range(len(nodesData))))# nodesData[np.argsort(nodesData[:,1])]))
             Xv = [pos[k][0] for k in nodes]
             Yv = [pos[k][1] for k in nodes]
             Zv = [pos[k][2] for k in nodes]
@@ -975,55 +979,100 @@ def generateKmerGraph(args):
             print e.filename
             print e.strerror
 
-        plots.append(go.Scatter3d(x=Xed,
-                                  y=Yed,
-                                  z=Zed,
-                                  mode='lines',
-                                  line=go.Line(color='rgb(210,210,210)', width=1),
-                                  hoverinfo='none'
-                                  ))
+    plots.append(go.Scatter3d(x=Xed,
+                              y=Yed,
+                              z=Zed,
+                              mode='lines',
+                              line=go.Line(color='rgb(210,210,210)', width=1),
+                              hoverinfo='none'
+                              ))
 
-        axis = dict(showbackground=False,
-                    showline=False,
-                    zeroline=False,
-                    showgrid=False,
-                    showticklabels=False,
-                    title=''
-                    )
-
-        layout = go.Layout(
-            title="Graph of 500 Best Kmers",
-            width=1000,
-            height=1000,
-            showlegend=True,
-            scene=go.Scene(
-                xaxis=go.XAxis(axis),
-                yaxis=go.YAxis(axis),
-                zaxis=go.ZAxis(axis),
-            ),
-            margin=go.Margin(
-                t=100
-            ),
-            hovermode='closest',
-            annotations=go.Annotations([
-                go.Annotation(
-                    showarrow=False,
-                    text="",
-                    xref='paper',
-                    yref='paper',
-                    x=0,
-                    y=0.1,
-                    xanchor='left',
-                    yanchor='bottom',
-                    font=go.Font(
-                        size=14
-                    )
+    axis = dict(showbackground=False,
+                showline=False,
+                zeroline=False,
+                showgrid=False,
+                showticklabels=False,
+                title=''
                 )
-            ]), )
 
-        data1 = go.Data(plots)
-        fig1 = go.Figure(data=data1, layout=layout)
-        py.plot(fig1, filename=blastPath + 'KmerGraph3D.html')
+    layout = go.Layout(
+        title="Graph of 500 Best Kmers",
+        width=1000,
+        height=1000,
+        showlegend=True,
+        scene=go.Scene(
+            xaxis=go.XAxis(axis),
+            yaxis=go.YAxis(axis),
+            zaxis=go.ZAxis(axis),
+        ),
+        margin=go.Margin(
+            t=100
+        ),
+        hovermode='closest',
+        annotations=go.Annotations([
+            go.Annotation(
+                showarrow=False,
+                text="",
+                xref='paper',
+                yref='paper',
+                x=0,
+                y=0.1,
+                xanchor='left',
+                yanchor='bottom',
+                font=go.Font(
+                    size=14
+                )
+            )
+        ]), )
+
+    data1 = go.Data(plots)
+    fig1 = go.Figure(data=data1, layout=layout)
+    py.plot(fig1, filename=blastPath + 'KmerPeakGraph3D.html')
+
+    affinity_matrix = nx.to_numpy_matrix(kmerGraph)
+    s = SpectralClustering(n_clusters=n_subgenomes, affinity='precomputed')
+    labels = s.fit_predict(affinity_matrix)
+    plots = []
+
+    plots.append(go.Scatter3d(x=Xed,
+                              y=Yed,
+                              z=Zed,
+                              mode='lines',
+                              line=go.Line(color='rgb(210,210,210)', width=1),
+                              hoverinfo='none'
+                              ))
+
+    N = len(set(labels))
+    c = ['hsl(' + str(h) + ',50%' + ',50%)' for h in np.linspace(0, 360, N + 1)]
+    for i,label in enumerate(list(set(labels))):
+        nodes = list(kmerCountData[:,0][labels == label])
+        counts = list(allCounts[labels == label])
+        Xv = [pos[k][0] for k in nodes]
+        Yv = [pos[k][1] for k in nodes]
+        Zv = [pos[k][2] for k in nodes]
+        nodesText = [
+            '%s, %d connections, %d total kmer count' % (kmer, int(kmerGraph.degree(kmer)), totalKmerCount[kmer]) for
+            kmer in nodes]
+        plots.append(go.Scatter3d(x=Xv,
+                                  y=Yv,
+                                  z=Zv,
+                                  mode='markers',
+                                  name='Cluster %d' %i,
+                                  marker=go.Marker(symbol='dot',
+                                                   size=5,
+                                                   color=c[i],
+                                                   line=go.Line(color='rgb(50,50,50)', width=0.5)
+                                                   ),
+                                  text=nodesText,
+                                  hoverinfo='text'
+                                  ))
+        with open(blastPath + 'kmers_cluster_%d.txt' %(i),
+                  'w') as f:
+            f.write('\n'.join('%s\t%d' % (nodes[j], counts[j]) for j in range(len(nodes))))
+    data1 = go.Data(plots)
+    fig1 = go.Figure(data=data1, layout=layout)
+    py.plot(fig1, filename=blastPath + 'KmerClusteredGraph3D.html')
+
 
 #os.chdir('../../..')
 

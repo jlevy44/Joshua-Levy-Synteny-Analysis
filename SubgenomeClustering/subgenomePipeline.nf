@@ -336,7 +336,7 @@ if(trans == 1)
     """
     #!/bin/bash
     cd ${workingDir}
-    python subgenomeClusteringInterface.py transform_main 1 ${reclusterPath} ${technique}
+    python subgenomeClusteringInterface.py transform_main 1 ${reclusterPath} ${technique} 2
     """
 else
     """
@@ -372,7 +372,7 @@ if(trans2 == 1)
     """
     #!/bin/bash
     cd ${workingDir}
-    python subgenomeClusteringInterface.py transform_plot ${kmerMat} ${reclusterPath} ${technique}
+    python subgenomeClusteringInterface.py transform_plot ${kmerMat} ${reclusterPath} ${technique} 2
     """
 else
     """
@@ -412,7 +412,7 @@ if(clust == 1)
     """
     #!/bin/bash
     cd ${workingDir}
-    python subgenomeClusteringInterface.py cluster ${transformedData}transformed3D.npy ${reclusterPath} ${best500kmerPath} ${model}
+    python subgenomeClusteringInterface.py cluster ${transformedData}transformed3D.npy ${reclusterPath} ${best500kmerPath} ${model} 2
     cd -
     echo kmer500Best_${model}${transformedData}n3.fa > test.txt
     echo ${model}${transformedData}n3 > test2.txt
@@ -521,7 +521,7 @@ if(kmerGraph == 1)
     """
     #!/bin/bash
     cd ${workingDir}
-    python subgenomeClusteringInterface.py generateKmerGraph ${best500kmerPath} ${queryFolder}
+    python subgenomeClusteringInterface.py generateKmerGraph ${best500kmerPath} ${queryFolder} 2
     """
 else
     """
