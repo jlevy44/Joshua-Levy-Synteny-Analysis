@@ -352,7 +352,7 @@ else
 bestKmerMatrices = Channel.watchPath(reclusterPath+'*.npz','create,modify')
                           .map { file -> findPeak(file.name) }
                           .unique()
-
+if(trans2 == 1) {
 process transform {
 
 //clusterOptions = { slurm == 0 ? { trans2 == 1 ? '-P plant-analysis.p -cwd -l high.c -pe pe_slots 2 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt' } : '-N 2 -p regular -D . '}
@@ -382,6 +382,7 @@ else
     """
 
 }
+}
 
 transformedData = Channel.watchPath('*transformed3D.npy','create,modify')
                          .unique()
@@ -390,6 +391,7 @@ transformedData = Channel.watchPath('*transformed3D.npy','create,modify')
 
 clusterModels = ['KMeans']//,'SpectralClustering']
 kmerBest500Files = Channel.create()
+subgenomeFoldersRaw = Channel.create()
 process cluster {
 
 //clusterOptions = { slurm == 0 ? { clust == 1 ? '-P plant-analysis.p -cwd -q normal.q -pe pe_slots 2 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt' } : '-N 2 -p regular -D . '}
@@ -402,6 +404,7 @@ input:
 
 output:
     file 'test.txt' into kmerBest500Files//stdout into kmerBest500Files//val 'kmer500Best_${model}${transformedData}n3.fa' into kmerBest500Files
+    file 'test2.txt' into subgenomeFoldersRaw
 //${best500kmerPath}/
 
 script:
@@ -412,16 +415,22 @@ if(clust == 1)
     python subgenomeClusteringInterface.py cluster ${transformedData}transformed3D.npy ${reclusterPath} ${best500kmerPath} ${model}
     cd -
     echo kmer500Best_${model}${transformedData}n3.fa > test.txt
+    echo ${model}${transformedData}n3 > test2.txt
     """
 else
     """
     echo kmer500Best_${model}${transformedData}n3.fa > test.txt
+    echo ${model}${transformedData}n3 > test2.txt
     """
 
 }
-
-subgenomeFolders = Channel.watchPath('analysisOutputs/*.txt')
-                          .map {file -> file.name - '.txt'}
+subgenomeFoldersRaw.splitText()
+                .filter {it.toString().size() > 1}
+                .set {subgenomeFolders}
+subgenomeFolders.map { it -> it - '\n' }
+                .set { subgenomeFoldersFinal }
+                          //Channel.watchPath('analysisOutputs/*.txt','create,modify')
+                          //.map {file -> file.name - '.txt'}
 
 process subgenomeExtraction {
 
@@ -431,7 +440,7 @@ cpus = { extract == 1 ? 9 : 1 }
 
 
 input:
-    val subgenomeFolder from subgenomeFolders
+    val subgenomeFolder from subgenomeFoldersFinal
 
 //output:
 //    val peakName into peaks3

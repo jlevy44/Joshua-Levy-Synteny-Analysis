@@ -108,7 +108,7 @@ def blast2bed(args):
     with open(blastFile,'r') as f, open('blasted.bed','w') as f2:
         for line in f:
             if line:
-                l1 = line.split('\t')[1]
+                l1 = line.split('\t')[1].split('::')[0] # FIXME .split('::')[0] added for blast+
                 f2.write('\t'.join([l1] + ['0',str(int(l1.split('_')[-1])-int(l1.split('_')[-2]))] + [line.split('\t')[0]])+'\n')
 
     b = pybedtools.BedTool('blasted.bed').sort().merge(c=4,o='collapse',)
@@ -392,10 +392,14 @@ def peakClusteringMatrix(args):
 
 
 def transform_plot(args):
-    peak, reclusterFolder, model = args
+    peak, reclusterFolder, model, n_subgenomes = args
+    try:
+        n_subgenomes = int(n_subgenomes)
+    except:
+        n_subgenomes = 2
     if peak == '1':
         peak = 'main'
-    if os.path.exists(peak + '_' + model + 'Reduction.html') == 0:#isfile
+    if os.path.exists(peak + '_' + model + '_%d'%(n_subgenomes) + 'Reduction.html') == 0:#isfile
         if peak == 'main':
             # df = pd.read_feather('clusteringMatrix.feather')
             data = sps.load_npz('clusteringMatrix.npz')
@@ -405,8 +409,9 @@ def transform_plot(args):
         scaffolds = pickle.load(open('scaffolds.p', 'rb'))
         # df = df.set_index(['index'])
         # scaffolds = list(df.axes[0])
-        dimensionalityReducers = {'kpca': KernelPCA(n_components=3), 'factor': FactorAnalysis(n_components=3),
-                                  'feature': FeatureAgglomeration(n_clusters=3)}
+        N = n_subgenomes + 1
+        dimensionalityReducers = {'kpca': KernelPCA(n_components=N), 'factor': FactorAnalysis(n_components=N),
+                                  'feature': FeatureAgglomeration(n_clusters=N)}
         data = StandardScaler(with_mean=False).fit_transform(data)
         # for model in dimensionalityReducers:
         if model != 'kpca' and peak.startswith('recluster') == 0:
@@ -415,21 +420,27 @@ def transform_plot(args):
             data = data.toarray()
         transformed_data = dimensionalityReducers[model].fit_transform(data)
         np.save('%s_%s_transformed3D.npy'%(peak,model), transformed_data)
+        if n_subgenomes > 2:
+            transformed_data = KernelPCA(n_components=3).fit_transform(transformed_data)
         plots = []
         plots.append(
             go.Scatter3d(x=transformed_data[:, 0], y=transformed_data[:, 1], z=transformed_data[:, 2], name='Data',
                          mode='markers',
                          marker=dict(color='b', size=2), text=scaffolds))
         fig = go.Figure(data=plots)
-        py.plot(fig, filename=peak + '_' + model + 'Reduction.html')
+        py.plot(fig, filename=peak + '_' + model + '_%d'%(n_subgenomes) + 'Reduction.html')
     else:
-        subprocess.call('touch %s'%(peak + '_' + model + 'Reduction.html'),shell=True)
+        subprocess.call('touch %s'%(peak + '_' + model + '_%d'%(n_subgenomes) + 'Reduction.html'),shell=True)
 
 def cluster(args):
-    file, reclusterFolder, kmer500Path, clusterMethod = args
-    n_clusters = 3
+    file, reclusterFolder, kmer500Path, clusterMethod, n_subgenomes = args
+    try:
+        n_subgenomes = int(n_subgenomes)
+    except:
+        n_subgenomes = 2
+    n_clusters = n_subgenomes + 1
     clustering_algorithms = {'SpectralClustering': SpectralClustering(n_clusters=n_clusters, eigen_solver='lobpcg', affinity= 'nearest_neighbors', n_neighbors=30,random_state=42),#,gamma=1),arpack#amg,affinity="nearest_neighbors")#, n_neighbors=30, gamma=1),# nearestneighbors
-                             'KMeans': MiniBatchKMeans(n_clusters=3)}
+                             'KMeans': MiniBatchKMeans(n_clusters=n_clusters)}
     name, algorithm = clusterMethod , clustering_algorithms[clusterMethod]
     if 'recluster' not in file:
         dataOld = sps.load_npz('clusteringMatrix.npz')
@@ -450,6 +461,12 @@ def cluster(args):
             #try:
         if os.path.exists(name + Tname + 'n%d' % n_clusters + 'ClusterTest.html') == 0:
             algorithm.fit(transformed_data)
+            if n_subgenomes > 2:
+                reduction = KernelPCA(n_components=3)
+                reduction.fit(transformed_data)
+                transformed_data2 = StandardScaler().fit_transform(reduction.transform(transformed_data))
+            else:
+                transformed_data2 = transformed_data
             if hasattr(algorithm, 'labels_'):
                 y_pred = algorithm.labels_.astype(np.int)
             else:
@@ -463,6 +480,7 @@ def cluster(args):
                 os.mkdir('analysisOutputs/' + name + Tname + 'n%d' % n_clusters)
             except:
                 pass
+
             for key in set(y_pred):
                 # print key
                 cluster_scaffolds = np.array(scaffolds)[y_pred == key]
@@ -471,13 +489,16 @@ def cluster(args):
                     if clusterSize[key] == min(clusterSize.values()):
                         testCluster = key
                     plots.append(
-                        go.Scatter3d(x=transformed_data[y_pred == key, 0], y=transformed_data[y_pred == key, 1],
-                                     z=transformed_data[y_pred == key, 2],
+                        go.Scatter3d(x=transformed_data2[y_pred == key, 0], y=transformed_data2[y_pred == key, 1],
+                                     z=transformed_data2[y_pred == key, 2],
                                      name='Cluster %d, %d points, %f distance' % (key, len(cluster_scaffolds),clusterSize[key]), mode='markers',
                                      marker=dict(color=c[key], size=2), text=cluster_scaffolds))
 
             if hasattr(algorithm, 'cluster_centers_'):
-                centers = algorithm.cluster_centers_
+                if n_subgenomes > 2:
+                    centers = StandardScaler().fit_transform(reduction.transform(algorithm.cluster_centers_)) #FIXME modify!!! need scaler fitted model from transformeddata
+                else:
+                    centers = algorithm.cluster_centers_
                 plots.append(
                     go.Scatter3d(x=centers[:, 0], y=centers[:, 1], z=centers[:, 2], mode='markers',
                                  marker=dict(color='purple', symbol='circle', size=12),
@@ -527,6 +548,12 @@ def cluster(args):
             #try:
         if os.path.exists(name + Tname + 'n%d' % n_clusters + '500kmerreclusterTest.html') == 0: #.isfile
             algorithm.fit(transformed_data)
+            if n_subgenomes > 2:
+                reduction = KernelPCA(n_components=3)
+                reduction.fit(transformed_data)
+                transformed_data2 = StandardScaler().fit_transform(reduction.transform(transformed_data))
+            else:
+                transformed_data2 = transformed_data
             if hasattr(algorithm, 'labels_'):
                 y_pred = algorithm.labels_.astype(np.int)
             else:
@@ -558,7 +585,10 @@ def cluster(args):
                                      marker=dict(color=c[key], size=2), text=cluster_scaffolds))
 
             if hasattr(algorithm, 'cluster_centers_'):
-                centers = algorithm.cluster_centers_
+                if n_subgenomes > 2:
+                    centers = StandardScaler().fit_transform(reduction.transform(algorithm.cluster_centers_)) #FIXME modify
+                else:
+                    centers = algorithm.cluster_centers_
                 plots.append(
                     go.Scatter3d(x=centers[:, 0], y=centers[:, 1], z=centers[:, 2], mode='markers',
                                  marker=dict(color='purple', symbol='circle', size=12),
@@ -630,33 +660,37 @@ def compareKmers(subgenomeFolder,kmercountPath):
     # we now have two dictionaries (or more if we add more than two kmer count files to the kmercount_files path
     # now compare the two dictionaries in both directions to find kmers that are high in kmer dict 1 and low in kmer dict 2 and vice versa
     # this gets the dictionary name for the first kmer dict
-    dict1 = dictOfGenes[kmercountFiles[0][:kmercountFiles[0].rfind('.')]]#.split('.')[0]]
-    dict2 = dictOfGenes[kmercountFiles[1][:kmercountFiles[1].rfind('.')]]
+    #kmerDicts = [dictOfGenes[kmercountFiles[i][:kmercountFiles[i].rfind('.')]] for i in range(len(kmercountFiles))]
+    #dict1 = dictOfGenes[kmercountFiles[0][:kmercountFiles[0].rfind('.')]]#.split('.')[0]]
+    #dict2 = dictOfGenes[kmercountFiles[1][:kmercountFiles[1].rfind('.')]]
 
     # output kmers and counts for differential kmers
     # output file names
-    outFileNames = []
+    outFileNames = defaultdict(list)
     for file in kmercountFiles:
-        outFileNames.append(kmercountPath + "/%s.higher.kmers.fa" % (file.split('.')[0]))
-
+        outFileNames[kmercountPath + "/%s.higher.kmers.fa" % (file.split('.')[0])] = dictOfGenes[file[:file.rfind('.')]]
+        #outFileNames.append(kmercountPath + "/%s.higher.kmers.fa" % (file.split('.')[0]))
+    # {file.higherkmer : {kmer:count}}
     # create files for writing
     for filename in outFileNames:
         open(filename, 'w').close()
         print 'creating %s' % filename
 
-
-    # check dict 1 against dict 2
-    out1 = open(outFileNames[0], 'w')
-    # iterate through the keys of dict1 and identify kmers that are at least 10 fold higher in dict1
-    for key, value in dict1.iteritems():
-        key1 = str(key)
-        val1 = value
-        val2 = dict2.get(key, 3)
-        # require at least 30 fold higher kmers in dict1
-        if (val1 / val2) > ratio_threshold:
-            out1.write('>%s.%d.%d\n%s\n' % (key, val1, val2, key))
-    out1.close()
-
+    for outfilename, dict1 in outFileNames.iteritems():
+        # check dict 1 against dict 2
+        out1 = open(outfilename, 'w')
+        # iterate through the keys of dict1 and identify kmers that are at least 10 fold higher in dict1
+        for key, value in dict1.iteritems():
+            val1 = value
+            values = []
+            for outfilename2 in outFileNames:
+                if outfilename2 != outfilename:
+                    values.append(outFileNames[outfilename2].get(key,3))
+            # require at least 30 fold higher kmers in dict1
+            if all([(val1 / val2) > ratio_threshold for val2 in values]):
+                out1.write('>%s.%d.%s\n%s\n' % (key, val1, '.'.join(map(str,values)), key))
+        out1.close()
+    """
     # do same for other direction of query, # check dict 2 against dict 1
     out2 = open(outFileNames[1], 'w')
     for key, value in dict2.iteritems():
@@ -665,7 +699,7 @@ def compareKmers(subgenomeFolder,kmercountPath):
         val2 = dict1.get(key, 3)
         if (val1 / val2) > ratio_threshold:
             out2.write('>%s.%d.%d\n%s\n' % (key, val1, val2, key))
-    out2.close()
+    out2.close()"""
 
 def blast2bed3(subgenomeFolder,blastPath, bedPath, sortPath, genome):
     """Takes a list of genotype files with only one column for pos and converts them to proper bedgraph format to be sorted"""
@@ -831,11 +865,17 @@ def generateKmerGraph(args):
     b = pybedtools.BedTool(blastPath + 'blasted.bed').sort().merge(c=4, o='collapse', )
     b.saveas(blastPath + 'blasted_merged.bed')
     kmerGraph = nx.Graph()
+    totalKmerCount = {}
+    totalKmerCount = defaultdict(lambda:0, totalKmerCount)
     with open(blastPath + 'blasted_merged.bed', 'r') as f:
         for line in f:
             if line:
                 #kmerCountsNumbers = [kmerIdx[kmer] for kmer in set(line.rstrip('\n').split('\t').split(','))]
-                kmerGraph.add_edges_from(list(combinations(set(line.rstrip('\n').split('\t')[-1].split(',')),2)))#kmerCountsNumbers, 2)))
+                kmerz = line.rstrip('\n').split('\t')[-1].split(',')
+                kmerCount = Counter(kmerz)
+                for key in kmerCount:
+                    totalKmerCount[key] += kmerCount[key]
+                kmerGraph.add_edges_from(list(combinations(kmerCount.keys(),2)))#kmerCountsNumbers, 2)))
 
     histData = np.array([kmerGraph.degree(kmer) for kmer in kmerGraph.nodes()])[:, np.newaxis]
     xplot = np.linspace(0, np.max(histData), 300000)[:, np.newaxis]
@@ -858,23 +898,49 @@ def generateKmerGraph(args):
     plt.savefig(blastPath + 'KmerHistogram.png')
 
     plt.figure()
+    plt.hist(totalKmerCount.values(),bins = 50)
+    plt.xlabel('Total Kmer Count')
+    plt.ylabel('Count')
+    plt.legend(loc='upper left')
+    plt.title('Histogram of Total Kmer Count Throughout Genome')
+    plt.savefig(blastPath + 'TotalKmerCountHistogram.png')
+
+
+    #2d graph
+    plt.figure()
     plt.axis('off')
     nx.draw_networkx(kmerGraph, pos=nx.spring_layout(kmerGraph), edge_color='b')#nodecolor='r'
     plt.savefig(blastPath + 'kmerGraph_%s.png'%(kmerName), bbox_inches="tight")
 
+    #3d graph
+    plt.figure()
+    pos = nx.spring_layout(kmerGraph,k=0.7,iterations=50,scale=5,dim=3)
+    Xed = []
+    Yed = []
+    Zed = []
+    for edge in kmerGraph.edges():
+        Xed += [pos[edge[0]][0], pos[edge[1]][0], None]
+        Yed += [pos[edge[0]][1], pos[edge[1]][1], None]
+        Zed += [pos[edge[0]][2], pos[edge[1]][2], None]
+    plots = []
+
     intervals = [(0., xplot[idxs_valleys[0]][0])] + [(xplot[idxs_valleys[i]][0], xplot[idxs_valleys[i + 1]][0]) for i in
                                                      range(len(idxs_valleys) - 1)] + [
                     (xplot[idxs_valleys[-1]][0], xplot[-1][0])]
+    N = len(intervals)
+    c = ['hsl(' + str(h) + ',50%' + ',50%)' for h in np.linspace(0, 360, N+1)]
 
     kmerCountData = np.array([[kmer, int(kmerGraph.degree(kmer))] for kmer in kmerGraph.nodes()])
     print intervals
     allCounts = np.vectorize(int)(kmerCountData[:,1])
+    #idxs = np.arange(len(kmerGraph.nodes()))
     #print kmerCountData
-    for interval in intervals:
+    for i,interval in enumerate(intervals):
         try:
-            print np.where((kmerCountData[:, 1] <= np.floor(interval[1])) & (kmerCountData[:, 1] >= np.ceil(interval[0])))
-            nodesData = kmerCountData[:,0][np.where(( allCounts <= np.floor(interval[1])) & (allCounts >= np.ceil(interval[0])))]
-            counts = allCounts[np.where(( allCounts <= np.floor(interval[1])) & (allCounts >= np.ceil(interval[0])))]
+            #print np.where((kmerCountData[:, 1] <= np.floor(interval[1])) & (kmerCountData[:, 1] >= np.ceil(interval[0])))
+            idx_slice = np.where(( allCounts <= np.floor(interval[1])) & (allCounts >= np.ceil(interval[0])))
+            nodesData = kmerCountData[:,0][idx_slice]
+            counts = allCounts[idx_slice]
             nodesData = nodesData[np.argsort(counts)]
             counts = counts[np.argsort(counts)]
             print nodesData
@@ -887,8 +953,77 @@ def generateKmerGraph(args):
             plt.savefig(blastPath + 'kmerGraph_Interval_%d_%d.png' % (int(np.ceil(interval[0])),int(np.floor(interval[1]))), bbox_inches="tight")
             with open(blastPath + 'kmers_Interval_%d_%d.txt' % (int(np.ceil(interval[0])),int(np.floor(interval[1]))),'w') as f:
                 f.write('\n'.join('%s\t%d'%(nodesData[i],counts[i]) for i in range(len(nodesData))))# nodesData[np.argsort(nodesData[:,1])]))
-        except:
-            print interval
+            Xv = [pos[k][0] for k in nodes]
+            Yv = [pos[k][1] for k in nodes]
+            Zv = [pos[k][2] for k in nodes]
+            nodesText = ['%s, %d connections, %d total kmer count'%(kmer, int(kmerGraph.degree(kmer)), totalKmerCount[kmer]) for kmer in nodes]
+            plots.append(go.Scatter3d(x=Xv,
+                                  y=Yv,
+                                  z=Zv,
+                                  mode='markers',
+                                  name='Peak Interval %d %d'%(int(np.ceil(interval[0])),int(np.floor(interval[1]))),
+                                  marker=go.Marker(symbol='dot',
+                                                   size=5,
+                                                   color=c[i],
+                                                   line=go.Line(color='rgb(50,50,50)', width=0.5)
+                                                   ),
+                                  text=nodesText,
+                                  hoverinfo='text'
+                                  ))
+        except OSError as e:
+            print e.errno
+            print e.filename
+            print e.strerror
+
+        plots.append(go.Scatter3d(x=Xed,
+                                  y=Yed,
+                                  z=Zed,
+                                  mode='lines',
+                                  line=go.Line(color='rgb(210,210,210)', width=1),
+                                  hoverinfo='none'
+                                  ))
+
+        axis = dict(showbackground=False,
+                    showline=False,
+                    zeroline=False,
+                    showgrid=False,
+                    showticklabels=False,
+                    title=''
+                    )
+
+        layout = go.Layout(
+            title="Graph of 500 Best Kmers",
+            width=1000,
+            height=1000,
+            showlegend=True,
+            scene=go.Scene(
+                xaxis=go.XAxis(axis),
+                yaxis=go.YAxis(axis),
+                zaxis=go.ZAxis(axis),
+            ),
+            margin=go.Margin(
+                t=100
+            ),
+            hovermode='closest',
+            annotations=go.Annotations([
+                go.Annotation(
+                    showarrow=False,
+                    text="",
+                    xref='paper',
+                    yref='paper',
+                    x=0,
+                    y=0.1,
+                    xanchor='left',
+                    yanchor='bottom',
+                    font=go.Font(
+                        size=14
+                    )
+                )
+            ]), )
+
+        data1 = go.Data(plots)
+        fig1 = go.Figure(data=data1, layout=layout)
+        py.plot(fig1, filename=blastPath + 'KmerGraph3D.html')
 
 #os.chdir('../../..')
 
