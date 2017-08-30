@@ -43,7 +43,7 @@ def writeKmercount(args):
     """Takes list of fasta files and runs kmercountexact.sh to generate with only one column for pos and converts them to proper bedgraph format to be sorted"""
     fastaPath, kmercountPath = args
     for fastaFile in os.listdir(fastaPath):
-        if fastaFile.endswith('.fa') or fastaFile.endswith('.fasta'):
+        if (fastaFile.endswith('.fa') or fastaFile.endswith('.fasta')) and '_split' in fastaFile:
             f = fastaFile.rstrip()
             print f
             scriptName = f[:f.rfind('.')] + '.sh'
@@ -69,7 +69,7 @@ def kmer2Fasta(args):
 
 def writeBlast(args):
     """make blast database for whole genome assembly"""
-    genome, blastPath, kmercountPath, fastaPath = args
+    genome, blastPath, kmercountPath, fastaPath, BB = args
     genomeName = genome[:genome.rfind('.')]
     #dbscriptName = genomeName + '.db.sh'
     #blastdb = open(dbscriptName, 'w')
@@ -87,7 +87,10 @@ def writeBlast(args):
         f = file.rstrip()
         outFileName = f[:f.rfind('.')]+'.BLASTtsv.txt'
         lineOutputList = [genomeName, inputFile, blastPath, outFileName]
-        subprocess.call('module load blast+/2.6.0 && blastn -db ./%s.blast_db -query %s -task "blastn-short" -outfmt 6 -out %s/%s -num_threads 8 -evalue 1e-2' % tuple(lineOutputList),shell=True)
+        if BB:
+            subprocess.call('bbmap.sh vslow=t ambiguous=all noheader=t secondary=t perfectmode=t threads=8 maxsites=2000000000 outputunmapped=f ref=%s in=%s outm=%s'%(fastaPath+genome,inputFile,blastPath+'/'+f[:f.rfind('.')]+'.sam'),shell=True)
+        else:
+            subprocess.call('module load blast+/2.6.0 && blastn -db ./%s.blast_db -query %s -task "blastn-short" -outfmt 6 -out %s/%s -num_threads 8 -evalue 1e-2' % tuple(lineOutputList),shell=True)
 
 def findScaffolds(args):
     with open('correspondence.bed','r') as f:
@@ -104,12 +107,23 @@ def findKmerNames(args):
             return listKmer
 
 def blast2bed(args):
-    blastFile = args[0]
-    with open(blastFile,'r') as f, open('blasted.bed','w') as f2:
-        for line in f:
-            if line:
-                l1 = line.split('\t')[1].split('::')[0] # FIXME .split('::')[0] added for blast+
-                f2.write('\t'.join([l1] + ['0',str(int(l1.split('_')[-1])-int(l1.split('_')[-2]))] + [line.split('\t')[0]])+'\n')
+    blastFile, BB = args
+    try:
+        BB = int(BB)
+    except:
+        BB = 0
+    if BB:
+        with open(blastFile,'r') as f, open('blasted.bed','w') as f2:
+            for line in f:
+                if line:
+                    l1 = line.split('\t')[2].split('::')[0]
+                    f2.write('\t'.join([l1] + ['0', str(int(l1.split('_')[-1]) - int(l1.split('_')[-2]))] + [line.split('\t')[0]]) + '\n')
+    else:
+        with open(blastFile,'r') as f, open('blasted.bed','w') as f2:
+            for line in f:
+                if line:
+                    l1 = line.split('\t')[1].split('::')[0] # FIXME .split('::')[0] added for blast+
+                    f2.write('\t'.join([l1] + ['0',str(int(l1.split('_')[-1])-int(l1.split('_')[-2]))] + [line.split('\t')[0]])+'\n')
 
     b = pybedtools.BedTool('blasted.bed').sort().merge(c=4,o='collapse',)
     b.saveas('blasted_merged.bed')
@@ -419,7 +433,7 @@ def transform_plot(args):
         if peak.startswith('recluster'):
             data = data.toarray()
         transformed_data = dimensionalityReducers[model].fit_transform(data)
-        np.save('%s_%s_transformed3D.npy'%(peak,model), transformed_data)
+        np.save('%s_%s_%d_transformed3D.npy'%(peak,model,n_subgenomes), transformed_data)
         if n_subgenomes > 2:
             transformed_data = KernelPCA(n_components=3).fit_transform(transformed_data)
         plots = []
@@ -701,75 +715,89 @@ def compareKmers(subgenomeFolder,kmercountPath):
             out2.write('>%s.%d.%d\n%s\n' % (key, val1, val2, key))
     out2.close()"""
 
-def blast2bed3(subgenomeFolder,blastPath, bedPath, sortPath, genome):
+def blast2bed3(subgenomeFolder,blastPath, bedPath, sortPath, genome,BB):
     """Takes a list of genotype files with only one column for pos and converts them to proper bedgraph format to be sorted"""
     print 'blast files contains'
     blastFiles = os.listdir(blastPath)
     print('\n'.join('{}: {}'.format(*k) for k in enumerate(blastFiles)))
+    if BB:
+        endname = '.sam'
+    else:
+        endname = '.BLAST.tsv.txt'
     for blastFile in blastFiles:
-        f = blastFile.rstrip()
-        outFileName = f[:f.rfind('.')]+'.bed3'
-        input_list = [blastPath, f]
-        inpath = '%s/%s' % tuple(input_list)
-        inputFile = open(inpath, 'r')
-        outpath = os.path.join(bedPath, outFileName)
-        bo = open(outpath, 'w')
-        for line in inputFile:
-            lineInList = line.split()
-            lineOutputList = [lineInList[1], int(lineInList[8]), int(lineInList[8])+1]
-            bo.write('%s\t%d\t%d\n' % tuple(lineOutputList))
-        inputFile.close()
-        bo.close()
-        sortedName = f[:f.rfind('.')] + '.sorted.bed3'
-        si = os.path.join(bedPath, outFileName)
-        so = os.path.join(sortPath, sortedName)
-        coveragename = subgenomeFolder + '/' + f[:f.rfind('.')] + '.sorted.cov'
-        if not os.path.exists(sortPath):
-            os.makedirs(sortPath)
-        b = BedTool(si)
-        # if chromosomes, then use the 1Mb window
-        if not os.path.exists(genome.replace('.fai','')+'.bed'):
-            fai2bed((genome,))
-        shutil.copy(genome.replace('.fai','')+'.bed',subgenomeFolder)
-        windows = '%s.bed' % genome
-        a = BedTool(subgenomeFolder + '/' + windows)
-        b.sort().saveas(so)
-        a.coverage(b).saveas(coveragename)
-        bedgname = f[:f.rfind('.')] + '.sorted.cov.bedgraph'
-        open(subgenomeFolder + '/' + bedgname, 'w').close()
-        bedgo = open(subgenomeFolder + '/' + bedgname, 'w')
-        covFile = open(coveragename, 'r')
-        for line in covFile:
-            lineInList = line.split()
-            lineOutputList = [lineInList[0], int(lineInList[1]), int(lineInList[2]), int(lineInList[3]) ]
-            bedgo.write('%s\t%d\t%d\t%d\n' % tuple(lineOutputList))
-        covFile.close()
-        bedgo.close()
+        if blastFile.endswith(endname):
+            f = blastFile.rstrip()
+            outFileName = f[:f.rfind('.')]+'.bed3'
+            input_list = [blastPath, f]
+            inpath = '%s/%s' % tuple(input_list)
+            inputFile = open(inpath, 'r')
+            outpath = os.path.join(bedPath, outFileName)
+            bo = open(outpath, 'w')
+            if BB:
+                for line in inputFile:
+                    lineInList = line.split()
+                    lineOutputList = [lineInList[2],int(lineInList[3]),int(lineInList[3])+1]
+                    bo.write('%s\t%d\t%d\n' % tuple(lineOutputList))
+                    """blast:ATATGTTGTAATATTTGAGCACT.322.13	Nt01_118425000_118500000	100.000	23	23	24631	24609	2.35e-04	46.1"""
+                    """sam:ATATGTTGTAATATTTGAGCACT.322.13  16      Nt01_118425000_118500000        24609   3       23=     *       0       0       AGTGCTCAAATATTACAACATAT *       XT:A:R  NM:i:0  AM:i:3"""
+            else:
+                for line in inputFile:
+                    lineInList = line.split()
+                    lineOutputList = [lineInList[1], int(lineInList[8]), int(lineInList[8])+1]
+                    bo.write('%s\t%d\t%d\n' % tuple(lineOutputList))
+            inputFile.close()
+            bo.close()
+            sortedName = f[:f.rfind('.')] + '.sorted.bed3'
+            si = os.path.join(bedPath, outFileName)
+            so = os.path.join(sortPath, sortedName)
+            coveragename = subgenomeFolder + '/' + f[:f.rfind('.')] + '.sorted.cov'
+            if not os.path.exists(sortPath):
+                os.makedirs(sortPath)
+            b = BedTool(si)
+            # if chromosomes, then use the 1Mb window
+            if not os.path.exists(genome.replace('.fai','')+'.bed'):
+                fai2bed((genome,))
+            shutil.copy(genome.replace('.fai','')+'.bed',subgenomeFolder)
+            windows = '%s.bed' % genome
+            a = BedTool(windows)
+            b.sort().saveas(so)
+            a.coverage(b).saveas(coveragename)
+            bedgname = f[:f.rfind('.')] + '.sorted.cov.bedgraph'
+            open(subgenomeFolder + '/' + bedgname, 'w').close()
+            bedgo = open(subgenomeFolder + '/' + bedgname, 'w')
+            covFile = open(coveragename, 'r')
+            for line in covFile:
+                lineInList = line.split()
+                lineOutputList = [lineInList[0], int(lineInList[1]), int(lineInList[2]), int(lineInList[5]) ]#int(lineInList[3]) ]
+                bedgo.write('%s\t%d\t%d\t%d\n' % tuple(lineOutputList))
+            covFile.close()
+            bedgo.close()
 
 def bed2unionBed(genome, subgenomeFolder, bedPath):
     # for blastFile in blastFiles:
     #     f = blastFile.rstrip()
     #     outFileName = f[:f.rfind('.')]+'.bed3'
-    blastFiles = os.listdir(bedPath)
-    bedFile = blastFiles[0]
-    f = bedFile.rstrip()
-    print f
-    inputName = f[:f.rfind('.')]
+    bedGraphFiles = [file for file in os.listdir(subgenomeFolder) if file.endswith('.sorted.cov.bedgraph')]
+    #bedFile = blastFiles[0]
+    #f = bedFile.rstrip()
+    #print f
+    inputName = 'subgenomes'#f[:f.rfind('.')]
     outputFileName = subgenomeFolder + '/' +inputName + '.union.bedgraph'
     genomeName = genome[:genome.rfind('.')]
     subprocess.call('cut -f 1-2 %s.fai > %s.genome'%(genome,subgenomeFolder + '/genome'),shell=True)
     genomeFile = subgenomeFolder + '/genome.genome'
-    a_blast = blastFiles[0]
-    b_blast = blastFiles[1]
-    a_name = a_blast[:a_blast.rfind('.')] + '.sorted.cov.bedgraph'
-    b_name = b_blast[:b_blast.rfind('.')] + '.sorted.cov.bedgraph'
-    a = pybedtools.BedTool(a_name)
-    a_sort = a.sort()
-    b = pybedtools.BedTool(b_name)
-    b.sort()
-    b_sort = b.sort()
-    x = pybedtools.BedTool()
-    result = x.union_bedgraphs(i=[a_sort.fn, b_sort.fn], g=genomeFile, empty=True)
+    #a_blast = blastFiles[0]
+    #b_blast = blastFiles[1]
+    #a_name = a_blast[:a_blast.rfind('.')] + '.sorted.cov.bedgraph'
+    #b_name = b_blast[:b_blast.rfind('.')] + '.sorted.cov.bedgraph'
+    #a = pybedtools.BedTool(a_name)
+    #a_sort = a.sort()
+    #b = pybedtools.BedTool(b_name)
+    #b.sort()
+    #b_sort = b.sort()
+    bedGraphBedSortFn = [BedTool(subgenomeFolder+'/' + file).sort().fn for file in bedGraphFiles]
+    x = BedTool()
+    result = x.union_bedgraphs(i=bedGraphBedSortFn, g=genomeFile, empty=True)
     result.saveas(outputFileName)
 
 def make_plots(genome, bedFiles):
@@ -787,22 +815,39 @@ def make_plots(genome, bedFiles):
         print 'Unable to run %s via command line..' % dbscriptName
 
 def kmerratio2scaffasta(subgenomePath, genome):
-    a = subgenomePath + '/' + [file for file in os.listdir(subgenomePath) if 'union.bedgraph' in file][0]
+    a = subgenomePath + '/subgenomes.union.bedgraph'#[file for file in os.listdir(subgenomePath) if 'union.bedgraph' in file][0]
     ubedg = open(a, 'r')
     genomeFastaObj = Fasta(genome)
-
+    extractPath = subgenomePath+'/extractedSubgenomes/'
+    try:
+        os.mkdir(extractPath)
+    except:
+        pass
     ### define output filenames
-    genomeprefix = genome[:genome.rfind('.')]
-    o1 = subgenomePath + '/' + genomeprefix + '.subgenomeA.fasta'
-    o2 = subgenomePath + '/' + genomeprefix + '.subgenomeB.fasta'
-    o1h = open(o1, 'w')
-    o2h = open(o2, 'w')
+    genomeprefix = genome[genome.rfind('/')+1:genome.rfind('.')]
+    outputSubgenomes = [extractPath + genomeprefix + '.subgenome' + chr(i+65) + '.fasta' for i in range(len(ubedg.readline().split('\t')[3:]))]
+    ubedg.seek(0)
+    scaffoldsOut = [[] for subgenome in outputSubgenomes]#{subgenome:[] for subgenome in outputSubgenomes}
+
 
     # parse the unionbed file to subset
     for line in ubedg:
         if line:#'Chr' in line or 'chr' in line or 'B' in line or 'Sc' in line:
             # print line
-            scaff = str((line.split()[0]).rstrip())
+            lineList = line.split('\t')
+            scaff = str((lineList[0]).rstrip())
+            x = [float((lineList[i]).rstrip()) for i in range(3,len(lineList))]
+            for i in range(len(x)):
+                x_others = x[:i] + x[i+1:]
+                if all([(x_i == 0 and x[i] > 10) or (x_i > 0 and (x[i]/x_i) > 2) for x_i in x_others]):
+                    scaffoldsOut[i].append(scaff)
+    ubedg.close()
+    for subgenome, scaffolds in zip(outputSubgenomes,scaffoldsOut):
+        with open(subgenome,'w') as f:
+            for scaff in scaffolds:
+                f.write('>%s\n%s\n' % (scaff, str(genomeFastaObj[scaff][:])))
+        subprocess.call('reformat.sh in=%s out=%s fastawrap=60'%(subgenome,subgenome.replace('.fasta','_wrapped.fasta')),shell=True)
+    """
             x3 = float((line.split()[3]).rstrip())
             #print 'my x3 is %s\n' % x3
             x4 = float((line.split()[4]).rstrip())
@@ -816,13 +861,16 @@ def kmerratio2scaffasta(subgenomePath, genome):
             elif x3 == 0 and x4 > 10:
                 o2h.write('>%s\n%s\n' % (scaff, str(genomeFastaObj[scaff][:])))
     o1h.close()
-    o2h.close()
-    ubedg.close()
+    o2h.close()"""
+
 
 def subgenomeExtraction(args):
-    subgenome_folder, fastaPath, genomeName, originalGenome = args
+    subgenome_folder, fastaPath, genomeName, originalGenome, BB = args
     bedDict = fai2bed((fastaPath+genomeName,))
-
+    try:
+        BB = int(BB)
+    except:
+        BB = 0
     for file in os.listdir(subgenome_folder):
         if file and file.endswith('.txt'):
             with open(subgenome_folder+'/'+file,'r') as f,open(subgenome_folder+'/'+file.replace('.txt','.bed'),'w') as f2:
@@ -846,23 +894,31 @@ def subgenomeExtraction(args):
     except:
         pass
     writeKmerCountSubgenome((subgenome_folder,0))
-    writeBlast((originalGenome,blastPath,subgenome_folder+'/kmercount_files/',fastaPath))
-    blast2bed3(subgenome_folder, blastPath, bedPath, sortPath, fastaPath+originalGenome)
+    writeBlast((originalGenome,blastPath,subgenome_folder+'/kmercount_files/',fastaPath,BB))
+    blast2bed3(subgenome_folder, blastPath, bedPath, sortPath, fastaPath+originalGenome, BB)
     bed2unionBed(fastaPath+originalGenome, subgenome_folder, bedPath)
     kmerratio2scaffasta(subgenome_folder, fastaPath+originalGenome)
     #make_plots(genome, bedFiles)
 
 def generateKmerGraph(args):
-    kmerPath, kmerName, n_subgenomes = args
+    kmerPath, kmerName, n_subgenomes, BB = args
     try:
         n_subgenomes = int(n_subgenomes)
     except:
         n_subgenomes = 2
+    try:
+        BB = int(BB)
+    except:
+        BB = 0
+    if BB:
+        k = 2
+    else:
+        k = 1
     blastPath = kmerPath + '/' + kmerName + '/'
     with open(blastPath+ kmerName + '.blast.txt', 'r') as f, open(blastPath + 'blasted.bed', 'w') as f2:
         for line in f:
             if line:
-                l1 = line.split('\t')[1]
+                l1 = line.split('\t')[k].split('::')[0]
                 f2.write('\t'.join([l1] + ['0', str(int(l1.split('_')[-1]) - int(l1.split('_')[-2]))] + [
                     line.split('\t')[0]]) + '\n')
 
@@ -883,7 +939,7 @@ def generateKmerGraph(args):
 
     histData = np.array([kmerGraph.degree(kmer) for kmer in kmerGraph.nodes()])[:, np.newaxis]
     xplot = np.linspace(0, np.max(histData), 300000)[:, np.newaxis]
-    kde = KernelDensity(kernel='gaussian', bandwidth=25).fit(histData)
+    kde = KernelDensity(kernel='gaussian', bandwidth=np.max(histData)/18.).fit(histData)
     exp_log_dens = np.exp(kde.score_samples(xplot))
 
     idxs_peaks = argrelextrema(exp_log_dens, np.greater)[0]  # peakutils.indexes(exp_log_dens)
@@ -913,12 +969,12 @@ def generateKmerGraph(args):
     #2d graph
     plt.figure()
     plt.axis('off')
-    nx.draw_networkx(kmerGraph, pos=nx.spring_layout(kmerGraph), edge_color='b')#nodecolor='r'
+    nx.draw_networkx(kmerGraph, pos=nx.spring_layout(kmerGraph), edge_color='b', with_labels=0)#nodecolor='r'
     plt.savefig(blastPath + 'kmerGraph_%s.png'%(kmerName), bbox_inches="tight")
 
     #3d graph
     plt.figure()
-    pos = nx.spring_layout(kmerGraph,k=0.7,iterations=50,scale=5,dim=3)
+    pos = nx.spring_layout(kmerGraph,dim=3)#,k=0.7,iterations=50,scale=5,dim=3)
     Xed = []
     Yed = []
     Zed = []
@@ -927,10 +983,12 @@ def generateKmerGraph(args):
         Yed += [pos[edge[0]][1], pos[edge[1]][1], None]
         Zed += [pos[edge[0]][2], pos[edge[1]][2], None]
     plots = []
-
-    intervals = [(0., xplot[idxs_valleys[0]][0])] + [(xplot[idxs_valleys[i]][0], xplot[idxs_valleys[i + 1]][0]) for i in
-                                                     range(len(idxs_valleys) - 1)] + [
-                    (xplot[idxs_valleys[-1]][0], xplot[-1][0])]
+    if len(idxs_valleys) > 0:
+        intervals = [(0., xplot[idxs_valleys[0]][0])] + [(xplot[idxs_valleys[i]][0], xplot[idxs_valleys[i + 1]][0]) for i in
+                                                         range(len(idxs_valleys) - 1)] + [
+                        (xplot[idxs_valleys[-1]][0], xplot[-1][0])]
+    else:
+        intervals = [(0.,np.max(histData))]
     N = len(intervals)
     c = ['hsl(' + str(h) + ',50%' + ',50%)' for h in np.linspace(0, 360, N+1)]
 
