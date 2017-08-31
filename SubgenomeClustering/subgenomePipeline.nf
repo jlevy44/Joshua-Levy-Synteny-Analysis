@@ -70,7 +70,7 @@ kmerGraph = findValue('kmerGraph ').asType(Integer);
 genomeSplitName = genome - '_split' - '.fa' + '_split.fa';
 blastDBName = genomeSplitName - '.fa';
 genomeFullPath = fastaPath + genomeSplitName;
-
+n_clusters = (n_subgenomes.asType(Integer) + 1).asType(String);
 //genome2 = { original == 1 ? genome - '\n' : genomeSplitName };
 //println genome2
 //originalGenome = { original == 1 ? fastaPath + genome : genomeFullPath };
@@ -124,6 +124,7 @@ else
     """
 
 }
+
 
 genomeChan3 = genomeChan2.last()
 
@@ -449,13 +450,13 @@ if(clust == 1)
     cd ${workingDir}
     python subgenomeClusteringInterface.py cluster ${transformedData}transformed3D.npy ${reclusterPath} ${best500kmerPath} ${model} ${n_subgenomes}
     cd -
-    echo kmer500Best_${model}${transformedData}n3.fa > test.txt
-    echo ${model}${transformedData}n3 > test2.txt
+    echo kmer500Best_${model}${transformedData}n${n_clusters}.fa > test.txt
+    echo ${model}${transformedData}n${n_clusters} > test2.txt
     """
 else
     """
-    echo kmer500Best_${model}${transformedData}n3.fa > test.txt
-    echo ${model}${transformedData}n3 > test2.txt
+    echo kmer500Best_${model}${transformedData}n${n_clusters}.fa > test.txt
+    echo ${model}${transformedData}n${n_clusters} > test2.txt
     """
 
 }
