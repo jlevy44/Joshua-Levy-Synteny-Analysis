@@ -193,6 +193,10 @@ def kmerRelatedHistogram(args):
 
 def splitFasta(args):
     fastaFile = Fasta(args[1] + args[0])
+    try:
+        splitLength = int(args[2])
+    except:
+        splitLength = 75000
 
     global inputStr
     global key
@@ -232,7 +236,7 @@ def splitFasta(args):
     bedText = []
     for key in fastaFile.keys():
         inputStr = fastaFile[key][:].seq
-        bedText += split(inputStr,75000)
+        bedText += split(inputStr,splitLength)
     with open('correspondence.bed','w') as f:
         f.write('\n'.join(bedText))
     BedTool('correspondence.bed').sort().saveas('correspondence.bed')
@@ -478,7 +482,10 @@ def cluster(args):
             if n_subgenomes > 2:
                 reduction = KernelPCA(n_components=3)
                 reduction.fit(transformed_data)
-                transformed_data2 = StandardScaler().fit_transform(reduction.transform(transformed_data))
+                reductionT = reduction.transform(transformed_data)
+                scaledfit = StandardScaler()
+                scaledfit.fit(reductionT)
+                transformed_data2 = scaledfit.transform(reductionT)
             else:
                 transformed_data2 = transformed_data
             if hasattr(algorithm, 'labels_'):
@@ -510,7 +517,7 @@ def cluster(args):
 
             if hasattr(algorithm, 'cluster_centers_'):
                 if n_subgenomes > 2:
-                    centers = StandardScaler().fit_transform(reduction.transform(algorithm.cluster_centers_)) #FIXME modify!!! need scaler fitted model from transformeddata
+                    centers = scaledfit.transform(reduction.transform(algorithm.cluster_centers_)) #FIXME modify!!! need scaler fitted model from transformeddata
                 else:
                     centers = algorithm.cluster_centers_
                 plots.append(
@@ -565,7 +572,10 @@ def cluster(args):
             if n_subgenomes > 2:
                 reduction = KernelPCA(n_components=3)
                 reduction.fit(transformed_data)
-                transformed_data2 = StandardScaler().fit_transform(reduction.transform(transformed_data))
+                reductionT = reduction.transform(transformed_data)
+                scaledfit = StandardScaler()
+                scaledfit.fit(reductionT)
+                transformed_data2 = scaledfit.transform(reductionT)
             else:
                 transformed_data2 = transformed_data
             if hasattr(algorithm, 'labels_'):
@@ -591,16 +601,16 @@ def cluster(args):
                     if clusterSize[key] == min(clusterSize.values()):
                         testCluster = key
                     plots.append(
-                        go.Scatter3d(x=transformed_data[y_pred == key, 0],
-                                     y=transformed_data[y_pred == key, 1],
-                                     z=transformed_data[y_pred == key, 2],
+                        go.Scatter3d(x=transformed_data2[y_pred == key, 0],
+                                     y=transformed_data2[y_pred == key, 1],
+                                     z=transformed_data2[y_pred == key, 2],
                                      name='Cluster %d, %d points, %f distance' % (key, len(cluster_scaffolds),clusterSize[key]),
                                      mode='markers',
                                      marker=dict(color=c[key], size=2), text=cluster_scaffolds))
 
             if hasattr(algorithm, 'cluster_centers_'):
                 if n_subgenomes > 2:
-                    centers = StandardScaler().fit_transform(reduction.transform(algorithm.cluster_centers_)) #FIXME modify
+                    centers = scaledfit.transform(reduction.transform(algorithm.cluster_centers_)) #FIXME modify
                 else:
                     centers = algorithm.cluster_centers_
                 plots.append(

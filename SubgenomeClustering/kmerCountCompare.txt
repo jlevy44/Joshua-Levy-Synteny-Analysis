@@ -17,6 +17,7 @@ BB = 1
 n_subgenomes = 2
 save = 1
 splitFasta = 0
+splitFastaLineLegnth = 75000
 writeKmer = 0
 kmer2Fasta = 0
 original = 0

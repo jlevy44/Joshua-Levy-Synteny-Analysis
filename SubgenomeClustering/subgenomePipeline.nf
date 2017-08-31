@@ -38,6 +38,7 @@ genome = findValue('genome ' );
 peakPath = findValue(' peakPath');
 BBstr = findValue('BB ');
 n_subgenomes = findValue('n_subgenomes ');
+splitLength = findValue('splitFastaLineLegnth ');
 
 
 //preprocess = findValue('preprocess ').asType(Integer);
@@ -116,7 +117,7 @@ if(splitFast == 1)
     """
     #!/bin/bash
     cd ${workingDir}
-    python subgenomeClusteringInterface.py splitFasta ${genomeName} ${fastaPath}
+    python subgenomeClusteringInterface.py splitFasta ${genomeName} ${fastaPath} ${splitFastaLineLength}
     """
 else
     """
