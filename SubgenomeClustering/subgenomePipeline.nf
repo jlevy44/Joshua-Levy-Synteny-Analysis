@@ -39,6 +39,8 @@ peakPath = findValue(' peakPath');
 BBstr = findValue('BB ');
 n_subgenomes = findValue('n_subgenomes ');
 splitLength = findValue('splitFastaLineLegnth ');
+bootstrap = findValue('bootstrap ');
+kmerLength = findValue('kmerLength ');
 
 
 //preprocess = findValue('preprocess ').asType(Integer);
@@ -117,7 +119,7 @@ if(splitFast == 1)
     """
     #!/bin/bash
     cd ${workingDir}
-    python subgenomeClusteringInterface.py splitFasta ${genomeName} ${fastaPath} ${splitFastaLineLength}
+    python subgenomeClusteringInterface.py splitFasta ${genomeName} ${fastaPath} ${splitLength}
     """
 else
     """
@@ -151,7 +153,7 @@ if(writeKmer == 1)
     """
     #!/bin/bash
     cd ${workingDir}
-    python subgenomeClusteringInterface.py writeKmerCount ${fastaPath} ${kmercountPath}
+    python subgenomeClusteringInterface.py writeKmerCount ${fastaPath} ${kmercountPath} ${kmerLength}
     """
 else
     """
@@ -488,7 +490,7 @@ if(extract == 1)
     """
     #!/bin/bash
     cd ${workingDir}
-    python subgenomeClusteringInterface.py subgenomeExtraction ./analysisOutputs/${subgenomeFolder} ${fastaPath} ${genomeSplitName} ${genome2} ${BBstr}
+    python subgenomeClusteringInterface.py subgenomeExtraction ./analysisOutputs/${subgenomeFolder} ${fastaPath} ${genomeSplitName} ${genome2} ${BBstr} ${bootstrap} 0 ${kmerLength}
     """
 else
     """

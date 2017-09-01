@@ -41,16 +41,16 @@ from itertools import combinations
 
 def writeKmercount(args):
     """Takes list of fasta files and runs kmercountexact.sh to generate with only one column for pos and converts them to proper bedgraph format to be sorted"""
-    fastaPath, kmercountPath = args
+    fastaPath, kmercountPath, kmerLength = args
     for fastaFile in os.listdir(fastaPath):
         if (fastaFile.endswith('.fa') or fastaFile.endswith('.fasta')) and '_split' in fastaFile:
             f = fastaFile.rstrip()
             print f
             scriptName = f[:f.rfind('.')] + '.sh'
             outFileName = f[:f.rfind('.')]+'.kcount'
-            lineOutputList = [fastaPath, fastaFile, kmercountPath, outFileName]
+            lineOutputList = [fastaPath, fastaFile, kmercountPath, outFileName, kmerLength]
             bbtoolsI = open(scriptName, 'w')
-            bbtoolsI.write('#!/bin/bash\nmodule load bbtools\nkmercountexact.sh overwrite=true fastadump=f mincount=3 in=%s/%s out=%s/%s k=23 -Xmx100g\n' % tuple(lineOutputList))
+            bbtoolsI.write('#!/bin/bash\nmodule load bbtools\nkmercountexact.sh overwrite=true fastadump=f mincount=3 in=%s/%s out=%s/%s k=%s -Xmx100g\n' % tuple(lineOutputList))
             bbtoolsI.close()
             try:
                 subprocess.call('sh %s' % scriptName, shell=True)#nohup
@@ -642,7 +642,7 @@ def fai2bed(args):
     return bedFastaDict
 
 def writeKmerCountSubgenome(args):
-    subgenomeFolder, null  = args
+    subgenomeFolder, kmerLength  = args
     try:
         os.mkdir(subgenomeFolder+'/kmercount_files/')
     except:
@@ -653,8 +653,8 @@ def writeKmerCountSubgenome(args):
             f = fastaFile.rstrip()
             print f
             outFileName = f[:f.rfind('.')] + '.kcount'
-            lineOutputList = [subgenomeFolder+'/', fastaFile, kmercountPath, outFileName]
-            subprocess.call('module load bbtools && kmercountexact.sh overwrite=true fastadump=f mincount=3 in=%s/%s out=%s/%s k=23 -Xmx60g' % tuple(
+            lineOutputList = [subgenomeFolder+'/', fastaFile, kmercountPath, outFileName,kmerLength]
+            subprocess.call('module load bbtools && kmercountexact.sh overwrite=true fastadump=f mincount=3 in=%s/%s out=%s/%s k=%s -Xmx60g' % tuple(
                     lineOutputList),shell=True)
 
     compareKmers(subgenomeFolder, kmercountPath)
@@ -824,7 +824,8 @@ def make_plots(genome, bedFiles):
     except:
         print 'Unable to run %s via command line..' % dbscriptName
 
-def kmerratio2scaffasta(subgenomePath, genome):
+def kmerratio2scaffasta(subgenomePath, fastaPath, genomeName, originalGenome, BB, bootstrap, iteration, kmerLength):
+    genome = fastaPath + genomeName
     a = subgenomePath + '/subgenomes.union.bedgraph'#[file for file in os.listdir(subgenomePath) if 'union.bedgraph' in file][0]
     ubedg = open(a, 'r')
     genomeFastaObj = Fasta(genome)
@@ -857,6 +858,19 @@ def kmerratio2scaffasta(subgenomePath, genome):
             for scaff in scaffolds:
                 f.write('>%s\n%s\n' % (scaff, str(genomeFastaObj[scaff][:])))
         subprocess.call('reformat.sh in=%s out=%s fastawrap=60'%(subgenome,subgenome.replace('.fasta','_wrapped.fasta')),shell=True)
+    if iteration == 0:
+        subgenomePath = subgenomePath + '/bootstrap_1'
+    if iteration < bootstrap:
+        iteration += 1
+        subgenomePath = subgenomePath[:subgenomePath.rfind('/')] + '/bootstrap_%d' % (iteration)
+        try:
+            os.mkdir(subgenomePath)
+        except:
+            pass
+        for i, scaffolds in enumerate(scaffoldsOut):
+            with open(subgenomePath + '/subgenome_%d.txt'%i,'w') as f:
+                f.write('\n'.join(scaffolds))
+        subgenomeExtraction((subgenomePath, fastaPath, genomeName, originalGenome, BB, bootstrap, iteration, kmerLength))
     """
             x3 = float((line.split()[3]).rstrip())
             #print 'my x3 is %s\n' % x3
@@ -875,8 +889,14 @@ def kmerratio2scaffasta(subgenomePath, genome):
 
 
 def subgenomeExtraction(args):
-    subgenome_folder, fastaPath, genomeName, originalGenome, BB = args
+    subgenome_folder, fastaPath, genomeName, originalGenome, BB, bootstrap, iteration, kmerLength = args
     bedDict = fai2bed((fastaPath+genomeName,))
+    try:
+        bootstrap = int(bootstrap)
+        iteration = int(iteration)
+    except:
+        bootstrap = 0
+        iteration = 0
     try:
         BB = int(BB)
     except:
@@ -903,11 +923,11 @@ def subgenomeExtraction(args):
         os.mkdir(sortPath)
     except:
         pass
-    writeKmerCountSubgenome((subgenome_folder,0))
+    writeKmerCountSubgenome((subgenome_folder,kmerLength))
     writeBlast((originalGenome,blastPath,subgenome_folder+'/kmercount_files/',fastaPath,BB))
     blast2bed3(subgenome_folder, blastPath, bedPath, sortPath, fastaPath+originalGenome, BB)
     bed2unionBed(fastaPath+originalGenome, subgenome_folder, bedPath)
-    kmerratio2scaffasta(subgenome_folder, fastaPath+originalGenome)
+    kmerratio2scaffasta(subgenome_folder, fastaPath, genomeName, originalGenome, BB, bootstrap, iteration, kmerLength)
     #make_plots(genome, bedFiles)
 
 def generateKmerGraph(args):
