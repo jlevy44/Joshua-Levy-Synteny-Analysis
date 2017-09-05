@@ -41,8 +41,8 @@
       <file leaf-file-name="subgenomeClusteringInterface.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/SubgenomeClustering/subgenomeClusteringInterface.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="41">
-              <caret line="995" column="49" lean-forward="false" selection-start-line="995" selection-start-column="49" selection-end-line="995" selection-end-column="49" />
+            <state relative-caret-position="-139">
+              <caret line="1026" column="94" lean-forward="false" selection-start-line="1026" selection-start-column="94" selection-end-line="1026" selection-end-column="94" />
               <folding>
                 <element signature="e#0#14#0" expanded="true" />
               </folding>
@@ -72,7 +72,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>n3</find>
       <find>75000</find>
       <find>subgenome_</find>
       <find>23</find>
@@ -102,6 +101,7 @@
       <find>kmer2fas</find>
       <find>bbmap</find>
       <find>classify</find>
+      <find>ambiguous.k</find>
     </findStrings>
     <replaceStrings>
       <replace>val</replace>
@@ -764,7 +764,14 @@
       <option name="project" value="LOCAL" />
       <updated>1504647298433</updated>
     </task>
-    <option name="localTasksCounter" value="49" />
+    <task id="LOCAL-00049" summary="debugging classification part... Added spectral clustering">
+      <created>1504649700247</created>
+      <option name="number" value="00049" />
+      <option name="presentableId" value="LOCAL-00049" />
+      <option name="project" value="LOCAL" />
+      <updated>1504649700247</updated>
+    </task>
+    <option name="localTasksCounter" value="50" />
     <servers />
   </component>
   <component name="TodoView">
@@ -1199,8 +1206,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/SubgenomeClustering/subgenomeClusteringInterface.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="41">
-          <caret line="995" column="49" lean-forward="false" selection-start-line="995" selection-start-column="49" selection-end-line="995" selection-end-column="49" />
+        <state relative-caret-position="-139">
+          <caret line="1026" column="94" lean-forward="false" selection-start-line="1026" selection-start-column="94" selection-end-line="1026" selection-end-column="94" />
           <folding>
             <element signature="e#0#14#0" expanded="true" />
           </folding>

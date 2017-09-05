@@ -1024,7 +1024,7 @@ def classify(classifyFolder, fastaPath, genomeName, kmerLength):
                     f2.write('\t'.join([l1] + ['0', str(int(l1.split('_')[-1]) - int(l1.split('_')[-2]))] + [
                         line.split('\t')[0]]) + '\n')
 
-        kmerIdx = {line[1].split('\t')[0] : line[0] for line in enumerate(open('ambiguous.kcount','r').readlines())}
+        kmerIdx = {line[1].split('\t')[0] : line[0] for line in enumerate(open(classifyFolder+'ambiguous.kcount','r').readlines())}
         scaffoldIdx = {scaffold[1] : scaffold[0] for scaffold in enumerate(scaffolds)}
         data = sps.dok_matrix((len(scaffolds), len(kmerIdx.values())), dtype=np.float32)
         b = pybedtools.BedTool(classifyFolder + 'blasted.bed').sort().merge(c=4, o='collapse', )
