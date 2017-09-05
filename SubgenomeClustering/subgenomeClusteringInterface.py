@@ -21,6 +21,7 @@ import pyamg
 #import peakutils
 from sklearn.feature_selection import SelectKBest
 from sklearn.pipeline import Pipeline
+from sklearn.neighbors import NearestNeighbors, KNeighborsClassifier
 from sklearn.neighbors import KernelDensity
 from collections import defaultdict
 from scipy.signal import argrelextrema
@@ -36,6 +37,8 @@ from sklearn.feature_selection import chi2
 import scipy.sparse as sps
 import networkx as nx
 from itertools import combinations
+from networkx.algorithms.components import *
+
 
 
 
@@ -92,7 +95,7 @@ def writeBlast(args):
         else:
             subprocess.call('module load blast+/2.6.0 && blastn -db ./%s.blast_db -query %s -task "blastn-short" -outfmt 6 -out %s/%s -num_threads 8 -evalue 1e-2' % tuple(lineOutputList),shell=True)
 
-def findScaffolds(args):
+def findScaffolds(args=''):
     with open('correspondence.bed','r') as f:
         lineList = sorted([line.split('\t')[-1].strip('\n') for line in f.readlines() if line])
     return lineList
@@ -452,14 +455,16 @@ def transform_plot(args):
 
 def cluster(args):
     file, reclusterFolder, kmer500Path, clusterMethod, n_subgenomes = args
+    print clusterMethod
     try:
         n_subgenomes = int(n_subgenomes)
     except:
         n_subgenomes = 2
     n_clusters = n_subgenomes + 1
-    clustering_algorithms = {'SpectralClustering': SpectralClustering(n_clusters=n_clusters, eigen_solver='lobpcg', affinity= 'nearest_neighbors', n_neighbors=30,random_state=42),#,gamma=1),arpack#amg,affinity="nearest_neighbors")#, n_neighbors=30, gamma=1),# nearestneighbors
+    clustering_algorithms = {'SpectralClustering': SpectralClustering(n_clusters=n_clusters, eigen_solver='amg', affinity= 'precomputed', random_state=42),#,gamma=1),arpack#amg,affinity="nearest_neighbors")#, n_neighbors=30, gamma=1),# nearestneighbors
                              'KMeans': MiniBatchKMeans(n_clusters=n_clusters)}
     name, algorithm = clusterMethod , clustering_algorithms[clusterMethod]
+    metric = 'cosine'
     if 'recluster' not in file:
         dataOld = sps.load_npz('clusteringMatrix.npz')
         scaffolds = pickle.load(open('scaffolds.p', 'rb'))
@@ -478,7 +483,43 @@ def cluster(args):
         #for name, algorithm in zip(clustering_names, clustering_algorithms):
             #try:
         if os.path.exists(name + Tname + 'n%d' % n_clusters + 'ClusterTest.html') == 0:
-            algorithm.fit(transformed_data)
+            try:
+                os.mkdir('analysisOutputs/' + name + Tname + 'n%d' % n_clusters)
+            except:
+                pass
+
+            if clusterMethod == 'SpectralClustering':
+                #try:
+                neigh = NearestNeighbors(n_neighbors=10, algorithm = 'brute' , metric=metric)
+                #except:
+                #    print 'NN not working'
+                neigh.fit(transformed_data)
+                fit_data = neigh.kneighbors_graph(transformed_data)
+                G = nx.from_scipy_sparse_matrix(fit_data)
+                mapping = {i: scaffolds[i] for i in range(len(scaffolds))}
+                G = nx.relabel_nodes(G, mapping, copy=False)
+                #print list(connected_component_subgraphs(G))[0]
+                #print sorted(nx.connected_components(G), key=len, reverse=True)
+                gs = list(connected_component_subgraphs(G))[0]
+                scaffolds2 = gs.nodes()
+                #print scaffolds2
+                scaffBool = np.vectorize(lambda scaffold: scaffold in scaffolds2)(scaffolds)
+                fit_data = nx.to_scipy_sparse_matrix(gs)
+                dataOld = dataOld[scaffBool]
+                transformed_data = transformed_data[scaffBool]
+                scaffolds_noconnect = list(np.array(scaffolds)[scaffBool == False])
+                scaffolds = scaffolds2
+                # FIXME do something with thrown out points in future
+                sps.save_npz('analysisOutputs/' + name + Tname + 'n%d' % n_clusters +'/spectralGraph.npz', fit_data.tocsc())
+                pickle.dump(scaffolds,open('analysisOutputs/' + name + Tname + 'n%d' % n_clusters + '/scaffolds_connect.p', 'wb'))
+                pickle.dump(scaffolds_noconnect,open('analysisOutputs/' + name + Tname + 'n%d' % n_clusters + '/scaffolds_noconnect.p', 'wb'))
+                #clusterGraph(('analysisOutputs/' + name + Tname + 'n%d' % n_clusters +'/spectralGraph.npz','analysisOutputs/' + name + Tname + 'n%d' % n_clusters + '/scaffolds_connect.p','analysisOutputs/' + name + Tname + 'n%d' % n_clusters))
+                # above takes too much time!!! fix please :)
+                # sps.save_npz('spectralGraph.npz',fit_data)
+                # print fit_data.toarray()
+            else:
+                fit_data = transformed_data
+            algorithm.fit(fit_data)
             if n_subgenomes > 2:
                 reduction = KernelPCA(n_components=3)
                 reduction.fit(transformed_data)
@@ -497,10 +538,7 @@ def cluster(args):
             # plot
             plots = []
             clusterSize = defaultdict(list)
-            try:
-                os.mkdir('analysisOutputs/' + name + Tname + 'n%d' % n_clusters)
-            except:
-                pass
+
 
             for key in set(y_pred):
                 # print key
@@ -551,82 +589,84 @@ def cluster(args):
             #except:
                 #print 'Unable to cluster completely using ' + name + ' for ' + Tname
     else:
-        scaffolds = pickle.load(open('scaffolds.p', 'rb'))
-        # kmerIdx = {i : kmer for i, kmer in enumerate(kmers)}
-        Tname = file.split('transformed3D')[0]
-        transformed_data = np.load(file)
+        print 'Exception!!!'
+        if clusterMethod != 'SpectralClustering':
+            scaffolds = pickle.load(open('scaffolds.p', 'rb'))
+            # kmerIdx = {i : kmer for i, kmer in enumerate(kmers)}
+            Tname = file.split('transformed3D')[0]
+            transformed_data = np.load(file)
 
-        transformed_data = StandardScaler().fit_transform(transformed_data)
+            transformed_data = StandardScaler().fit_transform(transformed_data)
 
-        #clustering_names = ['SpectralClustering', 'KMeans']
-        #n_clusters = 3
+            #clustering_names = ['SpectralClustering', 'KMeans']
+            #n_clusters = 3
 
-        #clustering_algorithms = {'SpectralClustering':SpectralClustering(n_clusters=n_clusters, eigen_solver='amg', affinity="nearest_neighbors", gamma=1),
-        #                         'KMeans':MiniBatchKMeans(n_clusters=3)}
+            #clustering_algorithms = {'SpectralClustering':SpectralClustering(n_clusters=n_clusters, eigen_solver='amg', affinity="nearest_neighbors", gamma=1),
+            #                         'KMeans':MiniBatchKMeans(n_clusters=3)}
 
 
-        #for name, algorithm in zip(clustering_names, clustering_algorithms):
-            #try:
-        if os.path.exists(name + Tname + 'n%d' % n_clusters + '500kmerreclusterTest.html') == 0: #.isfile
-            algorithm.fit(transformed_data)
-            if n_subgenomes > 2:
-                reduction = KernelPCA(n_components=3)
-                reduction.fit(transformed_data)
-                reductionT = reduction.transform(transformed_data)
-                scaledfit = StandardScaler()
-                scaledfit.fit(reductionT)
-                transformed_data2 = scaledfit.transform(reductionT)
-            else:
-                transformed_data2 = transformed_data
-            if hasattr(algorithm, 'labels_'):
-                y_pred = algorithm.labels_.astype(np.int)
-            else:
-                y_pred = algorithm.predict(transformed_data)
-            N = len(set(y_pred))
-            c = ['hsl(' + str(h) + ',50%' + ',50%)' for h in np.linspace(0, 360, N)]
-            # plot
-            plots = []
-            clusterSize = defaultdict(list)
-            try:
-                os.mkdir('analysisOutputs/' + name + Tname + 'n%d' % n_clusters)
-            except:
-                pass
-            for key in set(y_pred):
-                # print key
-                cluster_scaffolds = np.array(scaffolds)[y_pred == key]
-                if list(cluster_scaffolds):
-                    clusterSize[key] = np.mean(np.apply_along_axis(lambda x: np.linalg.norm(x), 1,
-                                                                   transformed_data[y_pred == key,
-                                                                   :]))  # len(cluster_scaffolds)
-                    if clusterSize[key] == min(clusterSize.values()):
-                        testCluster = key
-                    plots.append(
-                        go.Scatter3d(x=transformed_data2[y_pred == key, 0],
-                                     y=transformed_data2[y_pred == key, 1],
-                                     z=transformed_data2[y_pred == key, 2],
-                                     name='Cluster %d, %d points, %f distance' % (key, len(cluster_scaffolds),clusterSize[key]),
-                                     mode='markers',
-                                     marker=dict(color=c[key], size=2), text=cluster_scaffolds))
-
-            if hasattr(algorithm, 'cluster_centers_'):
+            #for name, algorithm in zip(clustering_names, clustering_algorithms):
+                #try:
+            if os.path.exists(name + Tname + 'n%d' % n_clusters + '500kmerreclusterTest.html') == 0: #.isfile
+                algorithm.fit(transformed_data)
                 if n_subgenomes > 2:
-                    centers = scaledfit.transform(reduction.transform(algorithm.cluster_centers_)) #FIXME modify
+                    reduction = KernelPCA(n_components=3)
+                    reduction.fit(transformed_data)
+                    reductionT = reduction.transform(transformed_data)
+                    scaledfit = StandardScaler()
+                    scaledfit.fit(reductionT)
+                    transformed_data2 = scaledfit.transform(reductionT)
                 else:
-                    centers = algorithm.cluster_centers_
-                plots.append(
-                    go.Scatter3d(x=centers[:, 0], y=centers[:, 1], z=centers[:, 2], mode='markers',
-                                 marker=dict(color='purple', symbol='circle', size=12),
-                                 opacity=0.4,
-                                 name='Centroids'))
-            for key in set(y_pred)-{testCluster}:
-                with open('analysisOutputs/' + name + Tname + 'n%d' % n_clusters + '/recluster_subgenome_%d.txt' % key, 'w') as f:
-                    f.write('\n'.join(np.array(scaffolds)[y_pred == key]))
+                    transformed_data2 = transformed_data
+                if hasattr(algorithm, 'labels_'):
+                    y_pred = algorithm.labels_.astype(np.int)
+                else:
+                    y_pred = algorithm.predict(transformed_data)
+                N = len(set(y_pred))
+                c = ['hsl(' + str(h) + ',50%' + ',50%)' for h in np.linspace(0, 360, N)]
+                # plot
+                plots = []
+                clusterSize = defaultdict(list)
+                try:
+                    os.mkdir('analysisOutputs/' + name + Tname + 'n%d' % n_clusters)
+                except:
+                    pass
+                for key in set(y_pred):
+                    # print key
+                    cluster_scaffolds = np.array(scaffolds)[y_pred == key]
+                    if list(cluster_scaffolds):
+                        clusterSize[key] = np.mean(np.apply_along_axis(lambda x: np.linalg.norm(x), 1,
+                                                                       transformed_data[y_pred == key,
+                                                                       :]))  # len(cluster_scaffolds)
+                        if clusterSize[key] == min(clusterSize.values()):
+                            testCluster = key
+                        plots.append(
+                            go.Scatter3d(x=transformed_data2[y_pred == key, 0],
+                                         y=transformed_data2[y_pred == key, 1],
+                                         z=transformed_data2[y_pred == key, 2],
+                                         name='Cluster %d, %d points, %f distance' % (key, len(cluster_scaffolds),clusterSize[key]),
+                                         mode='markers',
+                                         marker=dict(color=c[key], size=2), text=cluster_scaffolds))
 
-            fig = go.Figure(data=plots)
-            subprocess.call('touch ' + 'analysisOutputs/' + name + Tname + 'n%d' % n_clusters + '.txt',shell=True)
-            py.plot(fig, filename=name + Tname + 'n%d' % n_clusters + '500kmerreclusterTest.html')
-            #except:
-            #    print 'Unable to cluster completely using ' + name + ' for ' + Tname
+                if hasattr(algorithm, 'cluster_centers_'):
+                    if n_subgenomes > 2:
+                        centers = scaledfit.transform(reduction.transform(algorithm.cluster_centers_)) #FIXME modify
+                    else:
+                        centers = algorithm.cluster_centers_
+                    plots.append(
+                        go.Scatter3d(x=centers[:, 0], y=centers[:, 1], z=centers[:, 2], mode='markers',
+                                     marker=dict(color='purple', symbol='circle', size=12),
+                                     opacity=0.4,
+                                     name='Centroids'))
+                for key in set(y_pred)-{testCluster}:
+                    with open('analysisOutputs/' + name + Tname + 'n%d' % n_clusters + '/recluster_subgenome_%d.txt' % key, 'w') as f:
+                        f.write('\n'.join(np.array(scaffolds)[y_pred == key]))
+
+                fig = go.Figure(data=plots)
+                subprocess.call('touch ' + 'analysisOutputs/' + name + Tname + 'n%d' % n_clusters + '.txt',shell=True)
+                py.plot(fig, filename=name + Tname + 'n%d' % n_clusters + '500kmerreclusterTest.html')
+                #except:
+                #    print 'Unable to cluster completely using ' + name + ' for ' + Tname
 
 def fai2bed(args):
     genome = args[0]
@@ -711,7 +751,7 @@ def compareKmers(subgenomeFolder,kmercountPath):
                 if outfilename2 != outfilename:
                     values.append(outFileNames[outfilename2].get(key,3))
             # require at least 30 fold higher kmers in dict1
-            if all([(val1 / val2) > ratio_threshold for val2 in values]):
+            if any([(val1 / val2) > ratio_threshold for val2 in values]): # all()
                 out1.write('>%s.%d.%s\n%s\n' % (key, val1, '.'.join(map(str,values)), key))
         out1.close()
     """
@@ -824,7 +864,7 @@ def make_plots(genome, bedFiles):
     except:
         print 'Unable to run %s via command line..' % dbscriptName
 
-def kmerratio2scaffasta(subgenomePath, fastaPath, genomeName, originalGenome, BB, bootstrap, iteration, kmerLength):
+def kmerratio2scaffasta(subgenomePath, originalSubgenomePath, fastaPath, genomeName, originalGenome, BB, bootstrap, iteration, kmerLength,runFinal):
     genome = fastaPath + genomeName
     a = subgenomePath + '/subgenomes.union.bedgraph'#[file for file in os.listdir(subgenomePath) if 'union.bedgraph' in file][0]
     ubedg = open(a, 'r')
@@ -870,7 +910,19 @@ def kmerratio2scaffasta(subgenomePath, fastaPath, genomeName, originalGenome, BB
         for i, scaffolds in enumerate(scaffoldsOut):
             with open(subgenomePath + '/subgenome_%d.txt'%i,'w') as f:
                 f.write('\n'.join(scaffolds))
-        subgenomeExtraction((subgenomePath, fastaPath, genomeName, originalGenome, BB, bootstrap, iteration, kmerLength))
+    elif iteration == bootstrap:
+        iteration += 1
+        try:
+            os.mkdir(originalSubgenomePath + '/classify')
+        except:
+            pass
+        for i, scaffolds in enumerate(scaffoldsOut):
+            with open(originalSubgenomePath + '/classify/subgenome_%d.txt' % i, 'w') as f:
+                f.write('\n'.join(scaffolds))
+    if runFinal == 0:
+        subgenomeExtraction((subgenomePath, originalSubgenomePath, fastaPath, genomeName, originalGenome, BB, bootstrap, iteration, kmerLength, runFinal))
+    else:
+        quit()
     """
             x3 = float((line.split()[3]).rstrip())
             #print 'my x3 is %s\n' % x3
@@ -889,26 +941,21 @@ def kmerratio2scaffasta(subgenomePath, fastaPath, genomeName, originalGenome, BB
 
 
 def subgenomeExtraction(args):
-    subgenome_folder, fastaPath, genomeName, originalGenome, BB, bootstrap, iteration, kmerLength = args
+    subgenome_folder, originalSubgenomePath, fastaPath, genomeName, originalGenome, BB, bootstrap, iteration, kmerLength, runFinal = args
     bedDict = fai2bed((fastaPath+genomeName,))
     try:
         bootstrap = int(bootstrap)
         iteration = int(iteration)
+        runFinal = int(runFinal)
     except:
         bootstrap = 0
         iteration = 0
+        runFinal = 0
     try:
         BB = int(BB)
     except:
         BB = 0
-    for file in os.listdir(subgenome_folder):
-        if file and file.endswith('.txt'):
-            with open(subgenome_folder+'/'+file,'r') as f,open(subgenome_folder+'/'+file.replace('.txt','.bed'),'w') as f2:
-                for line in f:
-                    if line:
-                        f2.write(bedDict[line.strip('\n')][0])
-            subprocess.call('bedtools getfasta -fi %s -fo %s -bed %s -name'%(fastaPath+genomeName,subgenome_folder + '/%s_'%('model')+file.replace('.txt','.fa'),subgenome_folder+'/'+file.replace('.txt','.bed')),shell=True)
-    blastPath = subgenome_folder+'/blast_files/'
+    blastPath = subgenome_folder + '/blast_files/'
     bedPath = subgenome_folder + '/bed_files/'
     sortPath = subgenome_folder + '/sortedbed_files/'
     try:
@@ -923,12 +970,90 @@ def subgenomeExtraction(args):
         os.mkdir(sortPath)
     except:
         pass
-    writeKmerCountSubgenome((subgenome_folder,kmerLength))
-    writeBlast((originalGenome,blastPath,subgenome_folder+'/kmercount_files/',fastaPath,BB))
-    blast2bed3(subgenome_folder, blastPath, bedPath, sortPath, fastaPath+originalGenome, BB)
-    bed2unionBed(fastaPath+originalGenome, subgenome_folder, bedPath)
-    kmerratio2scaffasta(subgenome_folder, fastaPath, genomeName, originalGenome, BB, bootstrap, iteration, kmerLength)
-    #make_plots(genome, bedFiles)
+    if bootstrap >= iteration or runFinal == 1:
+        for file in os.listdir(subgenome_folder):
+            if file and file.endswith('.txt'):
+                with open(subgenome_folder+'/'+file,'r') as f,open(subgenome_folder+'/'+file.replace('.txt','.bed'),'w') as f2:
+                    for line in f:
+                        if line:
+                            f2.write(bedDict[line.strip('\n')][0])
+                subprocess.call('bedtools getfasta -fi %s -fo %s -bed %s -name'%(fastaPath+genomeName,subgenome_folder + '/%s_'%('model')+file.replace('.txt','.fa'),subgenome_folder+'/'+file.replace('.txt','.bed')),shell=True)
+        writeKmerCountSubgenome((subgenome_folder,kmerLength))
+        writeBlast((originalGenome,blastPath,subgenome_folder+'/kmercount_files/',fastaPath,BB))
+        blast2bed3(subgenome_folder, blastPath, bedPath, sortPath, fastaPath+originalGenome, BB)
+        bed2unionBed(fastaPath+originalGenome, subgenome_folder, bedPath)
+        kmerratio2scaffasta(subgenome_folder, originalSubgenomePath, fastaPath, genomeName, originalGenome, BB, bootstrap, iteration, kmerLength,runFinal)
+    if bootstrap < iteration and runFinal == 0:
+        subgenome_folder = originalSubgenomePath
+        classifyFolder = subgenome_folder + '/classify/'
+        subgenome_folder, runFinal = classify(classifyFolder,fastaPath,genomeName,kmerLength)
+        iteration += 1
+        if runFinal:
+            subgenomeExtraction((subgenome_folder, originalSubgenomePath, fastaPath, genomeName, originalGenome, BB, bootstrap, iteration, kmerLength,runFinal))
+
+def classify(classifyFolder, fastaPath, genomeName, kmerLength):
+    subgenome_files = [np.vectorize(lambda line: line.strip('\n'))(open(classifyFolder + file, 'r').readlines()) for file in os.listdir(classifyFolder) if file.endswith('.txt')]
+    scaffoldLabel_dict = defaultdict(lambda: 0)
+    for i in range(len(subgenome_files)):
+        for scaffold in subgenome_files[i]:
+            scaffoldLabel_dict[scaffold] = i
+    n_subgenomes = len(subgenome_files)
+    total_subgenome_scaffolds = np.concatenate(tuple(subgenome_files),axis=0)
+    subgenomeFolder=classifyFolder + 'finalClassifiedOutputs'
+    scaffolds = np.array(pickle.load(open('scaffolds.p', 'rb')))
+    runFinal = 0
+    scaffolds_unchecked = np.setdiff1d(scaffolds, total_subgenome_scaffolds)
+    if list(scaffolds_unchecked):
+        genomeFastaObj = Fasta(fastaPath + genomeName)
+        with open(classifyFolder + 'ambiguous.fa', 'w') as f:
+            for scaff in scaffolds_unchecked:
+                f.write('>%s\n%s\n' % (scaff, str(genomeFastaObj[scaff][:])))
+        subprocess.call('reformat.sh in=%s out=%s fastawrap=60' % (classifyFolder + 'ambiguous.fa', classifyFolder + 'ambiguous_wrapped.fa'), shell=True)
+        subprocess.call('kmercountexact.sh overwrite=true fastadump=f mincount=3 in=%s out=%s k=%s -Xmx60g' % (classifyFolder + 'ambiguous_wrapped.fa', classifyFolder + 'ambiguous.kcount',kmerLength), shell=True)
+        with open(classifyFolder+'ambiguous.kcount','r') as f, open(classifyFolder+'ambiguous.kcount.fa','w') as f2:#kmer2Fasta((classifyFolder)) #ambiguous.kcount.fa
+            for line in f:
+                if line and int(line.split('\t')[-1]) >= 100:
+                    f2.write('>%s\n%s\n' % tuple([line.split('\t')[0]] * 2))
+        print 'bbmap.sh vslow=t ambiguous=all noheader=t secondary=t perfectmode=t threads=8 maxsites=2000000000 outputunmapped=f ref=%s in=%s outm=%s' % (fastaPath + genomeName, classifyFolder + 'ambiguous.kcount.fa', classifyFolder + 'ambiguous.sam')
+        subprocess.call('bbmap.sh vslow=t ambiguous=all noheader=t secondary=t perfectmode=t threads=8 maxsites=2000000000 outputunmapped=f ref=%s in=%s outm=%s' % (fastaPath + genomeName, classifyFolder + 'ambiguous.kcount.fa', classifyFolder + 'ambiguous.sam'), shell=True)
+        with open(classifyFolder + 'ambiguous.sam', 'r') as f, open(classifyFolder + 'blasted.bed', 'w') as f2:
+            for line in f:
+                if line:
+                    l1 = line.split('\t')[2].split('::')[0]
+                    f2.write('\t'.join([l1] + ['0', str(int(l1.split('_')[-1]) - int(l1.split('_')[-2]))] + [
+                        line.split('\t')[0]]) + '\n')
+
+        kmerIdx = {line[1].split('\t')[0] : line[0] for line in enumerate(open('ambiguous.kcount','r').readlines())}
+        scaffoldIdx = {scaffold[1] : scaffold[0] for scaffold in enumerate(scaffolds)}
+        data = sps.dok_matrix((len(scaffolds), len(kmerIdx.values())), dtype=np.float32)
+        b = pybedtools.BedTool(classifyFolder + 'blasted.bed').sort().merge(c=4, o='collapse', )
+        b.saveas(classifyFolder + 'blasted_merged.bed')
+        with open(classifyFolder + 'blasted_merged.bed', 'r') as f:
+            for line in f:
+                if line:
+                    listLine = line.rstrip('\n').split('\t')
+                    counts = Counter(listLine[-1].split(','))
+                    interval = (abs(float(listLine[2]) - float(listLine[1]))) / 5000.
+                    for key in counts:
+                        try:
+                            data[scaffoldIdx[listLine[0]], kmerIdx[key]] = counts[key] / interval
+                        except:
+                            pass
+        # FIXME pca only for now, maybe use supervised LDA in future!!!!!!!!!
+        data = data.tocsc()
+        transformed_data = StandardScaler().fit_transform(KernelPCA(n_components=n_subgenomes + 1).fit_transform(StandardScaler().fit_transform(data)))
+        trainData = transformed_data[np.vectorize(lambda scaffold: scaffold in total_subgenome_scaffolds)(scaffolds)]
+        trainLabels = np.vectorize(lambda scaffold: scaffoldLabel_dict[scaffold])(total_subgenome_scaffolds)
+        testData = transformed_data[np.vectorize(lambda scaffold: scaffold in scaffolds_unchecked)(scaffolds)]
+        knn = KNeighborsClassifier()
+        knn.fit(trainData,trainLabels)
+        testLabels = knn.predict(testData)
+        for i in range(len(subgenome_files)):
+            subgenome_files[i] = np.concatenate((subgenome_files[i],scaffolds_unchecked[testLabels == i]))
+            with open(subgenomeFolder + '/subgenome_%d.txt'%i,'w') as f:
+                f.write('\n'.join(subgenome_files[i]))
+        runFinal = 1
+    return subgenomeFolder, runFinal
 
 def generateKmerGraph(args):
     kmerPath, kmerName, n_subgenomes, BB = args
@@ -1161,6 +1286,90 @@ def generateKmerGraph(args):
     fig1 = go.Figure(data=data1, layout=layout)
     py.plot(fig1, filename=blastPath + 'KmerClusteredGraph3D.html')
 
+def clusterGraph(args): #FIXME under development
+    sparse_matrix_file, scaffoldsFile, outDir = args
+    G = nx.from_scipy_sparse_matrix(sps.load_npz(sparse_matrix_file))
+    scaffolds = pickle.load(open(scaffoldsFile, 'rb'))
+    mapping = {i:scaffolds[i] for i in range(len(scaffolds))}
+    G=nx.relabel_nodes(G,mapping, copy=False)
+    pos = nx.spring_layout(G,dim=3)
+    plots = []
+    nodes = G.nodes()
+    N = 2
+    c = ['hsl(' + str(h) + ',50%' + ',50%)' for h in np.linspace(0, 360, N+1)]
+    Xv = [pos[k][0] for k in nodes]
+    Yv = [pos[k][1] for k in nodes]
+    Zv = [pos[k][2] for k in nodes]
+    nodesText = ['%s, %d connections'%(kmer, int(G.degree(kmer))) for kmer in nodes]#, Related: %s'%(kmer, int(G.degree(kmer)), ' '.join(G[kmer].keys())) for kmer in nodes]
+    Xed = []
+    Yed = []
+    Zed = []
+    for edge in G.edges():
+        Xed += [pos[edge[0]][0], pos[edge[1]][0], None]
+        Yed += [pos[edge[0]][1], pos[edge[1]][1], None]
+        Zed += [pos[edge[0]][2], pos[edge[1]][2], None]
+    plots.append(go.Scatter3d(x=Xv,
+                          y=Yv,
+                          z=Zv,
+                          mode='markers',
+                          name='Scaffolds',
+                          marker=go.Marker(symbol='dot',
+                                           size=5,
+                                           color=c[0],
+                                           line=go.Line(color='rgb(50,50,50)', width=0.5)
+                                           ),
+                          text=nodesText,
+                          hoverinfo='text'
+                          ))
+    plots.append(go.Scatter3d(x=Xed,
+                              y=Yed,
+                              z=Zed,
+                              mode='lines',
+                              line=go.Line(color='rgb(210,210,210)', width=1),
+                              hoverinfo='none'
+                              ))
+    axis = dict(showbackground=False,
+            showline=False,
+            zeroline=False,
+            showgrid=False,
+            showticklabels=False,
+            title=''
+            )
+
+    layout = go.Layout(
+        title="Graph of Scaffolds",
+        width=1000,
+        height=1000,
+        showlegend=True,
+        scene=go.Scene(
+            xaxis=go.XAxis(axis),
+            yaxis=go.YAxis(axis),
+            zaxis=go.ZAxis(axis),
+        ),
+        margin=go.Margin(
+            t=100
+        ),
+        hovermode='closest',
+        annotations=go.Annotations([
+            go.Annotation(
+                showarrow=False,
+                text="",
+                xref='paper',
+                yref='paper',
+                x=0,
+                y=0.1,
+                xanchor='left',
+                yanchor='bottom',
+                font=go.Font(
+                    size=14
+                )
+            )
+        ]), )
+    data1 = go.Data(plots)
+    fig1 = go.Figure(data=data1, layout=layout)
+    py.plot(fig1, filename=outDir + '/OutputGraph.html')
+
+
 
 #os.chdir('../../..')
 
@@ -1182,7 +1391,8 @@ options = {
     'cluster': cluster,
     'transform_main': transform_main,
     'subgenomeExtraction': subgenomeExtraction,
-    'generateKmerGraph': generateKmerGraph
+    'generateKmerGraph': generateKmerGraph,
+    'clusterGraph': clusterGraph
 }
 
 def main():

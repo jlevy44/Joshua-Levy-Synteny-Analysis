@@ -428,7 +428,7 @@ transformedData = Channel.watchPath('*transformed3D.npy','create,modify')
                          .map {file -> file.name - 'transformed3D.npy'}
                          //.filter((file.name).startsWith('main'))
 
-clusterModels = ['KMeans']//,'SpectralClustering']
+clusterModels = ['KMeans','SpectralClustering']
 kmerBest500Files = Channel.create()
 subgenomeFoldersRaw = Channel.create()
 process cluster {
@@ -452,6 +452,7 @@ if(clust == 1)
     #!/bin/bash
     cd ${workingDir}
     python subgenomeClusteringInterface.py cluster ${transformedData}transformed3D.npy ${reclusterPath} ${best500kmerPath} ${model} ${n_subgenomes}
+    echo ${model}
     cd -
     echo kmer500Best_${model}${transformedData}n${n_clusters}.fa > test.txt
     echo ${model}${transformedData}n${n_clusters} > test2.txt
@@ -490,7 +491,7 @@ if(extract == 1)
     """
     #!/bin/bash
     cd ${workingDir}
-    python subgenomeClusteringInterface.py subgenomeExtraction ./analysisOutputs/${subgenomeFolder} ${fastaPath} ${genomeSplitName} ${genome2} ${BBstr} ${bootstrap} 0 ${kmerLength}
+    python subgenomeClusteringInterface.py subgenomeExtraction ./analysisOutputs/${subgenomeFolder} ./analysisOutputs/${subgenomeFolder} ${fastaPath} ${genomeSplitName} ${genome2} ${BBstr} ${bootstrap} 0 ${kmerLength} 0
     """
 else
     """
