@@ -41,8 +41,8 @@
       <file leaf-file-name="subgenomeClusteringInterface.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/SubgenomeClustering/subgenomeClusteringInterface.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-139">
-              <caret line="1026" column="94" lean-forward="false" selection-start-line="1026" selection-start-column="94" selection-end-line="1026" selection-end-column="94" />
+            <state relative-caret-position="409">
+              <caret line="1058" column="12" lean-forward="false" selection-start-line="1057" selection-start-column="5" selection-end-line="1058" selection-end-column="12" />
               <folding>
                 <element signature="e#0#14#0" expanded="true" />
               </folding>
@@ -100,8 +100,8 @@
       <find>classif</find>
       <find>kmer2fas</find>
       <find>bbmap</find>
-      <find>classify</find>
       <find>ambiguous.k</find>
+      <find>classify</find>
     </findStrings>
     <replaceStrings>
       <replace>val</replace>
@@ -173,8 +173,8 @@
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="-1664" />
-    <option name="y" value="77" />
+    <option name="x" value="-1680" />
+    <option name="y" value="-71" />
     <option name="width" value="1080" />
     <option name="height" value="622" />
   </component>
@@ -427,13 +427,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1497987891371</updated>
-    </task>
-    <task id="LOCAL-00001" summary="Updated CircosDropper">
-      <created>1497990721440</created>
-      <option name="number" value="00001" />
-      <option name="presentableId" value="LOCAL-00001" />
-      <option name="project" value="LOCAL" />
-      <updated>1497990721440</updated>
     </task>
     <task id="LOCAL-00002" summary="Updates to scaffolding process...">
       <created>1498072323082</created>
@@ -771,7 +764,14 @@
       <option name="project" value="LOCAL" />
       <updated>1504649700247</updated>
     </task>
-    <option name="localTasksCounter" value="50" />
+    <task id="LOCAL-00050" summary="debugging classification part... Added spectral clustering">
+      <created>1504649862130</created>
+      <option name="number" value="00050" />
+      <option name="presentableId" value="LOCAL-00050" />
+      <option name="project" value="LOCAL" />
+      <updated>1504649862132</updated>
+    </task>
+    <option name="localTasksCounter" value="51" />
     <servers />
   </component>
   <component name="TodoView">
@@ -784,7 +784,7 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="-1664" y="77" width="1080" height="622" extended-state="0" />
+    <frame x="-1680" y="-71" width="1080" height="622" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.17407407" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
@@ -1206,8 +1206,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/SubgenomeClustering/subgenomeClusteringInterface.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-139">
-          <caret line="1026" column="94" lean-forward="false" selection-start-line="1026" selection-start-column="94" selection-end-line="1026" selection-end-column="94" />
+        <state relative-caret-position="409">
+          <caret line="1058" column="12" lean-forward="false" selection-start-line="1057" selection-start-column="5" selection-end-line="1058" selection-end-column="12" />
           <folding>
             <element signature="e#0#14#0" expanded="true" />
           </folding>
