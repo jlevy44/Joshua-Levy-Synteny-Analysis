@@ -4,7 +4,6 @@
     <list default="true" id="87dadfdf-9689-45cf-b4af-5fd342ee0ae6" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/SubgenomeClustering/subgenomeClusteringInterface.py" afterPath="$PROJECT_DIR$/SubgenomeClustering/subgenomeClusteringInterface.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/SubgenomeClustering/subgenomePipeline.nf" afterPath="$PROJECT_DIR$/SubgenomeClustering/subgenomePipeline.nf" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -42,8 +41,8 @@
       <file leaf-file-name="subgenomeClusteringInterface.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/SubgenomeClustering/subgenomeClusteringInterface.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="176">
-              <caret line="1010" column="49" lean-forward="true" selection-start-line="1010" selection-start-column="49" selection-end-line="1010" selection-end-column="49" />
+            <state relative-caret-position="41">
+              <caret line="995" column="49" lean-forward="false" selection-start-line="995" selection-start-column="49" selection-end-line="995" selection-end-column="49" />
               <folding>
                 <element signature="e#0#14#0" expanded="true" />
               </folding>
@@ -89,7 +88,6 @@
       <find>pickle.load</find>
       <find>blast2</find>
       <find>dok</find>
-      <find>classify</find>
       <find>pca</find>
       <find>clusterGra</find>
       <find>cluster</find>
@@ -103,6 +101,7 @@
       <find>classif</find>
       <find>kmer2fas</find>
       <find>bbmap</find>
+      <find>classify</find>
     </findStrings>
     <replaceStrings>
       <replace>val</replace>
@@ -174,8 +173,8 @@
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="-1565" />
-    <option name="y" value="-71" />
+    <option name="x" value="-1664" />
+    <option name="y" value="77" />
     <option name="width" value="1080" />
     <option name="height" value="622" />
   </component>
@@ -758,7 +757,14 @@
       <option name="project" value="LOCAL" />
       <updated>1504226854628</updated>
     </task>
-    <option name="localTasksCounter" value="48" />
+    <task id="LOCAL-00048" summary="debugging classification part... Added spectral clustering">
+      <created>1504647298433</created>
+      <option name="number" value="00048" />
+      <option name="presentableId" value="LOCAL-00048" />
+      <option name="project" value="LOCAL" />
+      <updated>1504647298433</updated>
+    </task>
+    <option name="localTasksCounter" value="49" />
     <servers />
   </component>
   <component name="TodoView">
@@ -771,7 +777,7 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="-1565" y="-71" width="1080" height="622" extended-state="0" />
+    <frame x="-1664" y="77" width="1080" height="622" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.17407407" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
@@ -797,7 +803,6 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="finalizing clustering algorithms plus a test case for finding names" />
     <MESSAGE value="added histogram checking feature for related kmers" />
     <MESSAGE value="updates to kmer and clustering analysis" />
     <MESSAGE value="working with clustering algorithms" />
@@ -822,7 +827,8 @@
     <MESSAGE value="fix subgenome cluster number name" />
     <MESSAGE value="updates" />
     <MESSAGE value="more updates, bootstrapping features added..." />
-    <option name="LAST_COMMIT_MESSAGE" value="more updates, bootstrapping features added..." />
+    <MESSAGE value="debugging classification part... Added spectral clustering" />
+    <option name="LAST_COMMIT_MESSAGE" value="debugging classification part... Added spectral clustering" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1193,8 +1199,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/SubgenomeClustering/subgenomeClusteringInterface.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="176">
-          <caret line="1010" column="49" lean-forward="true" selection-start-line="1010" selection-start-column="49" selection-end-line="1010" selection-end-column="49" />
+        <state relative-caret-position="41">
+          <caret line="995" column="49" lean-forward="false" selection-start-line="995" selection-start-column="49" selection-end-line="995" selection-end-column="49" />
           <folding>
             <element signature="e#0#14#0" expanded="true" />
           </folding>

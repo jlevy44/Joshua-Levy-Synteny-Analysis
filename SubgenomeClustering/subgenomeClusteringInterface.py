@@ -993,6 +993,7 @@ def subgenomeExtraction(args):
 
 def classify(classifyFolder, fastaPath, genomeName, kmerLength):
     subgenome_files = [np.vectorize(lambda line: line.strip('\n'))(open(classifyFolder + file, 'r').readlines()) for file in os.listdir(classifyFolder) if file.endswith('.txt')]
+    # FIXME maybe filter out missing sequences...
     scaffoldLabel_dict = defaultdict(lambda: 0)
     for i in range(len(subgenome_files)):
         for scaffold in subgenome_files[i]:
@@ -1006,7 +1007,7 @@ def classify(classifyFolder, fastaPath, genomeName, kmerLength):
     if list(scaffolds_unchecked):
         genomeFastaObj = Fasta(fastaPath + genomeName)
         with open(classifyFolder + 'ambiguous.fa', 'w') as f:
-            for scaff in scaffolds_unchecked:
+            for scaff in total_subgenome_scaffolds:
                 f.write('>%s\n%s\n' % (scaff, str(genomeFastaObj[scaff][:])))
         subprocess.call('reformat.sh in=%s out=%s fastawrap=60' % (classifyFolder + 'ambiguous.fa', classifyFolder + 'ambiguous_wrapped.fa'), shell=True)
         subprocess.call('kmercountexact.sh overwrite=true fastadump=f mincount=3 in=%s out=%s k=%s -Xmx60g' % (classifyFolder + 'ambiguous_wrapped.fa', classifyFolder + 'ambiguous.kcount',kmerLength), shell=True)
