@@ -38,7 +38,7 @@ genome = findValue('genome ' );
 peakPath = findValue(' peakPath');
 BBstr = findValue('BB ');
 n_subgenomes = findValue('n_subgenomes ');
-splitLength = findValue('splitFastaLineLegnth ');
+splitLength = findValue('splitFastaLineLength ');
 bootstrap = findValue('bootstrap ');
 kmerLength = findValue('kmerLength ');
 
@@ -170,6 +170,8 @@ executor = 'local'
 //clusterOptions = { slurm == 0 ? { fromFasta == 1 ? '-P plant-analysis.p -cwd -q normal.q -pe pe_slots 2 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt' } : '-N 2 -p regular -D . '}
 //clusterOptions = { slurm == 1 ? '-D .' : '-P plant-analysis.p -cwd' }
 cpus = { fromFasta == 1 ? 2 : 1 }
+memory = { fromFasta == 1 ? '100 GB' : '60 GB' }
+
 
 input:
     val genomeName from genomeChan4
@@ -206,6 +208,7 @@ process createOrigDB {
 executor = 'local'
 //clusterOptions = { slurm == 0 ? { original == 1 ? '-P plant-analysis.p -cwd -q normal.q -pe pe_slots 2 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt' } : '-N 2 -p regular -D . '}
 cpus = { original == 1 ? 2 : 1 }
+
 
 input:
     val genomeName from genomeChan55
@@ -477,6 +480,9 @@ process subgenomeExtraction {
 
 //clusterOptions = { slurm == 0 ? { extract == 1 ? '-P plant-analysis.p -cwd -q normal.q -pe pe_slots 9 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt' } : '-N 9 -p regular -D . '}
 cpus = { extract == 1 ? 9 : 1 }
+memory = { extract == 1 ? 65.GB * task.attempt : '10 MB' }
+errorStrategy = 'retry' //{ task.exitStatus == 1 ? 'retry' : 'terminate' }
+maxRetries = 2
 
 
 input:

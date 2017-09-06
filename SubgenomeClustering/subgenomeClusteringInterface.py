@@ -495,20 +495,58 @@ def cluster(args):
                 #    print 'NN not working'
                 neigh.fit(transformed_data)
                 fit_data = neigh.kneighbors_graph(transformed_data)
-                G = nx.from_scipy_sparse_matrix(fit_data)
-                mapping = {i: scaffolds[i] for i in range(len(scaffolds))}
-                G = nx.relabel_nodes(G, mapping, copy=False)
-                #print list(connected_component_subgraphs(G))[0]
-                #print sorted(nx.connected_components(G), key=len, reverse=True)
-                gs = list(connected_component_subgraphs(G))[0]
-                scaffolds2 = gs.nodes()
-                #print scaffolds2
-                scaffBool = np.vectorize(lambda scaffold: scaffold in scaffolds2)(scaffolds)
-                fit_data = nx.to_scipy_sparse_matrix(gs)
-                dataOld = dataOld[scaffBool]
-                transformed_data = transformed_data[scaffBool]
-                scaffolds_noconnect = list(np.array(scaffolds)[scaffBool == False])
-                scaffolds = scaffolds2
+                connected = sps.csgraph.connected_components(fit_data)
+                if connected[0] > 1:
+                    #D_num = fit_data.sum(axis=0,dtype=np.uint8)
+                    #D = sps.dok_matrix((len(scaffolds), len(scaffolds)), dtype=np.uint8)
+                    #for i in range(len(fit_data)):
+                    #    D[i,i] = D_num[i]
+                    #D = D.tocsc()
+                    #L = D-fit_data
+                    counts = Counter(connected[1])
+                    subgraph_idx = max(counts.iteritems(), key=lambda x: x[1])[0]
+                    scaffBool = connected[1] == subgraph_idx
+                    #G = nx.Graph(fit_data)#nx.from_scipy_sparse_matrix(fit_data)
+                    #mapping = {i: scaffolds[i] for i in range(len(scaffolds))}
+                    #print G.nodes()
+                    #G = nx.relabel_nodes(G, mapping, copy=False)
+                    #print scaffolds[0:10], G.nodes()[0:10]
+                    #print list(connected_component_subgraphs(G))[0]
+                    #print sorted(nx.connected_components(G), key=len, reverse=True)
+                    #gs = list(connected_component_subgraphs(G))[0]
+                    #scaffolds2 = [scaffold for scaffold in scaffolds if scaffold in gs.nodes()]
+                    #print scaffolds2
+                    #s2 = gs.nodes()
+                    #scaffBool = np.vectorize(lambda scaffold: scaffold in s2)(scaffolds)
+                    #fit_data = nx.to_scipy_sparse_matrix(gs)
+                    #fit_data = fit_data[scaffBool].T[scaffBool]
+                    dataOld = dataOld[scaffBool]
+                    print transformed_data[0:10,:],scaffolds[0:10]
+                    transformed_data = transformed_data[scaffBool,:]
+                    scaffolds_noconnect = list(np.array(scaffolds)[scaffBool == False])
+                    #print scaffolds[0:10],np.array(scaffolds2)[0:10]#, np.array(scaffolds2)[0:10]
+                    scaffolds = list(np.array(scaffolds)[scaffBool])
+                    print transformed_data[0:10,:],scaffolds[0:10]
+                    n_connected = connected[0]
+                    while(n_connected > 1):
+                        neigh = NearestNeighbors(n_neighbors=10, algorithm='brute', metric=metric)
+                        neigh.fit(transformed_data)
+                        fit_data = neigh.kneighbors_graph(transformed_data)
+                        connected = sps.csgraph.connected_components(fit_data)
+                        counts = Counter(connected[1])
+                        subgraph_idx = max(counts.iteritems(), key=lambda x: x[1])[0]
+                        scaffBool = connected[1] == subgraph_idx
+                        #fit_data = fit_data[scaffBool].T[scaffBool]
+                        if connected[0] > 1:
+                            dataOld = dataOld[scaffBool]
+                            transformed_data = transformed_data[scaffBool, :]
+                            scaffolds_noconnect += list(np.array(scaffolds)[scaffBool == False])
+                            scaffolds = list(np.array(scaffolds)[scaffBool])
+                        n_connected = connected[0]
+
+                else:
+                    scaffolds_noconnect = []
+
                 # FIXME do something with thrown out points in future
                 sps.save_npz('analysisOutputs/' + name + Tname + 'n%d' % n_clusters +'/spectralGraph.npz', fit_data.tocsc())
                 pickle.dump(scaffolds,open('analysisOutputs/' + name + Tname + 'n%d' % n_clusters + '/scaffolds_connect.p', 'wb'))
@@ -543,6 +581,7 @@ def cluster(args):
             for key in set(y_pred):
                 # print key
                 cluster_scaffolds = np.array(scaffolds)[y_pred == key]
+                print key, y_pred[0:10], cluster_scaffolds[0:10], scaffolds[0:10]
                 if list(cluster_scaffolds):
                     clusterSize[key] = np.mean(np.apply_along_axis(lambda x: np.linalg.norm(x),1,transformed_data[y_pred == key,:]))#len(cluster_scaffolds)
                     if clusterSize[key] == min(clusterSize.values()):
@@ -1043,7 +1082,7 @@ def classify(classifyFolder, fastaPath, genomeName, kmerLength):
                                 pass
             # FIXME pca only for now, maybe use supervised LDA in future!!!!!!!!!
             data = data.tocsc()
-            transformed_data = StandardScaler().fit_transform(KernelPCA(n_components=n_subgenomes + 1).fit_transform(StandardScaler().fit_transform(data)))
+            transformed_data = StandardScaler().fit_transform(KernelPCA(n_components=n_subgenomes + 1).fit_transform(StandardScaler(with_mean=False).fit_transform(data)))
             trainData = transformed_data[np.vectorize(lambda scaffold: scaffold in total_subgenome_scaffolds)(scaffolds)]
             trainLabels = np.vectorize(lambda scaffold: scaffoldLabel_dict[scaffold])(total_subgenome_scaffolds)
             testData = transformed_data[np.vectorize(lambda scaffold: scaffold in scaffolds_unchecked)(scaffolds)]
