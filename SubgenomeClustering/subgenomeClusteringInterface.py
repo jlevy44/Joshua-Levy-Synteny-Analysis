@@ -38,6 +38,7 @@ import scipy.sparse as sps
 import networkx as nx
 from itertools import combinations
 from networkx.algorithms.components import *
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
 
 
 
@@ -903,7 +904,7 @@ def make_plots(genome, bedFiles):
     except:
         print 'Unable to run %s via command line..' % dbscriptName
 
-def kmerratio2scaffasta(subgenomePath, originalSubgenomePath, fastaPath, genomeName, originalGenome, BB, bootstrap, iteration, kmerLength,runFinal):
+def kmerratio2scaffasta(subgenomePath, originalSubgenomePath, fastaPath, genomeName, originalGenome, BB, bootstrap, iteration, kmerLength,runFinal,kmer500Path):
     genome = fastaPath + genomeName
     a = subgenomePath + '/subgenomes.union.bedgraph'#[file for file in os.listdir(subgenomePath) if 'union.bedgraph' in file][0]
     ubedg = open(a, 'r')
@@ -959,7 +960,7 @@ def kmerratio2scaffasta(subgenomePath, originalSubgenomePath, fastaPath, genomeN
             with open(originalSubgenomePath + '/classify/subgenome_%d.txt' % i, 'w') as f:
                 f.write('\n'.join(scaffolds))
     if runFinal == 0:
-        subgenomeExtraction((subgenomePath, originalSubgenomePath, fastaPath, genomeName, originalGenome, BB, bootstrap, iteration, kmerLength, runFinal))
+        subgenomeExtraction((subgenomePath, originalSubgenomePath, fastaPath, genomeName, originalGenome, BB, bootstrap, iteration, kmerLength, runFinal,kmer500Path))
     else:
         quit()
     """
@@ -980,7 +981,7 @@ def kmerratio2scaffasta(subgenomePath, originalSubgenomePath, fastaPath, genomeN
 
 
 def subgenomeExtraction(args):
-    subgenome_folder, originalSubgenomePath, fastaPath, genomeName, originalGenome, BB, bootstrap, iteration, kmerLength, runFinal = args
+    subgenome_folder, originalSubgenomePath, fastaPath, genomeName, originalGenome, BB, bootstrap, iteration, kmerLength, runFinal,kmer500Path = args
     bedDict = fai2bed((fastaPath+genomeName,))
     try:
         bootstrap = int(bootstrap)
@@ -1021,16 +1022,16 @@ def subgenomeExtraction(args):
         writeBlast((originalGenome,blastPath,subgenome_folder+'/kmercount_files/',fastaPath,BB))
         blast2bed3(subgenome_folder, blastPath, bedPath, sortPath, fastaPath+originalGenome, BB)
         bed2unionBed(fastaPath+originalGenome, subgenome_folder, bedPath)
-        kmerratio2scaffasta(subgenome_folder, originalSubgenomePath, fastaPath, genomeName, originalGenome, BB, bootstrap, iteration, kmerLength,runFinal)
+        kmerratio2scaffasta(subgenome_folder, originalSubgenomePath, fastaPath, genomeName, originalGenome, BB, bootstrap, iteration, kmerLength,runFinal,kmer500Path)
     if bootstrap < iteration and runFinal == 0:
         subgenome_folder = originalSubgenomePath
         classifyFolder = subgenome_folder + '/classify/'
-        subgenome_folder, runFinal = classify(classifyFolder,fastaPath,genomeName,kmerLength)
+        subgenome_folder, runFinal = classify(classifyFolder,fastaPath,genomeName,kmerLength, originalSubgenomePath.split('/')[-1],kmer500Path)
         iteration += 1
         if runFinal:
-            subgenomeExtraction((subgenome_folder, originalSubgenomePath, fastaPath, genomeName, originalGenome, BB, bootstrap, iteration, kmerLength,runFinal))
+            subgenomeExtraction((subgenome_folder, originalSubgenomePath, fastaPath, genomeName, originalGenome, BB, bootstrap, iteration, kmerLength,runFinal,kmer500Path))
 
-def classify(classifyFolder, fastaPath, genomeName, kmerLength):
+def classify(classifyFolder, fastaPath, genomeName, kmerLength,model,kmer500Path):
     subgenome_files = [np.vectorize(lambda line: line.strip('\n'))(open(classifyFolder + file, 'r').readlines()) for file in os.listdir(classifyFolder) if file.endswith('.txt') and os.stat(classifyFolder+file).st_size]
     if len(subgenome_files) > 1:
         # FIXME maybe filter out missing sequences...
@@ -1041,6 +1042,10 @@ def classify(classifyFolder, fastaPath, genomeName, kmerLength):
         n_subgenomes = len(subgenome_files)
         total_subgenome_scaffolds = np.concatenate(tuple(subgenome_files),axis=0)
         subgenomeFolder=classifyFolder + 'finalClassifiedOutputs'
+        try:
+            os.mkdir(subgenomeFolder)
+        except:
+            pass
         scaffolds = np.array(pickle.load(open('scaffolds.p', 'rb')))
         runFinal = 0
         scaffolds_unchecked = np.setdiff1d(scaffolds, total_subgenome_scaffolds)
@@ -1057,17 +1062,21 @@ def classify(classifyFolder, fastaPath, genomeName, kmerLength):
                         f2.write('>%s\n%s\n' % tuple([line.split('\t')[0]] * 2))
             print 'bbmap.sh vslow=t ambiguous=all noheader=t secondary=t perfectmode=t threads=8 maxsites=2000000000 outputunmapped=f ref=%s in=%s outm=%s' % (fastaPath + genomeName, classifyFolder + 'ambiguous.kcount.fa', classifyFolder + 'ambiguous.sam')
             subprocess.call('bbmap.sh vslow=t ambiguous=all noheader=t secondary=t perfectmode=t threads=8 maxsites=2000000000 outputunmapped=f ref=%s in=%s outm=%s' % (fastaPath + genomeName, classifyFolder + 'ambiguous.kcount.fa', classifyFolder + 'ambiguous.sam'), shell=True)
-            with open(classifyFolder + 'ambiguous.sam', 'r') as f, open(classifyFolder + 'blasted.bed', 'w') as f2:
+            kmerIdx = {line[1].split('\t')[0]: line[0] for line in
+                       enumerate(open(classifyFolder + 'ambiguous.kcount', 'r').readlines())}
+            scaffoldIdx = {scaffold[1]: scaffold[0] for scaffold in enumerate(scaffolds)}
+            data = sps.dok_matrix((len(scaffolds), len(kmerIdx.values())), dtype=np.float32)
+            scaffoldL = np.array([map(int,scaffold.split('_')[-2:]) for scaffold in scaffolds])
+            scaffoldLengths = abs(scaffoldL[:,1]-scaffoldL[:,0])*5000.
+            with open(classifyFolder + 'ambiguous.sam', 'r') as f:#, open(classifyFolder + 'blasted.bed', 'w') as f2:
                 for line in f:
                     if line:
-                        l1 = line.split('\t')[2].split('::')[0]
-                        f2.write('\t'.join([l1] + ['0', str(int(l1.split('_')[-1]) - int(l1.split('_')[-2]))] + [
-                            line.split('\t')[0]]) + '\n')
+                        data[scaffoldIdx[line.split('\t')[2].split('::')[0]],kmerIdx[line.split('\t')[0]]] += 1.
+                        #f2.write('\t'.join([l1] + ['0', str(int(l1.split('_')[-1]) - int(l1.split('_')[-2]))] + [
+                        #    line.split('\t')[0]]) + '\n')
 
-            kmerIdx = {line[1].split('\t')[0] : line[0] for line in enumerate(open(classifyFolder+'ambiguous.kcount','r').readlines())}
-            scaffoldIdx = {scaffold[1] : scaffold[0] for scaffold in enumerate(scaffolds)}
-            data = sps.dok_matrix((len(scaffolds), len(kmerIdx.values())), dtype=np.float32)
-            b = pybedtools.BedTool(classifyFolder + 'blasted.bed').sort().merge(c=4, o='collapse', )
+
+            """b = pybedtools.BedTool(classifyFolder + 'blasted.bed').sort().merge(c=4, o='collapse', )
             b.saveas(classifyFolder + 'blasted_merged.bed')
             with open(classifyFolder + 'blasted_merged.bed', 'r') as f:
                 for line in f:
@@ -1079,16 +1088,30 @@ def classify(classifyFolder, fastaPath, genomeName, kmerLength):
                             try:
                                 data[scaffoldIdx[listLine[0]], kmerIdx[key]] = counts[key] / interval
                             except:
-                                pass
+                                pass"""
             # FIXME pca only for now, maybe use supervised LDA in future!!!!!!!!!
             data = data.tocsc()
-            transformed_data = StandardScaler().fit_transform(KernelPCA(n_components=n_subgenomes + 1).fit_transform(StandardScaler(with_mean=False).fit_transform(data)))
-            trainData = transformed_data[np.vectorize(lambda scaffold: scaffold in total_subgenome_scaffolds)(scaffolds)]
+            # divide every row by scaffold length
+            for i in range(len(scaffoldLengths)):
+                data[i,:]/=scaffoldLengths
+            intermediateTransform = KernelPCA(n_components=int(len(kmerIdx.keys())/10)).fit_transform(StandardScaler(with_mean=False).fit_transform(data))
+            lda = LDA(n_components=n_subgenomes + 1)
+            scaffBool = np.vectorize(lambda scaffold: scaffold in total_subgenome_scaffolds)(scaffolds)
             trainLabels = np.vectorize(lambda scaffold: scaffoldLabel_dict[scaffold])(total_subgenome_scaffolds)
+            lda.fit(intermediateTransform[scaffBool],trainLabels)
+            transformed_data = StandardScaler().fit_transform(lda.transform(intermediateTransform))
+            trainData = transformed_data[scaffBool]
             testData = transformed_data[np.vectorize(lambda scaffold: scaffold in scaffolds_unchecked)(scaffolds)]
             knn = KNeighborsClassifier()
             knn.fit(trainData,trainLabels)
             testLabels = knn.predict(testData)
+            kbest = SelectKBest(chi2, k=500)
+            kbest.fit(data[scaffBool], trainLabels)
+            bestFeatures = kbest.pvalues_.argsort()[:500]
+            kmers = kmerIdx.keys()
+            best_500_kmers = [kmers[i] for i in bestFeatures]
+            with open('%s/kmer500Best_%s.fa' % (kmer500Path, model+'_preClassify'), 'w') as f:
+                f.write('\n'.join('>%s\n%s' % (kmer, kmer) for kmer in best_500_kmers))
             for i in range(len(subgenome_files)):
                 subgenome_files[i] = np.concatenate((subgenome_files[i],scaffolds_unchecked[testLabels == i]))
                 with open(subgenomeFolder + '/subgenome_%d.txt'%i,'w') as f:

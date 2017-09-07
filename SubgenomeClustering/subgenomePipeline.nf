@@ -482,7 +482,7 @@ process subgenomeExtraction {
 cpus = { extract == 1 ? 9 : 1 }
 memory = { extract == 1 ? 65.GB * task.attempt : '10 MB' }
 errorStrategy = 'retry' //{ task.exitStatus == 1 ? 'retry' : 'terminate' }
-maxRetries = 2
+maxRetries = 1//2
 
 
 input:
@@ -497,7 +497,7 @@ if(extract == 1)
     """
     #!/bin/bash
     cd ${workingDir}
-    python subgenomeClusteringInterface.py subgenomeExtraction ./analysisOutputs/${subgenomeFolder} ./analysisOutputs/${subgenomeFolder} ${fastaPath} ${genomeSplitName} ${genome2} ${BBstr} ${bootstrap} 0 ${kmerLength} 0
+    python subgenomeClusteringInterface.py subgenomeExtraction ./analysisOutputs/${subgenomeFolder} ./analysisOutputs/${subgenomeFolder} ${fastaPath} ${genomeSplitName} ${genome2} ${BBstr} ${bootstrap} 0 ${kmerLength} 0 ${best500kmerPath}
     """
 else
     """

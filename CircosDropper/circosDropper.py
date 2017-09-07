@@ -50,7 +50,11 @@ for unoutfile in unoutFiles:
             targetSortFile = sortFile
             #print targetSortFile
     if bedfile not in os.listdir('.'):
-        unout2bed((unoutfile,querySortFile,targetSortFile))
+        try:
+            unout2bed((unoutfile,querySortFile,targetSortFile))
+        except:
+            print (unoutfile,querySortFile,targetSortFile)
+            quit()
     linkFile = unoutfile.replace('.unout','.link.txt')
     if linkFile not in os.listdir('.'):
         bed2link(bedfile)
