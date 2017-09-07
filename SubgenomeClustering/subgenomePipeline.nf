@@ -480,7 +480,7 @@ process subgenomeExtraction {
 
 //clusterOptions = { slurm == 0 ? { extract == 1 ? '-P plant-analysis.p -cwd -q normal.q -pe pe_slots 9 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt' } : '-N 9 -p regular -D . '}
 cpus = { extract == 1 ? 9 : 1 }
-memory = { extract == 1 ? 65.GB * task.attempt : '10 MB' }
+memory = { extract == 1 ? '30 GB' : '10 MB'}//65.GB * task.attempt : '10 MB' }
 errorStrategy = 'retry' //{ task.exitStatus == 1 ? 'retry' : 'terminate' }
 maxRetries = 0//1//2
 

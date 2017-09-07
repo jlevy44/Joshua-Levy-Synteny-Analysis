@@ -1049,6 +1049,7 @@ def classify(classifyFolder, fastaPath, genomeName, kmerLength,model,kmer500Path
         scaffolds = np.array(pickle.load(open('scaffolds.p', 'rb')))
         runFinal = 0
         scaffolds_unchecked = np.setdiff1d(scaffolds, total_subgenome_scaffolds)
+        print 'scaffolds_unchecked', scaffolds_unchecked
         if list(scaffolds_unchecked):
             genomeFastaObj = Fasta(fastaPath + genomeName)
             with open(classifyFolder + 'ambiguous.fa', 'w') as f:
@@ -1094,12 +1095,12 @@ def classify(classifyFolder, fastaPath, genomeName, kmerLength,model,kmer500Path
             # divide every row by scaffold length
             for i in range(len(scaffoldLengths)):
                 data[i,:]/=scaffoldLengths[i]
-            intermediateTransform = KernelPCA(n_components=int(len(kmerIdx.keys())/10)).fit_transform(StandardScaler(with_mean=False).fit_transform(data))
-            lda = LDA(n_components=n_subgenomes + 1)
+            #intermediateTransform = KernelPCA(n_components=int(len(kmerIdx.keys())/10)).fit_transform(StandardScaler(with_mean=False).fit_transform(data))
+            #lda = LDA(n_components=n_subgenomes + 1)
             scaffBool = np.vectorize(lambda scaffold: scaffold in total_subgenome_scaffolds)(scaffolds)
             trainLabels = np.vectorize(lambda scaffold: scaffoldLabel_dict[scaffold])(total_subgenome_scaffolds)
-            lda.fit(intermediateTransform[scaffBool],trainLabels)
-            transformed_data = StandardScaler().fit_transform(lda.transform(intermediateTransform))
+            #lda.fit(intermediateTransform[scaffBool],trainLabels)
+            transformed_data = StandardScaler().fit_transform(KernelPCA(n_components=n_subgenomes+1).fit_transform(StandardScaler(with_mean=False).fit_transform(data)))#lda.transform(intermediateTransform)nt(len(kmerIdx.keys())/10)
             trainData = transformed_data[scaffBool]
             testData = transformed_data[np.vectorize(lambda scaffold: scaffold in scaffolds_unchecked)(scaffolds)]
             knn = KNeighborsClassifier()
