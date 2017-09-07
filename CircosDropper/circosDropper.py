@@ -61,8 +61,11 @@ for unoutfile in unoutFiles:
     karyotypeQT = tuple([karyFile for karyFile in karyotypeFiles if querySpecies in karyFile.split('.')[1] or targetSpecies in karyFile.split('.')[1]])
     generateConfigs(karyotypeQT,linkFile)
     if '%s-%s.png'%(querySpecies,targetSpecies) not in os.listdir('.'):
-        subprocess.call(['circos', '-conf', 'circos.conf', '-outputfile',
-                     '%s-%s' %(querySpecies,targetSpecies), '-outputdir', '.'])
+        #try:
+        subprocess.call('circos -conf circos.conf -outputfile '+'%s-%s' %(querySpecies,targetSpecies)+ ' -outputdir .',shell=True)
+        #except:
+        #    print 'circos', '-conf', 'circos.conf', '-outputfile', '%s-%s' %(querySpecies,targetSpecies), '-outputdir', '.'
+        #    exit()
     if '%s-%s.pdf' % (querySpecies, targetSpecies) not in os.listdir('.'):
         subprocess.call('convert %s-%s.png %s-%s.pdf'%(querySpecies,targetSpecies,querySpecies,targetSpecies),shell=True)
         #try:

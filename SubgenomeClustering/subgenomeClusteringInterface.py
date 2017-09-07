@@ -1093,7 +1093,7 @@ def classify(classifyFolder, fastaPath, genomeName, kmerLength,model,kmer500Path
             data = data.tocsc()
             # divide every row by scaffold length
             for i in range(len(scaffoldLengths)):
-                data[i,:]/=scaffoldLengths
+                data[i,:]/=scaffoldLengths[i]
             intermediateTransform = KernelPCA(n_components=int(len(kmerIdx.keys())/10)).fit_transform(StandardScaler(with_mean=False).fit_transform(data))
             lda = LDA(n_components=n_subgenomes + 1)
             scaffBool = np.vectorize(lambda scaffold: scaffold in total_subgenome_scaffolds)(scaffolds)

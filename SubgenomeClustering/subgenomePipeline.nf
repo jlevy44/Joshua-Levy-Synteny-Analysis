@@ -482,7 +482,7 @@ process subgenomeExtraction {
 cpus = { extract == 1 ? 9 : 1 }
 memory = { extract == 1 ? 65.GB * task.attempt : '10 MB' }
 errorStrategy = 'retry' //{ task.exitStatus == 1 ? 'retry' : 'terminate' }
-maxRetries = 1//2
+maxRetries = 0//1//2
 
 
 input:
