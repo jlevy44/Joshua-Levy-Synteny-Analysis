@@ -45,7 +45,7 @@ if 1:
     keep_bool = genome_size > x[nearest_05]
     keep_genomes = np.array(df.axes[0])[keep_bool]
     print keep_genomes
-    print np.array(df.axes[0])[keep_bool == False]
+    print df['Unnamed: 0'][keep_bool == False]#np.array(df.axes[0])[keep_bool == False]
     try:
         os.mkdir('keep_files')
     except:
