@@ -41,6 +41,9 @@ n_subgenomes = findValue('n_subgenomes ');
 splitLength = findValue('splitFastaLineLength ');
 bootstrap = findValue('bootstrap ');
 kmerLength = findValue('kmerLength ');
+transformMetric = findValue('transformMetric ');
+n_neighbors = findValue('n_neighbors ');
+metric = findValue('metric ');
 
 
 //preprocess = findValue('preprocess ').asType(Integer);
@@ -378,7 +381,7 @@ if(trans == 1)
     """
     #!/bin/bash
     cd ${workingDir}
-    python subgenomeClusteringInterface.py transform_main 1 ${reclusterPath} ${technique} ${n_subgenomes}
+    python subgenomeClusteringInterface.py transform_main 1 ${reclusterPath} ${technique} ${n_subgenomes} ${transformMetric}
     """
 else
     """
@@ -414,7 +417,7 @@ if(trans2 == 1)
     """
     #!/bin/bash
     cd ${workingDir}
-    python subgenomeClusteringInterface.py transform_plot ${kmerMat} ${reclusterPath} ${technique} ${n_subgenomes}
+    python subgenomeClusteringInterface.py transform_plot ${kmerMat} ${reclusterPath} ${technique} ${n_subgenomes} ${transformMetric}
     """
 else
     """
@@ -454,7 +457,7 @@ if(clust == 1)
     """
     #!/bin/bash
     cd ${workingDir}
-    python subgenomeClusteringInterface.py cluster ${transformedData}transformed3D.npy ${reclusterPath} ${best500kmerPath} ${model} ${n_subgenomes}
+    python subgenomeClusteringInterface.py cluster ${transformedData}transformed3D.npy ${reclusterPath} ${best500kmerPath} ${model} ${n_subgenomes} ${metric} ${n_neighbors}
     echo ${model}
     cd -
     echo kmer500Best_${model}${transformedData}n${n_clusters}.fa > test.txt
@@ -497,7 +500,7 @@ if(extract == 1)
     """
     #!/bin/bash
     cd ${workingDir}
-    python subgenomeClusteringInterface.py subgenomeExtraction ./analysisOutputs/${subgenomeFolder} ./analysisOutputs/${subgenomeFolder} ${fastaPath} ${genomeSplitName} ${genome2} ${BBstr} ${bootstrap} 0 ${kmerLength} 0 ${best500kmerPath}
+    python subgenomeClusteringInterface.py subgenomeExtraction ./analysisOutputs/${subgenomeFolder} ./analysisOutputs/${subgenomeFolder} ${fastaPath} ${genomeSplitName} ${genome2} ${BBstr} ${bootstrap} 0 ${kmerLength} 0 ${best500kmerPath} ${transformMetric}
     """
 else
     """

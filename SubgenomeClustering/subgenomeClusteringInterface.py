@@ -354,10 +354,10 @@ def generateClusteringMatrixAndKmerPrevalence(args):
 
 def transform_main(args): #FIXME
     try:
-        main, reclusterFolder, model, n_subgenomes  = args
+        main, reclusterFolder, model, n_subgenomes, metric  = args
     except:
-        main, reclusterFolder, model,n_subgenomes = ('1','null','kpca','2')
-    transform_plot((main,reclusterFolder,model,n_subgenomes))
+        main, reclusterFolder, model,n_subgenomes, metric = ('1','null','kpca','2','straight')
+    transform_plot((main,reclusterFolder,model,n_subgenomes,metric))
 
 def peakClusteringMatrix(args):
     kmercountPath, peakFasta, blastFile, save = args
@@ -414,7 +414,7 @@ def peakClusteringMatrix(args):
 
 
 def transform_plot(args):
-    peak, reclusterFolder, model, n_subgenomes = args
+    peak, reclusterFolder, model, n_subgenomes, metric = args
     try:
         n_subgenomes = int(n_subgenomes)
     except:
@@ -431,19 +431,19 @@ def transform_plot(args):
         scaffolds = pickle.load(open('scaffolds.p', 'rb'))
         # df = df.set_index(['index'])
         # scaffolds = list(df.axes[0])
-        N = n_subgenomes + 1
-        dimensionalityReducers = {'kpca': KernelPCA(n_components=N), 'factor': FactorAnalysis(n_components=N),
+        N = n_subgenomes + 1 #FIXME change the kernel
+        dimensionalityReducers = {'kpca': KernelPCA(n_components=N,kernel=metric), 'factor': FactorAnalysis(n_components=N),
                                   'feature': FeatureAgglomeration(n_clusters=N)}
         data = StandardScaler(with_mean=False).fit_transform(data)
         # for model in dimensionalityReducers:
         if model != 'kpca' and peak.startswith('recluster') == 0:
-            data = KernelPCA(n_components=499).fit_transform(data)
+            data = PCA(n_components=499).fit_transform(data)
         if peak.startswith('recluster'):
             data = data.toarray()
         transformed_data = dimensionalityReducers[model].fit_transform(data)
         np.save('%s_%s_%d_transformed3D.npy'%(peak,model,n_subgenomes), transformed_data)
         if n_subgenomes > 2:
-            transformed_data = KernelPCA(n_components=3).fit_transform(transformed_data)
+            transformed_data = KernelPCA(n_components=3,kernel=metric).fit_transform(transformed_data)
         plots = []
         plots.append(
             go.Scatter3d(x=transformed_data[:, 0], y=transformed_data[:, 1], z=transformed_data[:, 2], name='Data',
@@ -455,17 +455,21 @@ def transform_plot(args):
         subprocess.call('touch %s'%(peak + '_' + model + '_%d'%(n_subgenomes) + 'Reduction.html'),shell=True)
 
 def cluster(args):
-    file, reclusterFolder, kmer500Path, clusterMethod, n_subgenomes = args
+    file, reclusterFolder, kmer500Path, clusterMethod, n_subgenomes, metric, n_neighbors = args
     print clusterMethod
     try:
         n_subgenomes = int(n_subgenomes)
     except:
         n_subgenomes = 2
+    try:
+        n_neighbors = int(n_neighbors)
+    except:
+        n_neighbors = 10
     n_clusters = n_subgenomes + 1
     clustering_algorithms = {'SpectralClustering': SpectralClustering(n_clusters=n_clusters, eigen_solver='amg', affinity= 'precomputed', random_state=42),#,gamma=1),arpack#amg,affinity="nearest_neighbors")#, n_neighbors=30, gamma=1),# nearestneighbors
                              'KMeans': MiniBatchKMeans(n_clusters=n_clusters)}
     name, algorithm = clusterMethod , clustering_algorithms[clusterMethod]
-    metric = 'cosine'
+    #metric = 'cosine'
     if 'recluster' not in file:
         dataOld = sps.load_npz('clusteringMatrix.npz')
         scaffolds = pickle.load(open('scaffolds.p', 'rb'))
@@ -491,7 +495,7 @@ def cluster(args):
 
             if clusterMethod == 'SpectralClustering':
                 #try:
-                neigh = NearestNeighbors(n_neighbors=10, algorithm = 'brute' , metric=metric)
+                neigh = NearestNeighbors(n_neighbors=n_neighbors, algorithm = 'brute' , metric=metric)
                 #except:
                 #    print 'NN not working'
                 neigh.fit(transformed_data)
@@ -530,7 +534,7 @@ def cluster(args):
                     print transformed_data[0:10,:],scaffolds[0:10]
                     n_connected = connected[0]
                     while(n_connected > 1):
-                        neigh = NearestNeighbors(n_neighbors=10, algorithm='brute', metric=metric)
+                        neigh = NearestNeighbors(n_neighbors=n_neighbors, algorithm='brute', metric=metric)
                         neigh.fit(transformed_data)
                         fit_data = neigh.kneighbors_graph(transformed_data)
                         connected = sps.csgraph.connected_components(fit_data)
@@ -904,7 +908,7 @@ def make_plots(genome, bedFiles):
     except:
         print 'Unable to run %s via command line..' % dbscriptName
 
-def kmerratio2scaffasta(subgenomePath, originalSubgenomePath, fastaPath, genomeName, originalGenome, BB, bootstrap, iteration, kmerLength,runFinal,kmer500Path):
+def kmerratio2scaffasta(subgenomePath, originalSubgenomePath, fastaPath, genomeName, originalGenome, BB, bootstrap, iteration, kmerLength,runFinal,kmer500Path, metric):
     genome = fastaPath + genomeName
     a = subgenomePath + '/subgenomes.union.bedgraph'#[file for file in os.listdir(subgenomePath) if 'union.bedgraph' in file][0]
     ubedg = open(a, 'r')
@@ -960,7 +964,7 @@ def kmerratio2scaffasta(subgenomePath, originalSubgenomePath, fastaPath, genomeN
             with open(originalSubgenomePath + '/classify/subgenome_%d.txt' % i, 'w') as f:
                 f.write('\n'.join(scaffolds))
     if runFinal == 0:
-        subgenomeExtraction((subgenomePath, originalSubgenomePath, fastaPath, genomeName, originalGenome, BB, bootstrap, iteration, kmerLength, runFinal,kmer500Path))
+        subgenomeExtraction((subgenomePath, originalSubgenomePath, fastaPath, genomeName, originalGenome, BB, bootstrap, iteration, kmerLength, runFinal,kmer500Path,metric))
     else:
         quit()
     """
@@ -981,7 +985,7 @@ def kmerratio2scaffasta(subgenomePath, originalSubgenomePath, fastaPath, genomeN
 
 
 def subgenomeExtraction(args):
-    subgenome_folder, originalSubgenomePath, fastaPath, genomeName, originalGenome, BB, bootstrap, iteration, kmerLength, runFinal,kmer500Path = args
+    subgenome_folder, originalSubgenomePath, fastaPath, genomeName, originalGenome, BB, bootstrap, iteration, kmerLength, runFinal,kmer500Path, metric = args
     bedDict = fai2bed((fastaPath+genomeName,))
     try:
         bootstrap = int(bootstrap)
@@ -1026,12 +1030,12 @@ def subgenomeExtraction(args):
     if bootstrap < iteration and runFinal == 0:
         subgenome_folder = originalSubgenomePath
         classifyFolder = subgenome_folder + '/classify/'
-        subgenome_folder, runFinal = classify(classifyFolder,fastaPath,genomeName,kmerLength, originalSubgenomePath.split('/')[-1],kmer500Path)
+        subgenome_folder, runFinal = classify(classifyFolder,fastaPath,genomeName,kmerLength, originalSubgenomePath.split('/')[-1],kmer500Path,metric)
         iteration += 1
         if runFinal:
-            subgenomeExtraction((subgenome_folder, originalSubgenomePath, fastaPath, genomeName, originalGenome, BB, bootstrap, iteration, kmerLength,runFinal,kmer500Path))
+            subgenomeExtraction((subgenome_folder, originalSubgenomePath, fastaPath, genomeName, originalGenome, BB, bootstrap, iteration, kmerLength,runFinal,kmer500Path,metric))
 
-def classify(classifyFolder, fastaPath, genomeName, kmerLength,model,kmer500Path):
+def classify(classifyFolder, fastaPath, genomeName, kmerLength,model,kmer500Path,metric):
     subgenome_files = [np.vectorize(lambda line: line.strip('\n'))(open(classifyFolder + file, 'r').readlines()) for file in os.listdir(classifyFolder) if file.endswith('.txt') and os.stat(classifyFolder+file).st_size]
     if len(subgenome_files) > 1:
         # FIXME maybe filter out missing sequences...
@@ -1100,7 +1104,8 @@ def classify(classifyFolder, fastaPath, genomeName, kmerLength,model,kmer500Path
             scaffBool = np.vectorize(lambda scaffold: scaffold in total_subgenome_scaffolds)(scaffolds)
             trainLabels = np.vectorize(lambda scaffold: scaffoldLabel_dict[scaffold])(total_subgenome_scaffolds)
             #lda.fit(intermediateTransform[scaffBool],trainLabels)
-            transformed_data = StandardScaler().fit_transform(KernelPCA(n_components=n_subgenomes+1).fit_transform(StandardScaler(with_mean=False).fit_transform(data)))#lda.transform(intermediateTransform)nt(len(kmerIdx.keys())/10)
+            # FIXME change kernel type
+            transformed_data = StandardScaler().fit_transform(KernelPCA(n_components=n_subgenomes+1,kernel=metric).fit_transform(StandardScaler(with_mean=False).fit_transform(data)))#lda.transform(intermediateTransform)nt(len(kmerIdx.keys())/10)
             trainData = transformed_data[scaffBool]
             testData = transformed_data[np.vectorize(lambda scaffold: scaffold in scaffolds_unchecked)(scaffolds)]
             knn = KNeighborsClassifier()
