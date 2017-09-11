@@ -42,10 +42,10 @@ from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
 
 
 
-
 def writeKmercount(args):
     """Takes list of fasta files and runs kmercountexact.sh to generate with only one column for pos and converts them to proper bedgraph format to be sorted"""
-    fastaPath, kmercountPath, kmerLength = args
+    fastaPath, kmercountPath, kmerLength, blastMem = args
+    blastMemStr = "export _JAVA_OPTIONS='-Xms5G -Xmx%sG'"%(blastMem)
     for fastaFile in os.listdir(fastaPath):
         if (fastaFile.endswith('.fa') or fastaFile.endswith('.fasta')) and '_split' in fastaFile:
             f = fastaFile.rstrip()
@@ -54,7 +54,7 @@ def writeKmercount(args):
             outFileName = f[:f.rfind('.')]+'.kcount'
             lineOutputList = [fastaPath, fastaFile, kmercountPath, outFileName, kmerLength]
             bbtoolsI = open(scriptName, 'w')
-            bbtoolsI.write('#!/bin/bash\nmodule load bbtools\nkmercountexact.sh overwrite=true fastadump=f mincount=3 in=%s/%s out=%s/%s k=%s -Xmx100g\n' % tuple(lineOutputList))
+            bbtoolsI.write('#!/bin/bash\nmodule load bbtools\n'+blastMemStr+'\nkmercountexact.sh overwrite=true fastadump=f mincount=3 in=%s/%s out=%s/%s k=%s -Xmx100g\n' % tuple(lineOutputList))
             bbtoolsI.close()
             try:
                 subprocess.call('sh %s' % scriptName, shell=True)#nohup
@@ -73,8 +73,9 @@ def kmer2Fasta(args):
 
 def writeBlast(args):
     """make blast database for whole genome assembly"""
-    genome, blastPath, kmercountPath, fastaPath, BB = args
+    genome, blastPath, kmercountPath, fastaPath, BB, blastMem = args
     genomeName = genome[:genome.rfind('.')]
+    blastMemStr = "export _JAVA_OPTIONS='-Xms5G -Xmx%sG'" % (blastMem)
     #dbscriptName = genomeName + '.db.sh'
     #blastdb = open(dbscriptName, 'w')
     #database_list = [fastaPath+genome, genomeName] #FIXME add genome path
@@ -92,9 +93,9 @@ def writeBlast(args):
         outFileName = f[:f.rfind('.')]+'.BLASTtsv.txt'
         lineOutputList = [genomeName, inputFile, blastPath, outFileName]
         if BB:
-            subprocess.call('bbmap.sh vslow=t ambiguous=all noheader=t secondary=t perfectmode=t threads=8 maxsites=2000000000 outputunmapped=f ref=%s in=%s outm=%s'%(fastaPath+genome,inputFile,blastPath+'/'+f[:f.rfind('.')]+'.sam'),shell=True)
+            subprocess.call(blastMemStr + ' && bbmap.sh vslow=t ambiguous=all noheader=t secondary=t perfectmode=t threads=8 maxsites=2000000000 outputunmapped=f ref=%s in=%s outm=%s'%(fastaPath+genome,inputFile,blastPath+'/'+f[:f.rfind('.')]+'.sam'),shell=True)
         else:
-            subprocess.call('module load blast+/2.6.0 && blastn -db ./%s.blast_db -query %s -task "blastn-short" -outfmt 6 -out %s/%s -num_threads 8 -evalue 1e-2' % tuple(lineOutputList),shell=True)
+            subprocess.call(blastMemStr + ' && module load blast+/2.6.0 && blastn -db ./%s.blast_db -query %s -task "blastn-short" -outfmt 6 -out %s/%s -num_threads 8 -evalue 1e-2' % tuple(lineOutputList),shell=True)
 
 def findScaffolds(args=''):
     with open('correspondence.bed','r') as f:
@@ -437,7 +438,7 @@ def transform_plot(args):
         data = StandardScaler(with_mean=False).fit_transform(data)
         # for model in dimensionalityReducers:
         if model != 'kpca' and peak.startswith('recluster') == 0:
-            data = PCA(n_components=499).fit_transform(data)
+            data = KernelPCA(n_components=499).fit_transform(data)
         if peak.startswith('recluster'):
             data = data.toarray()
         transformed_data = dimensionalityReducers[model].fit_transform(data)
@@ -726,7 +727,8 @@ def fai2bed(args):
     return bedFastaDict
 
 def writeKmerCountSubgenome(args):
-    subgenomeFolder, kmerLength  = args
+    subgenomeFolder, kmerLength, blastMem  = args
+    blastMemStr = "export _JAVA_OPTIONS='-Xms5G -Xmx%sG'" % (blastMem)
     try:
         os.mkdir(subgenomeFolder+'/kmercount_files/')
     except:
@@ -738,7 +740,7 @@ def writeKmerCountSubgenome(args):
             print f
             outFileName = f[:f.rfind('.')] + '.kcount'
             lineOutputList = [subgenomeFolder+'/', fastaFile, kmercountPath, outFileName,kmerLength]
-            subprocess.call('module load bbtools && kmercountexact.sh overwrite=true fastadump=f mincount=3 in=%s/%s out=%s/%s k=%s -Xmx60g' % tuple(
+            subprocess.call(blastMemStr + ' && module load bbtools && kmercountexact.sh overwrite=true fastadump=f mincount=3 in=%s/%s out=%s/%s k=%s -Xmx60g' % tuple(
                     lineOutputList),shell=True)
 
     compareKmers(subgenomeFolder, kmercountPath)
@@ -908,8 +910,9 @@ def make_plots(genome, bedFiles):
     except:
         print 'Unable to run %s via command line..' % dbscriptName
 
-def kmerratio2scaffasta(subgenomePath, originalSubgenomePath, fastaPath, genomeName, originalGenome, BB, bootstrap, iteration, kmerLength,runFinal,kmer500Path, metric):
+def kmerratio2scaffasta(subgenomePath, originalSubgenomePath, fastaPath, genomeName, originalGenome, BB, bootstrap, iteration, kmerLength,runFinal,kmer500Path, metric, originalStr, blastMem):
     genome = fastaPath + genomeName
+    blastMemStr = "export _JAVA_OPTIONS='-Xms5G -Xmx%sG'" % (blastMem)
     a = subgenomePath + '/subgenomes.union.bedgraph'#[file for file in os.listdir(subgenomePath) if 'union.bedgraph' in file][0]
     ubedg = open(a, 'r')
     genomeFastaObj = Fasta(genome)
@@ -941,7 +944,7 @@ def kmerratio2scaffasta(subgenomePath, originalSubgenomePath, fastaPath, genomeN
         with open(subgenome,'w') as f:
             for scaff in scaffolds:
                 f.write('>%s\n%s\n' % (scaff, str(genomeFastaObj[scaff][:])))
-        subprocess.call('reformat.sh in=%s out=%s fastawrap=60'%(subgenome,subgenome.replace('.fasta','_wrapped.fasta')),shell=True)
+        subprocess.call(blastMemStr + ' && reformat.sh in=%s out=%s fastawrap=60'%(subgenome,subgenome.replace('.fasta','_wrapped.fasta')),shell=True)
     if iteration == 0:
         subgenomePath = subgenomePath + '/bootstrap_1'
     if iteration < bootstrap:
@@ -964,7 +967,7 @@ def kmerratio2scaffasta(subgenomePath, originalSubgenomePath, fastaPath, genomeN
             with open(originalSubgenomePath + '/classify/subgenome_%d.txt' % i, 'w') as f:
                 f.write('\n'.join(scaffolds))
     if runFinal == 0:
-        subgenomeExtraction((subgenomePath, originalSubgenomePath, fastaPath, genomeName, originalGenome, BB, bootstrap, iteration, kmerLength, runFinal,kmer500Path,metric))
+        subgenomeExtraction((subgenomePath, originalSubgenomePath, fastaPath, genomeName, originalGenome, BB, bootstrap, iteration, kmerLength, runFinal,kmer500Path,metric, originalStr, blastMem))
     else:
         quit()
     """
@@ -985,7 +988,7 @@ def kmerratio2scaffasta(subgenomePath, originalSubgenomePath, fastaPath, genomeN
 
 
 def subgenomeExtraction(args):
-    subgenome_folder, originalSubgenomePath, fastaPath, genomeName, originalGenome, BB, bootstrap, iteration, kmerLength, runFinal,kmer500Path, metric = args
+    subgenome_folder, originalSubgenomePath, fastaPath, genomeName, originalGenome, BB, bootstrap, iteration, kmerLength, runFinal,kmer500Path, metric, originalStr, blastMem = args
     bedDict = fai2bed((fastaPath+genomeName,))
     try:
         bootstrap = int(bootstrap)
@@ -1022,21 +1025,22 @@ def subgenomeExtraction(args):
                         if line:
                             f2.write(bedDict[line.strip('\n')][0])
                 subprocess.call('bedtools getfasta -fi %s -fo %s -bed %s -name'%(fastaPath+genomeName,subgenome_folder + '/%s_'%('model')+file.replace('.txt','.fa'),subgenome_folder+'/'+file.replace('.txt','.bed')),shell=True)
-        writeKmerCountSubgenome((subgenome_folder,kmerLength))
-        writeBlast((originalGenome,blastPath,subgenome_folder+'/kmercount_files/',fastaPath,BB))
+        writeKmerCountSubgenome((subgenome_folder,kmerLength,blastMem))
+        writeBlast((originalGenome,blastPath,subgenome_folder+'/kmercount_files/',fastaPath,BB,blastMem))
         blast2bed3(subgenome_folder, blastPath, bedPath, sortPath, fastaPath+originalGenome, BB)
         bed2unionBed(fastaPath+originalGenome, subgenome_folder, bedPath)
-        kmerratio2scaffasta(subgenome_folder, originalSubgenomePath, fastaPath, genomeName, originalGenome, BB, bootstrap, iteration, kmerLength,runFinal,kmer500Path)
+        kmerratio2scaffasta(subgenome_folder, originalSubgenomePath, fastaPath, genomeName, originalGenome, BB, bootstrap, iteration, kmerLength,runFinal,kmer500Path,metric,originalStr, blastMem)
     if bootstrap < iteration and runFinal == 0:
         subgenome_folder = originalSubgenomePath
         classifyFolder = subgenome_folder + '/classify/'
-        subgenome_folder, runFinal = classify(classifyFolder,fastaPath,genomeName,kmerLength, originalSubgenomePath.split('/')[-1],kmer500Path,metric)
+        subgenome_folder, runFinal = classify(classifyFolder,fastaPath,genomeName,kmerLength, originalSubgenomePath.split('/')[-1],kmer500Path,metric,originalStr,originalGenome, blastMem)
         iteration += 1
         if runFinal:
-            subgenomeExtraction((subgenome_folder, originalSubgenomePath, fastaPath, genomeName, originalGenome, BB, bootstrap, iteration, kmerLength,runFinal,kmer500Path,metric))
+            subgenomeExtraction((subgenome_folder, originalSubgenomePath, fastaPath, genomeName, originalGenome, BB, bootstrap, iteration, kmerLength,runFinal,kmer500Path,metric,originalStr, blastMem))
 
-def classify(classifyFolder, fastaPath, genomeName, kmerLength,model,kmer500Path,metric):
+def classify(classifyFolder, fastaPath, genomeName, kmerLength,model,kmer500Path,metric,originalStr,originalGenome,blastMem):
     subgenome_files = [np.vectorize(lambda line: line.strip('\n'))(open(classifyFolder + file, 'r').readlines()) for file in os.listdir(classifyFolder) if file.endswith('.txt') and os.stat(classifyFolder+file).st_size]
+    blastMemStr = "export _JAVA_OPTIONS='-Xms5G -Xmx%sG'" % (blastMem)
     if len(subgenome_files) > 1:
         # FIXME maybe filter out missing sequences...
         scaffoldLabel_dict = defaultdict(lambda: 0)
@@ -1050,7 +1054,15 @@ def classify(classifyFolder, fastaPath, genomeName, kmerLength,model,kmer500Path
             os.mkdir(subgenomeFolder)
         except:
             pass
-        scaffolds = np.array(pickle.load(open('scaffolds.p', 'rb')))
+        try:
+            original = int(originalStr)
+        except:
+            original = 0
+        if original:
+            with open(fastaPath+originalGenome+'.fai', 'r') as f:
+                scaffolds = np.array([line.split()[0] for line in f if line])
+        else:
+            scaffolds = np.array(pickle.load(open('scaffolds.p', 'rb')))
         runFinal = 0
         scaffolds_unchecked = np.setdiff1d(scaffolds, total_subgenome_scaffolds)
         print 'scaffolds_unchecked', scaffolds_unchecked
@@ -1059,14 +1071,14 @@ def classify(classifyFolder, fastaPath, genomeName, kmerLength,model,kmer500Path
             with open(classifyFolder + 'ambiguous.fa', 'w') as f:
                 for scaff in total_subgenome_scaffolds:
                     f.write('>%s\n%s\n' % (scaff, str(genomeFastaObj[scaff][:])))
-            subprocess.call('reformat.sh in=%s out=%s fastawrap=60' % (classifyFolder + 'ambiguous.fa', classifyFolder + 'ambiguous_wrapped.fa'), shell=True)
-            subprocess.call('kmercountexact.sh overwrite=true fastadump=f mincount=3 in=%s out=%s k=%s -Xmx60g' % (classifyFolder + 'ambiguous_wrapped.fa', classifyFolder + 'ambiguous.kcount',kmerLength), shell=True)
+            subprocess.call(blastMemStr + ' && reformat.sh in=%s out=%s fastawrap=60' % (classifyFolder + 'ambiguous.fa', classifyFolder + 'ambiguous_wrapped.fa'), shell=True)
+            subprocess.call(blastMemStr + ' && kmercountexact.sh overwrite=true fastadump=f mincount=3 in=%s out=%s k=%s -Xmx60g' % (classifyFolder + 'ambiguous_wrapped.fa', classifyFolder + 'ambiguous.kcount',kmerLength), shell=True)
             with open(classifyFolder+'ambiguous.kcount','r') as f, open(classifyFolder+'ambiguous.kcount.fa','w') as f2:#kmer2Fasta((classifyFolder)) #ambiguous.kcount.fa
                 for line in f:
                     if line and int(line.split('\t')[-1]) >= 100:
                         f2.write('>%s\n%s\n' % tuple([line.split('\t')[0]] * 2))
             print 'bbmap.sh vslow=t ambiguous=all noheader=t secondary=t perfectmode=t threads=8 maxsites=2000000000 outputunmapped=f ref=%s in=%s outm=%s' % (fastaPath + genomeName, classifyFolder + 'ambiguous.kcount.fa', classifyFolder + 'ambiguous.sam')
-            subprocess.call('bbmap.sh vslow=t ambiguous=all noheader=t secondary=t perfectmode=t threads=8 maxsites=2000000000 outputunmapped=f ref=%s in=%s outm=%s' % (fastaPath + genomeName, classifyFolder + 'ambiguous.kcount.fa', classifyFolder + 'ambiguous.sam'), shell=True)
+            subprocess.call(blastMemStr + ' && bbmap.sh vslow=t ambiguous=all noheader=t secondary=t perfectmode=t threads=8 maxsites=2000000000 outputunmapped=f ref=%s in=%s outm=%s' % (fastaPath + genomeName, classifyFolder + 'ambiguous.kcount.fa', classifyFolder + 'ambiguous.sam'), shell=True)
             kmerIdx = {line[1].split('\t')[0]: line[0] for line in
                        enumerate(open(classifyFolder + 'ambiguous.kcount', 'r').readlines())}
             scaffoldIdx = {scaffold[1]: scaffold[0] for scaffold in enumerate(scaffolds)}
@@ -1364,82 +1376,83 @@ def clusterGraph(args): #FIXME under development
     scaffolds = pickle.load(open(scaffoldsFile, 'rb'))
     mapping = {i:scaffolds[i] for i in range(len(scaffolds))}
     G=nx.relabel_nodes(G,mapping, copy=False)
-    pos = nx.spring_layout(G,dim=3)
-    plots = []
-    nodes = G.nodes()
-    N = 2
-    c = ['hsl(' + str(h) + ',50%' + ',50%)' for h in np.linspace(0, 360, N+1)]
-    Xv = [pos[k][0] for k in nodes]
-    Yv = [pos[k][1] for k in nodes]
-    Zv = [pos[k][2] for k in nodes]
-    nodesText = ['%s, %d connections'%(kmer, int(G.degree(kmer))) for kmer in nodes]#, Related: %s'%(kmer, int(G.degree(kmer)), ' '.join(G[kmer].keys())) for kmer in nodes]
-    Xed = []
-    Yed = []
-    Zed = []
-    for edge in G.edges():
-        Xed += [pos[edge[0]][0], pos[edge[1]][0], None]
-        Yed += [pos[edge[0]][1], pos[edge[1]][1], None]
-        Zed += [pos[edge[0]][2], pos[edge[1]][2], None]
-    plots.append(go.Scatter3d(x=Xv,
-                          y=Yv,
-                          z=Zv,
-                          mode='markers',
-                          name='Scaffolds',
-                          marker=go.Marker(symbol='dot',
-                                           size=5,
-                                           color=c[0],
-                                           line=go.Line(color='rgb(50,50,50)', width=0.5)
-                                           ),
-                          text=nodesText,
-                          hoverinfo='text'
-                          ))
-    plots.append(go.Scatter3d(x=Xed,
-                              y=Yed,
-                              z=Zed,
-                              mode='lines',
-                              line=go.Line(color='rgb(210,210,210)', width=1),
-                              hoverinfo='none'
+    for i in [25,50,100,300]:
+        pos = nx.spring_layout(G,dim=3,iterations=i)
+        plots = []
+        nodes = G.nodes()
+        N = 2
+        c = ['hsl(' + str(h) + ',50%' + ',50%)' for h in np.linspace(0, 360, N+1)]
+        Xv = [pos[k][0] for k in nodes]
+        Yv = [pos[k][1] for k in nodes]
+        Zv = [pos[k][2] for k in nodes]
+        nodesText = ['%s, %d connections'%(kmer, int(G.degree(kmer))) for kmer in nodes]#, Related: %s'%(kmer, int(G.degree(kmer)), ' '.join(G[kmer].keys())) for kmer in nodes]
+        Xed = []
+        Yed = []
+        Zed = []
+        for edge in G.edges():
+            Xed += [pos[edge[0]][0], pos[edge[1]][0], None]
+            Yed += [pos[edge[0]][1], pos[edge[1]][1], None]
+            Zed += [pos[edge[0]][2], pos[edge[1]][2], None]
+        plots.append(go.Scatter3d(x=Xv,
+                              y=Yv,
+                              z=Zv,
+                              mode='markers',
+                              name='Scaffolds',
+                              marker=go.Marker(symbol='dot',
+                                               size=5,
+                                               color=c[0],
+                                               line=go.Line(color='rgb(50,50,50)', width=0.5)
+                                               ),
+                              text=nodesText,
+                              hoverinfo='text'
                               ))
-    axis = dict(showbackground=False,
-            showline=False,
-            zeroline=False,
-            showgrid=False,
-            showticklabels=False,
-            title=''
-            )
-
-    layout = go.Layout(
-        title="Graph of Scaffolds",
-        width=1000,
-        height=1000,
-        showlegend=True,
-        scene=go.Scene(
-            xaxis=go.XAxis(axis),
-            yaxis=go.YAxis(axis),
-            zaxis=go.ZAxis(axis),
-        ),
-        margin=go.Margin(
-            t=100
-        ),
-        hovermode='closest',
-        annotations=go.Annotations([
-            go.Annotation(
-                showarrow=False,
-                text="",
-                xref='paper',
-                yref='paper',
-                x=0,
-                y=0.1,
-                xanchor='left',
-                yanchor='bottom',
-                font=go.Font(
-                    size=14
+        plots.append(go.Scatter3d(x=Xed,
+                                  y=Yed,
+                                  z=Zed,
+                                  mode='lines',
+                                  line=go.Line(color='rgb(210,210,210)', width=1),
+                                  hoverinfo='none'
+                                  ))
+        axis = dict(showbackground=False,
+                showline=False,
+                zeroline=False,
+                showgrid=False,
+                showticklabels=False,
+                title=''
                 )
-            )
-        ]), )
-    data1 = go.Data(plots)
-    fig1 = go.Figure(data=data1, layout=layout)
-    py.plot(fig1, filename=outDir + '/OutputGraph.html')
+
+        layout = go.Layout(
+            title="Graph of Scaffolds",
+            width=1000,
+            height=1000,
+            showlegend=True,
+            scene=go.Scene(
+                xaxis=go.XAxis(axis),
+                yaxis=go.YAxis(axis),
+                zaxis=go.ZAxis(axis),
+            ),
+            margin=go.Margin(
+                t=100
+            ),
+            hovermode='closest',
+            annotations=go.Annotations([
+                go.Annotation(
+                    showarrow=False,
+                    text="",
+                    xref='paper',
+                    yref='paper',
+                    x=0,
+                    y=0.1,
+                    xanchor='left',
+                    yanchor='bottom',
+                    font=go.Font(
+                        size=14
+                    )
+                )
+            ]), )
+        data1 = go.Data(plots)
+        fig1 = go.Figure(data=data1, layout=layout)
+        py.plot(fig1, filename=outDir + '/OutputGraph_frame%d.html'%i)
 
 
 

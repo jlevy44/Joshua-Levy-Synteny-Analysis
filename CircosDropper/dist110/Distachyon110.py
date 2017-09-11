@@ -312,8 +312,11 @@ print len(df[df['TreeName'] != 'a']) -  sL
 print len(valL)
 print len(list110)
 print len(df[df['TreeName'] != 'a'])
+print len(df[df['species']=='distachyon'])
+print len(set(bad))
+print len(df[df['TreeName'] == 'a'][df['species']=='distachyon'])
 #print df[df['species'] == 'distachyon'][df['TreeName'] == 'a']
-
+print Tree(tree)
 df.to_csv('correspondence.csv')
 #t.prune([node.name for node in t.traverse('postorder') if node.name in [] and node.name])
 #t.write('grassnewick.nh',format=1)

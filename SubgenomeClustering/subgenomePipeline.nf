@@ -28,6 +28,7 @@ pythonPath = findValue('pythonPath ' );
 systemPath = findValue('systemPath ' );
 blastPath = findValue('blastPath ' );
 kmercountPath = findValue('kmercountPath ' );
+blastMemory = findValue('blastMemory ' );
 reclusterPath = findValue('reclusterPath ');
 best500kmerPath = findValue('kmer500BestPath ');
 fastaPath = findValue('fastaPath ' );
@@ -45,7 +46,6 @@ transformMetric = findValue('transformMetric ');
 n_neighbors = findValue('n_neighbors ');
 metric = findValue('metric ');
 
-
 //preprocess = findValue('preprocess ').asType(Integer);
 
 
@@ -59,6 +59,7 @@ writeKmer = findValue('writeKmer ').asType(Integer);
 fromFasta = findValue('kmer2Fasta ').asType(Integer);
 original = findValue('original ').asType(Integer);
 writeBlast = findValue('writeBlast ').asType(Integer);
+runBlastParallel = findValue('runBlastParallel ').asType(Integer);
 b2b = findValue('blast2bed ').asType(Integer);
 genMat = findValue('generateClusteringMatrix ').asType(Integer);
 kHist = findValue('kmerHistogram ').asType(Integer);
@@ -77,6 +78,8 @@ genomeSplitName = genome - '_split' - '.fa' + '_split.fa';
 blastDBName = genomeSplitName - '.fa';
 genomeFullPath = fastaPath + genomeSplitName;
 n_clusters = (n_subgenomes.asType(Integer) + 1).asType(String);
+originalStr = original.asType(String);
+blastMemStr = "export _JAVA_OPTIONS='-Xms5G -Xmx" + blastMemory + "G'"
 //genome2 = { original == 1 ? genome - '\n' : genomeSplitName };
 //println genome2
 //originalGenome = { original == 1 ? fastaPath + genome : genomeFullPath };
@@ -156,7 +159,7 @@ if(writeKmer == 1)
     """
     #!/bin/bash
     cd ${workingDir}
-    python subgenomeClusteringInterface.py writeKmerCount ${fastaPath} ${kmercountPath} ${kmerLength}
+    python subgenomeClusteringInterface.py writeKmerCount ${fastaPath} ${kmercountPath} ${kmerLength} ${blastMemory}
     """
 else
     """
@@ -191,14 +194,14 @@ if(fromFasta == 1 && BB == 0)
     cd ${workingDir}
     module load blast+/2.6.0
     python subgenomeClusteringInterface.py kmer2Fasta ${kmercountPath}
-    makeblastdb -in ${genomeFullPath} -dbtype nucl -out ${blastDBName}.blast_db
+    ${blastMemStr} && makeblastdb -in ${genomeFullPath} -dbtype nucl -out ${blastDBName}.blast_db
     """
 else if(fromFasta == 1 && BB == 1)
     """
     #!/bin/bash
     cd ${workingDir}
     python subgenomeClusteringInterface.py kmer2Fasta ${kmercountPath}
-    bbmap.sh ref=${genomeFullPath}
+    ${blastMemStr} && bbmap.sh ref=${genomeFullPath}
     """
 else
     """
@@ -222,13 +225,13 @@ if(original == 1 && BB == 0)
     #!/bin/bash
     cd ${workingDir}
     module load blast+/2.6.0
-    makeblastdb -in ${originalGenome} -dbtype nucl -out ${blastDBName2}.blast_db
+    ${blastMemStr} && makeblastdb -in ${originalGenome} -dbtype nucl -out ${blastDBName2}.blast_db
     """
 else if(original == 1 && BB == 1)
     """
     #!/bin/bash
     cd ${workingDir}
-    bbmap.sh ref=${originalGenome}
+    ${blastMemStr} && bbmap.sh ref=${originalGenome}
     """
 else
     """
@@ -240,8 +243,10 @@ else
 
 //Channel.watchPath(kmercountPath+kmercountName, 'create,modify')
 genomeChan5.map{it -> file(kmercountPath+kmercountName)}
-                    .splitFasta(by: 50000,file: true)
-                    .into {kmerFasta; kFast2}
+if(runBlastParallel == 1){
+    genomeChan5.splitFasta(by: 50000,file: true)
+    }
+genomeChan5.into {kmerFasta; kFast2}
                     //.set { kmerFasta }
 
 kFast2.subscribe {println it}
@@ -269,12 +274,12 @@ if(writeBlast == 1 && BB == 0)
     #!/bin/bash
     module load blast+/2.6.0
     #cd ${workingDir}
-    blastn -db ${workingDir}/${blastDBName}.blast_db -query query.fa -task "blastn-short" -outfmt 6 -num_threads 15 -evalue 1e-2 > blast_result
+    ${blastMemStr} && blastn -db ${workingDir}/${blastDBName}.blast_db -query query.fa -task "blastn-short" -outfmt 6 -num_threads 15 -evalue 1e-2 > blast_result
     """
 else if(writeBlast == 1 && BB == 1)
     """
     #!/bin/bash
-    bbmap.sh vslow=t ambiguous=all noheader=t secondary=t perfectmode=t threads=15 maxsites=2000000000 outputunmapped=f ref=${workingDir}/${genomeFullPath} in=query.fa outm=result.sam
+    ${blastMemStr} && bbmap.sh vslow=t ambiguous=all noheader=t secondary=t perfectmode=t threads=15 maxsites=2000000000 outputunmapped=f ref=${workingDir}/${genomeFullPath} in=query.fa outm=result.sam
     mv result.sam blast_result
     """
 else
@@ -500,7 +505,7 @@ if(extract == 1)
     """
     #!/bin/bash
     cd ${workingDir}
-    python subgenomeClusteringInterface.py subgenomeExtraction ./analysisOutputs/${subgenomeFolder} ./analysisOutputs/${subgenomeFolder} ${fastaPath} ${genomeSplitName} ${genome2} ${BBstr} ${bootstrap} 0 ${kmerLength} 0 ${best500kmerPath} ${transformMetric}
+    python subgenomeClusteringInterface.py subgenomeExtraction ./analysisOutputs/${subgenomeFolder} ./analysisOutputs/${subgenomeFolder} ${fastaPath} ${genomeSplitName} ${genome2} ${BBstr} ${bootstrap} 0 ${kmerLength} 0 ${best500kmerPath} ${transformMetric} ${originalStr} ${blastMemory}
     """
 else
     """
@@ -548,7 +553,7 @@ if(kmerBlast == 1 && BB == 0)
     module load blast+/2.6.0
     cd ${workingDir}
     mkdir ${best500kmerPath}/${queryFolder}
-    blastn -db ${workingDir}/${blastDBName}.blast_db -query ${best500kmerPath}/${query} -task "blastn-short" -outfmt 6 -num_threads 15 -evalue 1e-2 > ${best500kmerPath}/${queryFolder}/${queryFolder}.blast.txt
+    ${blastMemStr} && blastn -db ${workingDir}/${blastDBName}.blast_db -query ${best500kmerPath}/${query} -task "blastn-short" -outfmt 6 -num_threads 15 -evalue 1e-2 > ${best500kmerPath}/${queryFolder}/${queryFolder}.blast.txt
     """
 else if(kmerBlast == 1 && BB == 1)
     """
@@ -556,7 +561,7 @@ else if(kmerBlast == 1 && BB == 1)
     cd ${workingDir}
     mkdir ${best500kmerPath}/${queryFolder}
     echo ${best500kmerPath}/${queryFolder}/${queryFolder}.blast.sam
-    bbmap.sh vslow=t ambiguous=all noheader=t secondary=t perfectmode=t threads=15 maxsites=2000000000 outputunmapped=f ref=${genomeFullPath} in=${best500kmerPath}/${query} outm=${best500kmerPath}/${queryFolder}/${queryFolder}.blast.sam
+    ${blastMemStr} && bbmap.sh vslow=t ambiguous=all noheader=t secondary=t perfectmode=t threads=15 maxsites=2000000000 outputunmapped=f ref=${genomeFullPath} in=${best500kmerPath}/${query} outm=${best500kmerPath}/${queryFolder}/${queryFolder}.blast.sam
     mv ${best500kmerPath}/${queryFolder}/${queryFolder}.blast.sam ${best500kmerPath}/${queryFolder}/${queryFolder}.blast.txt"""
 else
     """
