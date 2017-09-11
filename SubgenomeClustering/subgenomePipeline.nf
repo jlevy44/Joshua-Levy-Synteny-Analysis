@@ -242,11 +242,16 @@ else
 
 
 //Channel.watchPath(kmercountPath+kmercountName, 'create,modify')
-genomeChan5.map{it -> file(kmercountPath+kmercountName)}
 if(runBlastParallel == 1){
-    genomeChan5.splitFasta(by: 50000,file: true)
+    genomeChan5.map{it -> file(kmercountPath+kmercountName)}
+               .splitFasta(by: 50000,file: true)
+               .into {kmerFasta; kFast2}
     }
-genomeChan5.into {kmerFasta; kFast2}
+else{
+    genomeChan5.map{it -> file(kmercountPath+kmercountName)}
+               .into {kmerFasta; kFast2}
+}
+
                     //.set { kmerFasta }
 
 kFast2.subscribe {println it}
