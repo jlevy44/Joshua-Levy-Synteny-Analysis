@@ -62,12 +62,16 @@ def writeKmercount(args):
                 print 'Unable to run %s via command line..' % outFileName
 
 def kmer2Fasta(args):
-    kmercountPath = args[0]
+    kmercountPath, kmer_low_count = args
+    try:
+        kmer_low_count = int(kmer_low_count)
+    except:
+        kmer_low_count = 100
     for kmer in os.listdir(kmercountPath):
         if kmer.endswith('.kcount'):
             with open(kmercountPath+kmer,'r') as f, open(kmercountPath+kmer+'.fa','w') as f2:
                 for line in f:
-                    if line and int(line.split('\t')[-1]) >= 100:
+                    if line and int(line.split('\t')[-1]) >= kmer_low_count:
                         f2.write('>%s\n%s\n'%tuple([line.split('\t')[0]]*2))
 
 
@@ -554,7 +558,12 @@ def cluster(args):
                     scaffolds_noconnect = []
 
                 # FIXME do something with thrown out points in future
-                np.save('analysisOutputs/' + name + Tname + 'n%d' % n_clusters +'/graphInitialPositions.npy', transformed_data)
+                if n_subgenomes > 2:
+                    t_data = KernelPCA(n_components=3).fit_transform(transformed_data)
+                else:
+                    t_data = transformed_data
+                np.save('analysisOutputs/' + name + Tname + 'n%d' % n_clusters +'/graphInitialPositions.npy', t_data)
+                del t_data
                 sps.save_npz('analysisOutputs/' + name + Tname + 'n%d' % n_clusters +'/spectralGraph.npz', fit_data.tocsc())
                 pickle.dump(scaffolds,open('analysisOutputs/' + name + Tname + 'n%d' % n_clusters + '/scaffolds_connect.p', 'wb'))
                 pickle.dump(scaffolds_noconnect,open('analysisOutputs/' + name + Tname + 'n%d' % n_clusters + '/scaffolds_noconnect.p', 'wb'))
@@ -728,7 +737,7 @@ def fai2bed(args):
     return bedFastaDict
 
 def writeKmerCountSubgenome(args):
-    subgenomeFolder, kmerLength, blastMem  = args
+    subgenomeFolder, kmerLength, blastMem, diff_kmer_threshold  = args
     blastMemStr = "export _JAVA_OPTIONS='-Xms5G -Xmx%sG'" % (blastMem)
     try:
         os.mkdir(subgenomeFolder+'/kmercount_files/')
@@ -744,7 +753,7 @@ def writeKmerCountSubgenome(args):
             subprocess.call(blastMemStr + ' && module load bbtools && kmercountexact.sh overwrite=true fastadump=f mincount=3 in=%s/%s out=%s/%s k=%s -Xmx60g' % tuple(
                     lineOutputList),shell=True)
 
-    compareKmers(subgenomeFolder, kmercountPath)
+    compareKmers(diff_kmer_threshold, kmercountPath)
 
 def kmercounttodict(kmercount2fname,kmercountPath):
     """ kmercounttodict function creates kmer : count key value pairs, takes path and file name of a kmer count file"""
@@ -758,10 +767,13 @@ def kmercounttodict(kmercount2fname,kmercountPath):
     inputFile.close()
     return dictConverted
 
-def compareKmers(subgenomeFolder,kmercountPath):
+def compareKmers(diff_kmer_threshold,kmercountPath):
+    try:
+        ratio_threshold = int(diff_kmer_threshold)
+    except:
+        ratio_threshold = 20
     dictOfGenes = {}
-    ratio_threshold = 20
-    end_dinucleotide = 'GG'
+    #end_dinucleotide = 'GG'
     kmercountFiles = [file for file in os.listdir(kmercountPath) if file.endswith('.kcount') and '_split' not in file]
     for file in kmercountFiles:
         # creates a dictionary that associates a species to its dictionary of the kmer : count key value pairs
@@ -911,11 +923,15 @@ def make_plots(genome, bedFiles):
     except:
         print 'Unable to run %s via command line..' % dbscriptName
 
-def kmerratio2scaffasta(subgenomePath, originalSubgenomePath, fastaPath, genomeName, originalGenome, BB, bootstrap, iteration, kmerLength,runFinal,kmer500Path, metric, originalStr, blastMem):
+def kmerratio2scaffasta(subgenomePath, originalSubgenomePath, fastaPath, genomeName, originalGenome, BB, bootstrap, iteration, kmerLength,runFinal,kmer500Path, metric, originalStr, blastMem, kmer_low_count, diff_kmer_threshold, unionbed_threshold):
     try:
         original = int(originalStr)
     except:
         original = 0
+    try:
+        absolute_threshold, ratio_threshold = tuple(map(int,unionbed_threshold.split(',')))
+    except:
+        absolute_threshold, ratio_threshold = 10, 2
     if original:
         genomeName = originalGenome
     genome = fastaPath + genomeName
@@ -933,7 +949,7 @@ def kmerratio2scaffasta(subgenomePath, originalSubgenomePath, fastaPath, genomeN
     outputSubgenomes = [extractPath + genomeprefix + '.subgenome' + chr(i+65) + '.fasta' for i in range(len(ubedg.readline().split('\t')[3:]))]
     ubedg.seek(0)
     scaffoldsOut = [[] for subgenome in outputSubgenomes]#{subgenome:[] for subgenome in outputSubgenomes}
-
+    ambiguousScaffolds = []
 
     # parse the unionbed file to subset
     for line in ubedg:
@@ -941,11 +957,15 @@ def kmerratio2scaffasta(subgenomePath, originalSubgenomePath, fastaPath, genomeN
             # print line
             lineList = line.split('\t')
             scaff = str((lineList[0]).rstrip())
+            ambiguous = 1
             x = [float((lineList[i]).rstrip()) for i in range(3,len(lineList))]
             for i in range(len(x)):
-                x_others = x[:i] + x[i+1:]
-                if all([(x_i == 0 and x[i] > 10) or (x_i > 0 and (x[i]/x_i) > 2) for x_i in x_others]):
+                x_others = x[:i] + x[i+1:] #FIXME maybe add a break below, or find max of list to speed up algorithm, not a big deal
+                if all([(x_i == 0 and x[i] > absolute_threshold) or (x_i > 0 and (x[i]/x_i) > ratio_threshold) for x_i in x_others]):
                     scaffoldsOut[i].append(scaff)
+                    ambiguous = 0
+            if ambiguous:
+                ambiguousScaffolds.append(scaff)
     no_kill = all([len(subgenome) > 0 for subgenome in scaffoldsOut])
     ubedg.close()
     for subgenome, scaffolds in zip(outputSubgenomes,scaffoldsOut):
@@ -953,6 +973,11 @@ def kmerratio2scaffasta(subgenomePath, originalSubgenomePath, fastaPath, genomeN
             for scaff in scaffolds:
                 f.write('>%s\n%s\n' % (scaff, str(genomeFastaObj[scaff][:])))
         subprocess.call(blastMemStr + ' && reformat.sh in=%s out=%s fastawrap=60'%(subgenome,subgenome.replace('.fasta','_wrapped.fasta')),shell=True)
+    with open(extractPath+'ambiguousScaffolds.fasta','w') as f:
+        for scaff in ambiguousScaffolds:
+            f.write('>%s\n%s\n' % (scaff, str(genomeFastaObj[scaff][:])))
+    subprocess.call(blastMemStr + ' && reformat.sh in=%s out=%s fastawrap=60' % (extractPath+'ambiguousScaffolds.fasta', extractPath+'ambiguousScaffolds_wrapped.fasta'), shell=True)
+
     if iteration == 0:
         subgenomePath = subgenomePath + '/bootstrap_1'
     if iteration < bootstrap:
@@ -977,7 +1002,7 @@ def kmerratio2scaffasta(subgenomePath, originalSubgenomePath, fastaPath, genomeN
     if no_kill == 0:
         quit()
     if runFinal == 0:
-        subgenomeExtraction((subgenomePath, originalSubgenomePath, fastaPath, genomeName, originalGenome, BB, bootstrap, iteration, kmerLength, runFinal,kmer500Path,metric, originalStr, blastMem))
+        subgenomeExtraction((subgenomePath, originalSubgenomePath, fastaPath, genomeName, originalGenome, BB, bootstrap, iteration, kmerLength, runFinal,kmer500Path,metric, originalStr, blastMem, kmer_low_count, diff_kmer_threshold, unionbed_threshold))
     else:
         quit()
     """
@@ -998,7 +1023,7 @@ def kmerratio2scaffasta(subgenomePath, originalSubgenomePath, fastaPath, genomeN
 
 
 def subgenomeExtraction(args):
-    subgenome_folder, originalSubgenomePath, fastaPath, genomeName, originalGenome, BB, bootstrap, iteration, kmerLength, runFinal,kmer500Path, metric, originalStr, blastMem = args
+    subgenome_folder, originalSubgenomePath, fastaPath, genomeName, originalGenome, BB, bootstrap, iteration, kmerLength, runFinal,kmer500Path, metric, originalStr, blastMem, kmer_low_count, diff_kmer_threshold, unionbed_threshold = args
     bedDict = fai2bed((fastaPath+genomeName,))
     try:
         bootstrap = int(bootstrap)
@@ -1035,22 +1060,26 @@ def subgenomeExtraction(args):
                         if line:
                             f2.write(bedDict[line.strip('\n')][0])
                 subprocess.call('bedtools getfasta -fi %s -fo %s -bed %s -name'%(fastaPath+genomeName,subgenome_folder + '/%s_'%('model')+file.replace('.txt','.fa'),subgenome_folder+'/'+file.replace('.txt','.bed')),shell=True)
-        writeKmerCountSubgenome((subgenome_folder,kmerLength,blastMem))
+        writeKmerCountSubgenome((subgenome_folder,kmerLength,blastMem,diff_kmer_threshold))
         writeBlast((originalGenome,blastPath,subgenome_folder+'/kmercount_files/',fastaPath,BB,blastMem))
         blast2bed3(subgenome_folder, blastPath, bedPath, sortPath, fastaPath+originalGenome, BB)
         bed2unionBed(fastaPath+originalGenome, subgenome_folder, bedPath)
-        kmerratio2scaffasta(subgenome_folder, originalSubgenomePath, fastaPath, genomeName, originalGenome, BB, bootstrap, iteration, kmerLength,runFinal,kmer500Path,metric,originalStr, blastMem)
+        kmerratio2scaffasta(subgenome_folder, originalSubgenomePath, fastaPath, genomeName, originalGenome, BB, bootstrap, iteration, kmerLength,runFinal,kmer500Path,metric,originalStr, blastMem, kmer_low_count, diff_kmer_threshold, unionbed_threshold)
     if bootstrap < iteration and runFinal == 0:
         subgenome_folder = originalSubgenomePath
         classifyFolder = subgenome_folder + '/classify/'
-        subgenome_folder, runFinal = classify(classifyFolder,fastaPath,genomeName,kmerLength, originalSubgenomePath.split('/')[-1],kmer500Path,metric,originalStr,originalGenome, blastMem)
+        subgenome_folder, runFinal = classify(classifyFolder,fastaPath,genomeName,kmerLength, originalSubgenomePath.split('/')[-1],kmer500Path,metric,originalStr,originalGenome, blastMem, kmer_low_count)
         iteration += 1
         if runFinal:
-            subgenomeExtraction((subgenome_folder, originalSubgenomePath, fastaPath, genomeName, originalGenome, BB, bootstrap, iteration, kmerLength,runFinal,kmer500Path,metric,originalStr, blastMem))
+            subgenomeExtraction((subgenome_folder, originalSubgenomePath, fastaPath, genomeName, originalGenome, BB, bootstrap, iteration, kmerLength,runFinal,kmer500Path,metric,originalStr, blastMem, kmer_low_count, diff_kmer_threshold, unionbed_threshold))
 
-def classify(classifyFolder, fastaPath, genomeName, kmerLength,model,kmer500Path,metric,originalStr,originalGenome,blastMem):
+def classify(classifyFolder, fastaPath, genomeName, kmerLength,model,kmer500Path,metric,originalStr,originalGenome,blastMem,kmer_low_count):
     subgenome_files = [np.vectorize(lambda line: line.strip('\n'))(open(classifyFolder + file, 'r').readlines()) for file in os.listdir(classifyFolder) if file.endswith('.txt') and os.stat(classifyFolder+file).st_size]
     blastMemStr = "export _JAVA_OPTIONS='-Xms5G -Xmx%sG'" % (blastMem)
+    try:
+        kmer_low_count = int(kmer_low_count)
+    except:
+        kmer_low_count = 100
     if len(subgenome_files) > 1:
         # FIXME maybe filter out missing sequences...
         scaffoldLabel_dict = defaultdict(lambda: 0)
@@ -1085,7 +1114,7 @@ def classify(classifyFolder, fastaPath, genomeName, kmerLength,model,kmer500Path
             subprocess.call(blastMemStr + ' && kmercountexact.sh overwrite=true fastadump=f mincount=3 in=%s out=%s k=%s -Xmx60g' % (classifyFolder + 'ambiguous_wrapped.fa', classifyFolder + 'ambiguous.kcount',kmerLength), shell=True)
             with open(classifyFolder+'ambiguous.kcount','r') as f, open(classifyFolder+'ambiguous.kcount.fa','w') as f2:#kmer2Fasta((classifyFolder)) #ambiguous.kcount.fa
                 for line in f:
-                    if line and int(line.split('\t')[-1]) >= 100:
+                    if line and int(line.split('\t')[-1]) >= kmer_low_count:
                         f2.write('>%s\n%s\n' % tuple([line.split('\t')[0]] * 2))
             print 'bbmap.sh vslow=t ambiguous=all noheader=t secondary=t perfectmode=t threads=8 maxsites=2000000000 outputunmapped=f ref=%s in=%s outm=%s' % (fastaPath + genomeName, classifyFolder + 'ambiguous.kcount.fa', classifyFolder + 'ambiguous.sam')
             subprocess.call(blastMemStr + ' && bbmap.sh vslow=t ambiguous=all noheader=t secondary=t perfectmode=t threads=8 maxsites=2000000000 outputunmapped=f ref=%s path=%s/ in=%s outm=%s' % (fastaPath + genomeName, classifyFolder, classifyFolder + 'ambiguous.kcount.fa', classifyFolder + 'ambiguous.sam'), shell=True)
@@ -1383,7 +1412,7 @@ def generateKmerGraph(args):
     py.plot(fig1, filename=blastPath + 'KmerClusteredGraph3D.html')
 
 def clusterGraph(args): #FIXME under development
-    helpStr = """python subgenomeClusteringInterface.py clusterGraph graph_Matrix_path[.npz] connectedScaffoldsPath[.p] outputDir initialPosition=random|spectral|path_to_.npy iterations\npython subgenomeClusteringInterface.py clusterGraph help/-h"""
+    helpStr = """python subgenomeClusteringInterface.py clusterGraph graph_Matrix_path[.npz] connectedScaffoldsPath[.p] outputDir initialPosition=random|spectral|path_to_.npy iterations features_bed=Path_to_Bed\npython subgenomeClusteringInterface.py clusterGraph help/-h"""
     try:
         if args[0] == 'help' or args[0] == '-h':
             print helpStr
@@ -1392,12 +1421,43 @@ def clusterGraph(args): #FIXME under development
         print helpStr
         quit()
     try:
-        sparse_matrix_file, scaffoldsFile, outDir, initialPos, iteration = args
+        sparse_matrix_file, scaffoldsFile, outDir, initialPos, iteration, bedFeatures = args
     except:
         print helpStr
         quit()
+    try:
+        bedFeaturesFile = bedFeatures.split('=')[1]
+        if bedFeaturesFile.endswith('.bed') == 1:
+            featureMap = 1
+        else:
+            featureMap = 0
+    except:
+        featureMap = 0
     G = nx.from_scipy_sparse_matrix(sps.load_npz(sparse_matrix_file))
     scaffolds = pickle.load(open(scaffoldsFile, 'rb'))
+    N = 2
+    c = ['hsl(' + str(h) + ',50%' + ',50%)' for h in np.linspace(0, 360, N + 1)]
+    if featureMap:
+        scaffoldsDict = {scaffold : '\t'.join(['_'.join(scaffold.split('_')[0:-2])]+scaffold.split('_')[-2:]) for scaffold in scaffolds}
+        outputFeatures = defaultdict(list)
+        scaffoldIdx = {scaffolds[i] : i for i in range(len(scaffolds))}
+        scaffoldsBed = BedTool('\n'.join(scaffoldsDict.values()),from_string=True)
+        featureBed = BedTool(bedFeaturesFile)
+        finalBed = scaffoldsBed.intersect(featureBed,wa=True,wb=True).sort().merge(d=-1,c=7,o='distinct')
+        for line in str(finalBed).splitlines():
+            lineList = line.split('\t')
+            feature = lineList[-1]
+            if ',' in feature:
+                feature = 'ambiguous_black'
+            scaffold = '_'.join(lineList[0:-1])
+            idx = scaffoldIdx[scaffold]
+            outputFeatures[idx] = tuple(feature.split('_'))
+        outputFeaturesArray = np.array([outputFeatures[i] for i in range(len(scaffolds))])
+        names = outputFeaturesArray[:,0]
+        colors = outputFeaturesArray[:,1]
+    else:
+        names = 'Scaffolds'
+        colors = c[0]
     mapping = {i:scaffolds[i] for i in range(len(scaffolds))}
     G=nx.relabel_nodes(G,mapping, copy=False)
     try:
@@ -1429,8 +1489,6 @@ def clusterGraph(args): #FIXME under development
         pos = nx.spring_layout(G,dim=3,iterations=i,pos=pos_i)
         plots = []
         nodes = G.nodes()
-        N = 2
-        c = ['hsl(' + str(h) + ',50%' + ',50%)' for h in np.linspace(0, 360, N+1)]
         Xv = [pos[k][0] for k in nodes]
         Yv = [pos[k][1] for k in nodes]
         Zv = [pos[k][2] for k in nodes]
@@ -1446,10 +1504,10 @@ def clusterGraph(args): #FIXME under development
                               y=Yv,
                               z=Zv,
                               mode='markers',
-                              name='Scaffolds',
+                              name=names,
                               marker=go.Marker(symbol='dot',
                                                size=5,
-                                               color=c[0],
+                                               color=colors,
                                                line=go.Line(color='rgb(50,50,50)', width=0.5)
                                                ),
                               text=nodesText,

@@ -45,6 +45,13 @@ kmerLength = findValue('kmerLength ');
 transformMetric = findValue('transformMetric ');
 n_neighbors = findValue('n_neighbors ');
 metric = findValue('metric ');
+kmer_low_count = findValue('kmer_low_count ')
+diff_kmer_threshold = findValue('diff_kmer_threshold ')
+unionbed_threshold = findValue('unionbed_threshold ')
+
+clusterModels = findValue('clusterMethods ').split(',')
+
+//clusterModels = ['KMeans','SpectralClustering']
 
 //preprocess = findValue('preprocess ').asType(Integer);
 
@@ -193,14 +200,14 @@ if(fromFasta == 1 && BB == 0)
     #!/bin/bash
     cd ${workingDir}
     module load blast+/2.6.0
-    python subgenomeClusteringInterface.py kmer2Fasta ${kmercountPath}
+    python subgenomeClusteringInterface.py kmer2Fasta ${kmercountPath} ${kmer_low_count}
     ${blastMemStr} && makeblastdb -in ${genomeFullPath} -dbtype nucl -out ${blastDBName}.blast_db
     """
 else if(fromFasta == 1 && BB == 1)
     """
     #!/bin/bash
     cd ${workingDir}
-    python subgenomeClusteringInterface.py kmer2Fasta ${kmercountPath}
+    python subgenomeClusteringInterface.py kmer2Fasta ${kmercountPath} ${kmer_low_count}
     ${blastMemStr} && bbmap.sh ref=${genomeFullPath}
     """
 else
@@ -444,7 +451,7 @@ transformedData = Channel.watchPath('*transformed3D.npy','create,modify')
                          .map {file -> file.name - 'transformed3D.npy'}
                          //.filter((file.name).startsWith('main'))
 
-clusterModels = ['KMeans','SpectralClustering']
+
 kmerBest500Files = Channel.create()
 subgenomeFoldersRaw = Channel.create()
 process cluster {
@@ -510,7 +517,7 @@ if(extract == 1)
     """
     #!/bin/bash
     cd ${workingDir}
-    python subgenomeClusteringInterface.py subgenomeExtraction ./analysisOutputs/${subgenomeFolder} ./analysisOutputs/${subgenomeFolder} ${fastaPath} ${genomeSplitName} ${genome2} ${BBstr} ${bootstrap} 0 ${kmerLength} 0 ${best500kmerPath} ${transformMetric} ${originalStr} ${blastMemory}
+    python subgenomeClusteringInterface.py subgenomeExtraction ./analysisOutputs/${subgenomeFolder} ./analysisOutputs/${subgenomeFolder} ${fastaPath} ${genomeSplitName} ${genome2} ${BBstr} ${bootstrap} 0 ${kmerLength} 0 ${best500kmerPath} ${transformMetric} ${originalStr} ${blastMemory} ${kmer_low_count} ${diff_kmer_threshold} ${unionbed_threshold}
     """
 else
     """
