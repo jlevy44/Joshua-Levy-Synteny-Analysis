@@ -1457,7 +1457,7 @@ def clusterGraph(args): #FIXME under development
                 featuresDict[scaffold] = '|'.join([ft.split('_')[0] for ft in feature.split(',')])
                 feature = 'ambiguous_black'
             else:
-                featuresDict[scaffold] = feature
+                featuresDict[scaffold] = feature.split('_')[0]
             idx = scaffoldIdx[scaffold]
             outputFeatures[idx] = tuple(feature.split('_'))
         outputFeaturesArray = np.array([outputFeatures[i] for i in range(len(scaffolds))])

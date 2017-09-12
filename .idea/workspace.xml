@@ -3,9 +3,7 @@
   <component name="ChangeListManager">
     <list default="true" id="87dadfdf-9689-45cf-b4af-5fd342ee0ae6" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/SubgenomeClustering/kmerCountCompare.txt" afterPath="$PROJECT_DIR$/SubgenomeClustering/kmerCountCompare.txt" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/SubgenomeClustering/subgenomeClusteringInterface.py" afterPath="$PROJECT_DIR$/SubgenomeClustering/subgenomeClusteringInterface.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/SubgenomeClustering/subgenomePipeline.nf" afterPath="$PROJECT_DIR$/SubgenomeClustering/subgenomePipeline.nf" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -23,7 +21,7 @@
       <file leaf-file-name="subgenomePipeline.nf" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/SubgenomeClustering/subgenomePipeline.nf">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="75">
+            <state relative-caret-position="7785">
               <caret line="519" column="288" lean-forward="false" selection-start-line="519" selection-start-column="288" selection-end-line="519" selection-end-column="288" />
               <folding />
             </state>
@@ -43,7 +41,7 @@
       <file leaf-file-name="circosDropper.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/CircosDropper/circosDropper.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="15">
+            <state relative-caret-position="615">
               <caret line="47" column="22" lean-forward="false" selection-start-line="47" selection-start-column="22" selection-end-line="47" selection-end-column="22" />
               <folding>
                 <element signature="e#0#42#0" expanded="true" />
@@ -55,7 +53,7 @@
       <file leaf-file-name="kmerCountCompare.txt" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/SubgenomeClustering/kmerCountCompare.txt">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="165">
+            <state relative-caret-position="285">
               <caret line="19" column="10" lean-forward="false" selection-start-line="19" selection-start-column="10" selection-end-line="19" selection-end-column="10" />
               <folding />
             </state>
@@ -65,8 +63,8 @@
       <file leaf-file-name="subgenomeClusteringInterface.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/SubgenomeClustering/subgenomeClusteringInterface.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="941">
-              <caret line="1471" column="42" lean-forward="true" selection-start-line="1471" selection-start-column="42" selection-end-line="1471" selection-end-column="42" />
+            <state relative-caret-position="45">
+              <caret line="1447" column="45" lean-forward="true" selection-start-line="1447" selection-start-column="45" selection-end-line="1447" selection-end-column="45" />
               <folding>
                 <element signature="e#0#14#0" expanded="true" />
               </folding>
@@ -77,8 +75,8 @@
       <file leaf-file-name="Distachyon110.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/CircosDropper/dist110/Distachyon110.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="281">
-              <caret line="351" column="19" lean-forward="true" selection-start-line="351" selection-start-column="19" selection-end-line="351" selection-end-column="19" />
+            <state relative-caret-position="5265">
+              <caret line="351" column="19" lean-forward="false" selection-start-line="351" selection-start-column="19" selection-end-line="351" selection-end-column="19" />
               <folding>
                 <element signature="e#0#9#0" expanded="true" />
               </folding>
@@ -90,7 +88,7 @@
         <entry file="file://$PROJECT_DIR$/CircosDropper/dist110/grassnewick.nh">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="0">
-              <caret line="0" column="52" lean-forward="true" selection-start-line="0" selection-start-column="52" selection-end-line="0" selection-end-column="52" />
+              <caret line="0" column="52" lean-forward="false" selection-start-line="0" selection-start-column="52" selection-end-line="0" selection-end-column="52" />
               <folding />
             </state>
           </provider>
@@ -135,7 +133,6 @@
       <find>Bd21Control</find>
       <find>361</find>
       <find>Bd21C</find>
-      <find>283</find>
       <find>059</find>
       <find>clusterGra</find>
       <find>scaffa</find>
@@ -148,6 +145,7 @@
       <find>kmer_low_count</find>
       <find>${kmer_low_count} ${diff_kmer_threshold} ${unionbed_threshold}</find>
       <find>clusterMo</find>
+      <find>283</find>
     </findStrings>
     <replaceStrings>
       <replace>val</replace>
@@ -239,6 +237,7 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scratches" />
       <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
@@ -328,7 +327,6 @@
           </PATH>
         </subPane>
       </pane>
-      <pane id="Scratches" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -521,20 +519,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1497987891371</updated>
-    </task>
-    <task id="LOCAL-00013" summary="working on characterizing/clustering scaffolds by subgenome">
-      <created>1500333943717</created>
-      <option name="number" value="00013" />
-      <option name="presentableId" value="LOCAL-00013" />
-      <option name="project" value="LOCAL" />
-      <updated>1500333943717</updated>
-    </task>
-    <task id="LOCAL-00014" summary="working on characterizing/clustering scaffolds by subgenome">
-      <created>1500334024145</created>
-      <option name="number" value="00014" />
-      <option name="presentableId" value="LOCAL-00014" />
-      <option name="project" value="LOCAL" />
-      <updated>1500334024145</updated>
     </task>
     <task id="LOCAL-00015" summary="subgenome clustering">
       <created>1500391045012</created>
@@ -865,7 +849,21 @@
       <option name="project" value="LOCAL" />
       <updated>1505237111255</updated>
     </task>
-    <option name="localTasksCounter" value="62" />
+    <task id="LOCAL-00062" summary="changes to clusterGraph">
+      <created>1505248402772</created>
+      <option name="number" value="00062" />
+      <option name="presentableId" value="LOCAL-00062" />
+      <option name="project" value="LOCAL" />
+      <updated>1505248402772</updated>
+    </task>
+    <task id="LOCAL-00063" summary="added threshold options and clusterMethods to subgenomeCluster">
+      <created>1505250933287</created>
+      <option name="number" value="00063" />
+      <option name="presentableId" value="LOCAL-00063" />
+      <option name="project" value="LOCAL" />
+      <updated>1505250933287</updated>
+    </task>
+    <option name="localTasksCounter" value="64" />
     <servers />
   </component>
   <component name="TodoView">
@@ -886,25 +884,24 @@
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32933334" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.23007247" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.25304466" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25304466" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32904148" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
     </layout>
   </component>
   <component name="VcsContentAnnotationSettings">
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="continuing to make changes to scaffolding pipeline and clustering algorithm. Tested different clustering algorithms and adding classifier support" />
     <MESSAGE value="fixed a bug in scaffolding pipeline and added more classifier options" />
     <MESSAGE value="Still working on fixing scaffolding. Changed bbmap kmer size to 750... Clustering algorithm being converted to nextflow" />
     <MESSAGE value="build Clustering pipeline up until clustering capabilities" />
@@ -929,7 +926,8 @@
     <MESSAGE value="added distance metric and nearest neighbor option for spectral clustering and transform metric for kernel pca" />
     <MESSAGE value="improvements to pipeline" />
     <MESSAGE value="changes to clusterGraph" />
-    <option name="LAST_COMMIT_MESSAGE" value="changes to clusterGraph" />
+    <MESSAGE value="added threshold options and clusterMethods to subgenomeCluster" />
+    <option name="LAST_COMMIT_MESSAGE" value="added threshold options and clusterMethods to subgenomeCluster" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1270,15 +1268,15 @@
     <entry file="file://$PROJECT_DIR$/CircosDropper/dist110/grassnewick.nh">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
-          <caret line="0" column="52" lean-forward="true" selection-start-line="0" selection-start-column="52" selection-end-line="0" selection-end-column="52" />
+          <caret line="0" column="52" lean-forward="false" selection-start-line="0" selection-start-column="52" selection-end-line="0" selection-end-column="52" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/CircosDropper/dist110/Distachyon110.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="281">
-          <caret line="351" column="19" lean-forward="true" selection-start-line="351" selection-start-column="19" selection-end-line="351" selection-end-column="19" />
+        <state relative-caret-position="5265">
+          <caret line="351" column="19" lean-forward="false" selection-start-line="351" selection-start-column="19" selection-end-line="351" selection-end-column="19" />
           <folding>
             <element signature="e#0#9#0" expanded="true" />
           </folding>
@@ -1287,7 +1285,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/CircosDropper/circosDropper.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="15">
+        <state relative-caret-position="615">
           <caret line="47" column="22" lean-forward="false" selection-start-line="47" selection-start-column="22" selection-end-line="47" selection-end-column="22" />
           <folding>
             <element signature="e#0#42#0" expanded="true" />
@@ -1297,7 +1295,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/SubgenomeClustering/kmerCountCompare.txt">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="165">
+        <state relative-caret-position="285">
           <caret line="19" column="10" lean-forward="false" selection-start-line="19" selection-start-column="10" selection-end-line="19" selection-end-column="10" />
           <folding />
         </state>
@@ -1305,7 +1303,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/SubgenomeClustering/subgenomePipeline.nf">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="75">
+        <state relative-caret-position="7785">
           <caret line="519" column="288" lean-forward="false" selection-start-line="519" selection-start-column="288" selection-end-line="519" selection-end-column="288" />
           <folding />
         </state>
@@ -1313,8 +1311,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/SubgenomeClustering/subgenomeClusteringInterface.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="941">
-          <caret line="1471" column="42" lean-forward="true" selection-start-line="1471" selection-start-column="42" selection-end-line="1471" selection-end-column="42" />
+        <state relative-caret-position="45">
+          <caret line="1447" column="45" lean-forward="true" selection-start-line="1447" selection-start-column="45" selection-end-line="1447" selection-end-column="45" />
           <folding>
             <element signature="e#0#14#0" expanded="true" />
           </folding>
