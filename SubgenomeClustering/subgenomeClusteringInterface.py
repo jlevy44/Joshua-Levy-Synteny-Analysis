@@ -1437,29 +1437,37 @@ def clusterGraph(args): #FIXME under development
     scaffolds = pickle.load(open(scaffoldsFile, 'rb'))
     N = 2
     c = ['hsl(' + str(h) + ',50%' + ',50%)' for h in np.linspace(0, 360, N + 1)]
+    mapping = {i:scaffolds[i] for i in range(len(scaffolds))}
+    G=nx.relabel_nodes(G,mapping, copy=False)
+    nodes = G.nodes()
     if featureMap:
         scaffoldsDict = {scaffold : '\t'.join(['_'.join(scaffold.split('_')[0:-2])]+scaffold.split('_')[-2:]) for scaffold in scaffolds}
         outputFeatures = defaultdict(list)
         scaffoldIdx = {scaffolds[i] : i for i in range(len(scaffolds))}
         scaffoldsBed = BedTool('\n'.join(scaffoldsDict.values()),from_string=True)
         featureBed = BedTool(bedFeaturesFile)
+        featuresDict = {scaffold: '' for scaffold in scaffolds}
         finalBed = scaffoldsBed.intersect(featureBed,wa=True,wb=True).sort().merge(d=-1,c=7,o='distinct')
-        for line in str(finalBed).splitlines():
+        omittedRegions = scaffoldsBed.intersect(featureBed,v=True,wa=True)
+        for line in str(finalBed).splitlines()+[line2+'\tunlabelled_white' for line2 in str(omittedRegions).splitlines()]:
             lineList = line.split('\t')
             feature = lineList[-1]
-            if ',' in feature:
-                feature = 'ambiguous_black'
             scaffold = '_'.join(lineList[0:-1])
+            if ',' in feature:
+                featuresDict[scaffold] = '|'.join([ft.split('_')[0] for ft in feature.split(',')])
+                feature = 'ambiguous_black'
+            else:
+                featuresDict[scaffold] = feature
             idx = scaffoldIdx[scaffold]
             outputFeatures[idx] = tuple(feature.split('_'))
         outputFeaturesArray = np.array([outputFeatures[i] for i in range(len(scaffolds))])
         names = outputFeaturesArray[:,0]
         colors = outputFeaturesArray[:,1]
+        nodesText = ['%s, %d connections, feature= %s' % (scaffold, int(G.degree(scaffold)),featuresDict[scaffold]) for scaffold in nodes]  # , Related: %s'%(kmer, int(G.degree(kmer)), ' '.join(G[kmer].keys())) for kmer in nodes]
     else:
         names = 'Scaffolds'
         colors = c[0]
-    mapping = {i:scaffolds[i] for i in range(len(scaffolds))}
-    G=nx.relabel_nodes(G,mapping, copy=False)
+        nodesText = ['%s, %d connections, ' % (scaffold, int(G.degree(scaffold))) for scaffold in nodes]  # , Related: %s'%(kmer, int(G.degree(kmer)), ' '.join(G[kmer].keys())) for kmer in nodes]
     try:
         initialPos_name = initialPos.split('=')[1]
     except:
@@ -1488,11 +1496,9 @@ def clusterGraph(args): #FIXME under development
     for i in iterations:
         pos = nx.spring_layout(G,dim=3,iterations=i,pos=pos_i)
         plots = []
-        nodes = G.nodes()
         Xv = [pos[k][0] for k in nodes]
         Yv = [pos[k][1] for k in nodes]
         Zv = [pos[k][2] for k in nodes]
-        nodesText = ['%s, %d connections'%(kmer, int(G.degree(kmer))) for kmer in nodes]#, Related: %s'%(kmer, int(G.degree(kmer)), ' '.join(G[kmer].keys())) for kmer in nodes]
         Xed = []
         Yed = []
         Zed = []
