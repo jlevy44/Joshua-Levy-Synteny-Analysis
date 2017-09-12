@@ -554,6 +554,7 @@ def cluster(args):
                     scaffolds_noconnect = []
 
                 # FIXME do something with thrown out points in future
+                np.save('analysisOutputs/' + name + Tname + 'n%d' % n_clusters +'/graphInitialPositions.npy', transformed_data)
                 sps.save_npz('analysisOutputs/' + name + Tname + 'n%d' % n_clusters +'/spectralGraph.npz', fit_data.tocsc())
                 pickle.dump(scaffolds,open('analysisOutputs/' + name + Tname + 'n%d' % n_clusters + '/scaffolds_connect.p', 'wb'))
                 pickle.dump(scaffolds_noconnect,open('analysisOutputs/' + name + Tname + 'n%d' % n_clusters + '/scaffolds_noconnect.p', 'wb'))
@@ -1382,14 +1383,50 @@ def generateKmerGraph(args):
     py.plot(fig1, filename=blastPath + 'KmerClusteredGraph3D.html')
 
 def clusterGraph(args): #FIXME under development
-    sparse_matrix_file, scaffoldsFile, outDir = args
+    helpStr = """python subgenomeClusteringInterface.py clusterGraph graph_Matrix_path[.npz] connectedScaffoldsPath[.p] outputDir initialPosition=random|spectral|path_to_.npy iterations\npython subgenomeClusteringInterface.py clusterGraph help/-h"""
+    try:
+        if args[0] == 'help' or args[0] == '-h':
+            print helpStr
+            quit()
+    except:
+        print helpStr
+        quit()
+    try:
+        sparse_matrix_file, scaffoldsFile, outDir, initialPos, iteration = args
+    except:
+        print helpStr
+        quit()
     G = nx.from_scipy_sparse_matrix(sps.load_npz(sparse_matrix_file))
     scaffolds = pickle.load(open(scaffoldsFile, 'rb'))
     mapping = {i:scaffolds[i] for i in range(len(scaffolds))}
     G=nx.relabel_nodes(G,mapping, copy=False)
-    spectral = nx.spectral_layout(G,dim=3)
-    for i in [1,25,50,100,300]:
-        pos = nx.spring_layout(G,dim=3,iterations=i,pos=spectral)
+    try:
+        initialPos_name = initialPos.split('=')[1]
+    except:
+        print 'Invalid initial position'
+        print helpStr
+        quit()
+    if initialPos_name == 'spectral':
+        pos_i = nx.spectral_layout(G,dim=3)
+    elif initialPos_name == 'random':
+        pos_i = nx.random_layout(G, dim=3)
+    elif initialPos_name.endswith('.npy'):
+        pos_i = defaultdict(list)
+        t_data = np.load(initialPos_name)
+        for i in range(len(scaffolds)):
+            pos_i[scaffolds[i]] = tuple(t_data[i,:])
+    else:
+        print 'Invalid initial position name: ' + initialPos_name
+        print helpStr
+        quit()
+    try:
+        iterations = map(int,iteration.split(','))
+    except:
+        print 'Proper iterations input is comma delimitted'
+        print helpStr
+        quit()
+    for i in iterations:
+        pos = nx.spring_layout(G,dim=3,iterations=i,pos=pos_i)
         plots = []
         nodes = G.nodes()
         N = 2
