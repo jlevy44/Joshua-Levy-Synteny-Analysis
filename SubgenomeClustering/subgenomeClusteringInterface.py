@@ -1033,11 +1033,11 @@ def kmerratio2scaffasta(subgenomePath, originalSubgenomePath, fastaPath, genomeN
             with open(originalSubgenomePath + '/classify/subgenome_%d.txt' % i, 'w') as f:
                 f.write('\n'.join(scaffolds))
     if no_kill == 0:
-        quit()
+        return
     if runFinal == 0:
         subgenomeExtraction((subgenomePath, originalSubgenomePath, fastaPath, genomeName, originalGenome, BB, bootstrap, iteration, kmerLength, runFinal,kmer500Path,metric, originalStr, blastMem, kmer_low_count, diff_kmer_threshold, unionbed_threshold))
     else:
-        quit()
+        return
     """
             x3 = float((line.split()[3]).rstrip())
             #print 'my x3 is %s\n' % x3
@@ -1102,6 +1102,7 @@ def subgenomeExtraction(args):
         subgenome_folder = originalSubgenomePath
         classifyFolder = subgenome_folder + '/classify/'
         subgenome_folder, runFinal = classify(classifyFolder,fastaPath,genomeName,kmerLength, originalSubgenomePath.split('/')[-1],kmer500Path,metric,originalStr,originalGenome, blastMem, kmer_low_count)
+        print 'HAHA'
         iteration += 1
         if runFinal:
             subgenomeExtraction((subgenome_folder, originalSubgenomePath, fastaPath, genomeName, originalGenome, BB, bootstrap, iteration, kmerLength,runFinal,kmer500Path,metric,originalStr, blastMem, kmer_low_count, diff_kmer_threshold, unionbed_threshold))
@@ -1220,9 +1221,12 @@ def classify(classifyFolder, fastaPath, genomeName, kmerLength,model,kmer500Path
                     f.write('\n'.join(subgenome_files[i]))
             runFinal = 1
         else:
-            quit()
+            print 'heyHEY'
+            return 'null', 0
     else:
-        quit()
+        print 'HOHO'
+        return 'null', 0
+    print 'HEHE'
     return subgenomeFolder, runFinal
 
 def generateKmerGraph(args):

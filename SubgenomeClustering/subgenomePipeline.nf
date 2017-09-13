@@ -525,12 +525,14 @@ if(extract == 1)
     #!/bin/bash
     cd ${workingDir}
     python subgenomeClusteringInterface.py subgenomeExtraction ./analysisOutputs/${subgenomeFolder} ./analysisOutputs/${subgenomeFolder} ${fastaPath} ${genomeSplitName} ${genome2} ${BBstr} ${bootstrap} 0 ${kmerLength} 0 ${best500kmerPath} ${transformMetric} ${originalStr} ${blastMemory} ${kmer_low_count} ${diff_kmer_threshold} ${unionbed_threshold}
+    cd -
     echo kmer500Best_${subgenomeFolder}_preClassify.fa > test.txt
+    touch test.txt
     """
 else
     """
     echo kmer500Best_${subgenomeFolder}_preClassify.fa > test.txt
-    touch done
+    touch test.txt
     """
 }
 
@@ -553,9 +555,9 @@ best_kmer.map { it -> tuple(it - '\n', it - '\n' - '.fa') }//.filter({ it })//( 
          .set {best_kmer2}
 
 best_kmer3.map {it -> file(best500kmerPath + it.toString() - '\n')}
-          .set {best_kmer4}
+          .into {best_kmer4;printkmerFinal}
 
-best_kmer4.filter {file.exists() == 1}
+best_kmer4.filter { file -> file.exists() }
           .set {best_kmer5}
 
 best_kmer5.map {file -> tuple(file.name - best500kmerPath , file.name - best500kmerPath - '.fa')}
@@ -567,7 +569,7 @@ best_kmer5.map {file -> tuple(file.name - best500kmerPath , file.name - best500k
 
 best_kmerSemi = Channel.create()
                 .concat(best_kmer2,best_kmer6)
-                .into { best_kmerFinal; printkmerFinal }
+                .set { best_kmerFinal }
 
 printkmerFinal.println()
 
