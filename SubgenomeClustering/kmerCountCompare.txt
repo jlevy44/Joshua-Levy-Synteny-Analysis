@@ -28,6 +28,7 @@ generateClusteringMatrix = 1
 minChunkSize = 50000
 removeNonChunk = 1
 minChunkThreshold = 0
+reduction_techniques = kpca
 transformData = 1
 ClusterAll = 1
 clusterMethods = KMeans,SpectralClustering
@@ -48,3 +49,5 @@ transformDataChildren = 0
 kmerHistogram = 0
 peakClusterMatrix = 0
 old = ABR113_split.fa,,Nitab_v4_5_genome_Chr_Edwards2017_split.fa
+old_red_tech = kpca,factor
+# can include comma delimit for reduction techniques

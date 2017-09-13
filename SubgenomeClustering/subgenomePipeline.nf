@@ -54,7 +54,7 @@ minChunkThreshold = findValue('minChunkThreshold ')
 
 
 
-
+reduction_techniques = findValue('reduction_techniques ').split(',')
 clusterModels = findValue('clusterMethods ').split(',')
 
 //clusterModels = ['KMeans','SpectralClustering']
@@ -377,7 +377,7 @@ else
 
 }
 
-reduction_techniques = ['factor','kpca']
+//reduction_techniques = ['factor','kpca']
 //,'feature']
 
 /*
