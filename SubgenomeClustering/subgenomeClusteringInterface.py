@@ -45,22 +45,31 @@ from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
 def writeKmercount(args):
     """Takes list of fasta files and runs kmercountexact.sh to generate with only one column for pos and converts them to proper bedgraph format to be sorted"""
     fastaPath, kmercountPath, kmerLength, blastMem = args
+    kmerLengths = kmerLength.split(',')
     blastMemStr = "export _JAVA_OPTIONS='-Xms5G -Xmx%sG'"%(blastMem)
     for fastaFile in os.listdir(fastaPath):
         if (fastaFile.endswith('.fa') or fastaFile.endswith('.fasta')) and '_split' in fastaFile:
+            kmerFiles = []
             f = fastaFile.rstrip()
             print f
-            scriptName = f[:f.rfind('.')] + '.sh'
-            outFileName = f[:f.rfind('.')]+'.kcount'
-            lineOutputList = [fastaPath, fastaFile, kmercountPath, outFileName, kmerLength]
-            bbtoolsI = open(scriptName, 'w')
-            bbtoolsI.write('#!/bin/bash\nmodule load bbtools\n'+blastMemStr+'\nkmercountexact.sh overwrite=true fastadump=f mincount=3 in=%s/%s out=%s/%s k=%s -Xmx100g\n' % tuple(lineOutputList))
-            bbtoolsI.close()
-            try:
-                subprocess.call('sh %s' % scriptName, shell=True)#nohup
-            except:
-                print 'Unable to run %s via command line..' % outFileName
-
+            outFileNameFinal = f[:f.rfind('.')] + '.kcount'
+            open(kmercountPath + '/' + outFileNameFinal, 'w').close()
+            for kmerL in kmerLengths:
+                scriptName = f[:f.rfind('.')] + kmerL + '.sh'
+                outFileName = f[:f.rfind('.')]+kmerL+'.kcount'
+                kmerFiles.append(kmercountPath+'/'+outFileName)
+                lineOutputList = [fastaPath, fastaFile, kmercountPath, outFileName, kmerL]
+                bbtoolsI = open(scriptName, 'w')
+                bbtoolsI.write('#!/bin/bash\nmodule load bbtools\n'+blastMemStr+'\nkmercountexact.sh overwrite=true fastadump=f mincount=3 in=%s/%s out=%s/%s k=%s -Xmx100g\n' % tuple(lineOutputList))
+                bbtoolsI.close()
+                try:
+                    subprocess.call('sh %s' % scriptName, shell=True)#nohup
+                except:
+                    print 'Unable to run %s via command line..' % outFileName
+                with open(kmercountPath + '/' + outFileName,'r') as f1, open(kmercountPath + '/' + outFileNameFinal, 'a') as f2:
+                    f2.write(f1.read()+'\n')
+            for fname in kmerFiles:
+                os.remove(fname)
 def kmer2Fasta(args):
     kmercountPath, kmer_low_count = args
     try:
@@ -73,7 +82,6 @@ def kmer2Fasta(args):
                 for line in f:
                     if line and int(line.split('\t')[-1]) >= kmer_low_count:
                         f2.write('>%s\n%s\n'%tuple([line.split('\t')[0]]*2))
-
 
 def writeBlast(args):
     """make blast database for whole genome assembly"""
@@ -254,10 +262,24 @@ def splitFasta(args):
     print args[0].split('.fa')[0]+'_split.fa'
 
 def generateClusteringMatrixAndKmerPrevalence(args):
-    kmercountPath, save, genome = args
-    save = int(save)
+    kmercountPath, save, genome, chunkSize, minChunkSize, removeNonChunk, minChunkThreshold = args
+    try:
+        removeNonChunk = int(removeNonChunk)
+        chunkSize = int(chunkSize)
+        minChunkSize = int(minChunkSize)
+        minChunkThreshold = int(minChunkThreshold)
+        save = int(save)
+    except:
+        chunkSize = 75000
+        removeNonChunk = 0
+        save = 0
+
     kmers = findKmerNames((kmercountPath, genome))
     scaffolds = findScaffolds(1)
+    if removeNonChunk:
+        scaffolds = list(filter(lambda scaffold: abs(int(scaffold.split('_')[-1]) - int(scaffold.split('_')[-2])) == chunkSize,scaffolds))
+    elif minChunkThreshold:
+        scaffolds = list(filter(lambda scaffold: abs(int(scaffold.split('_')[-1]) - int(scaffold.split('_')[-2])) >= minChunkSize,scaffolds))
     scaffoldIdx = {scaffold:i for i,scaffold in enumerate(scaffolds)}
     kmerIdx = {kmer:i for i,kmer in enumerate(kmers)} # np.uint32(
     #kmerCount = {kmer:[0.,0] for kmer in kmers}
@@ -285,25 +307,26 @@ def generateClusteringMatrixAndKmerPrevalence(args):
         for line in f:
             if line:
                 listLine = line.rstrip('\n').split('\t')
-                counts = Counter(listLine[-1].split(','))
-                interval = (abs(float(listLine[2]) - float(listLine[1]))) / 5000.
-                #scalingFactor = interval * 5000. / len(kmers)
-                #kmerText = ','.join(counts.keys())
-                #kmerCountsNum = len(counts.keys())
-                #f3.write(listLine[0] + '\n')
-                #kmerCountsNumbers = [kmerIdx[kmer] for kmer in kmerCountsNames]
-                #kmerGraph.add_edges_from(list(combinations(kmerCountsNumbers, 2)))
-                for key in counts:
-                    #f2.write('%s\t0\t100\t%s\n'%(key,kmerText))
-                    try:
-                        #row_idx.append(scaffoldIdx[listLine[0]])
-                        #column_idx.append(kmerIdx[key])
-                        #values.append(counts[key] / interval)
-                        data[scaffoldIdx[listLine[0]], kmerIdx[key]] = counts[key] / interval
-                        #kmerCount[key][0] += kmerCountsNum #/ scalingFactor
-                        #kmerCount[key][1] += 1
-                    except:
-                        pass
+                if listLine[0] in scaffolds:
+                    counts = Counter(listLine[-1].split(','))
+                    interval = (abs(float(listLine[2]) - float(listLine[1]))) / 5000.
+                    #scalingFactor = interval * 5000. / len(kmers)
+                    #kmerText = ','.join(counts.keys())
+                    #kmerCountsNum = len(counts.keys())
+                    #f3.write(listLine[0] + '\n')
+                    #kmerCountsNumbers = [kmerIdx[kmer] for kmer in kmerCountsNames]
+                    #kmerGraph.add_edges_from(list(combinations(kmerCountsNumbers, 2)))
+                    for key in counts:
+                        #f2.write('%s\t0\t100\t%s\n'%(key,kmerText))
+                        try:
+                            #row_idx.append(scaffoldIdx[listLine[0]])
+                            #column_idx.append(kmerIdx[key])
+                            #values.append(counts[key] / interval)
+                            data[scaffoldIdx[listLine[0]], kmerIdx[key]] = counts[key] / interval
+                            #kmerCount[key][0] += kmerCountsNum #/ scalingFactor
+                            #kmerCount[key][1] += 1
+                        except:
+                            pass
                 #[(np.uint32(kmerIdx[key]),np.uint32(kmerIdx[kmername])) for kmername in kmerCountsNames])
                     #for kmername in kmerCountsNames:
                     #    kmer_SparseMatrix[kmerIdx[key],kmerIdx[kmername]] = 1
@@ -739,6 +762,7 @@ def fai2bed(args):
 def writeKmerCountSubgenome(args):
     subgenomeFolder, kmerLength, blastMem, diff_kmer_threshold  = args
     blastMemStr = "export _JAVA_OPTIONS='-Xms5G -Xmx%sG'" % (blastMem)
+    kmerLengths = kmerLength.split(',')
     try:
         os.mkdir(subgenomeFolder+'/kmercount_files/')
     except:
@@ -746,12 +770,21 @@ def writeKmerCountSubgenome(args):
     kmercountPath = subgenomeFolder+'/kmercount_files/'
     for fastaFile in os.listdir(subgenomeFolder):
         if 'higher.kmers' not in fastaFile and '_split' not in fastaFile and (fastaFile.endswith('.fa') or fastaFile.endswith('.fasta')):
+            kmerFiles = []
             f = fastaFile.rstrip()
-            print f
-            outFileName = f[:f.rfind('.')] + '.kcount'
-            lineOutputList = [subgenomeFolder+'/', fastaFile, kmercountPath, outFileName,kmerLength]
-            subprocess.call(blastMemStr + ' && module load bbtools && kmercountexact.sh overwrite=true fastadump=f mincount=3 in=%s/%s out=%s/%s k=%s -Xmx60g' % tuple(
-                    lineOutputList),shell=True)
+            outFileNameFinal = f[:f.rfind('.')] + '.kcount'
+            open(kmercountPath + '/' + outFileNameFinal, 'w').close()
+            for kmerL in kmerLengths:
+                print f
+                outFileName = f[:f.rfind('.')] + kmerL + '.kcount'
+                kmerFiles.append(kmercountPath + '/' + outFileName)
+                lineOutputList = [subgenomeFolder+'/', fastaFile, kmercountPath, outFileName,kmerL]
+                subprocess.call(blastMemStr + ' && module load bbtools && kmercountexact.sh overwrite=true fastadump=f mincount=3 in=%s/%s out=%s/%s k=%s -Xmx60g' % tuple(
+                        lineOutputList),shell=True)
+                with open(kmercountPath + '/' + outFileName, 'r') as f1, open(kmercountPath + '/' + outFileNameFinal,'a') as f2:
+                    f2.write(f1.read() + '\n')
+            for fname in kmerFiles:
+                os.remove(fname)
 
     compareKmers(diff_kmer_threshold, kmercountPath)
 
@@ -1100,8 +1133,11 @@ def classify(classifyFolder, fastaPath, genomeName, kmerLength,model,kmer500Path
         if original:
             with open(fastaPath+originalGenome+'.fai', 'r') as f:
                 scaffolds = np.array([line.split()[0] for line in f if line])
+            genomeName = originalGenome
         else:
-            scaffolds = np.array(pickle.load(open('scaffolds.p', 'rb')))
+            with open(fastaPath+genomeName+'.fai', 'r') as f:
+                scaffolds = np.array([line.split()[0] for line in f if line])
+            #scaffolds = np.array(pickle.load(open('scaffolds.p', 'rb')))
         runFinal = 0
         scaffolds_unchecked = np.setdiff1d(scaffolds, total_subgenome_scaffolds)
         print 'scaffolds_unchecked', scaffolds_unchecked

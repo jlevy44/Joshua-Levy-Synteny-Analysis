@@ -48,6 +48,12 @@ metric = findValue('metric ');
 kmer_low_count = findValue('kmer_low_count ')
 diff_kmer_threshold = findValue('diff_kmer_threshold ')
 unionbed_threshold = findValue('unionbed_threshold ')
+minChunkSize = findValue('minChunkSize ')
+removeNonChunk = findValue('removeNonChunk ')
+minChunkThreshold = findValue('minChunkThreshold ')
+
+
+
 
 clusterModels = findValue('clusterMethods ').split(',')
 
@@ -78,7 +84,6 @@ clust = findValue('ClusterAll ').asType(Integer);
 extract = findValue('extract ').asType(Integer);
 kmerBlast = findValue('kmerBlast ').asType(Integer);
 kmerGraph = findValue('kmerGraph ').asType(Integer);
-
 
 
 genomeSplitName = genome - '_split' - '.fa' + '_split.fa';
@@ -363,7 +368,7 @@ if(genMat == 1)
     """
     #!/bin/bash
     cd ${workingDir}
-    python subgenomeClusteringInterface.py genClusterKmer ${kmercountPath} ${save} ${genomeName}
+    python subgenomeClusteringInterface.py genClusterKmer ${kmercountPath} ${save} ${genomeName} ${splitLength} ${minChunkSize} ${removeNonChunk} ${minChunkThreshold}
     """
 else
     """
