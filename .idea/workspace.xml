@@ -2,14 +2,10 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="87dadfdf-9689-45cf-b4af-5fd342ee0ae6" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/DNASimulate/graphInitialPositions.npy" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/DNASimulate/spectralGraph.npz" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/DNASimulate/.ipynb_checkpoints/AnimateDNA-checkpoint.ipynb" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/DNASimulate/AnimateDNA.ipynb" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/DNASimulate/nohup.out" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/DNASimulate/new_fig.gif" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/SubgenomeClustering/subgenomeClusteringInterface.py" afterPath="$PROJECT_DIR$/SubgenomeClustering/subgenomeClusteringInterface.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/SubgenomeClustering/subgenomePipeline.nf" afterPath="$PROJECT_DIR$/SubgenomeClustering/subgenomePipeline.nf" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/DNASimulate/.ipynb_checkpoints/AnimateDNA-checkpoint.ipynb" afterPath="$PROJECT_DIR$/DNASimulate/.ipynb_checkpoints/AnimateDNA-checkpoint.ipynb" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/DNASimulate/AnimateDNA.ipynb" afterPath="$PROJECT_DIR$/DNASimulate/AnimateDNA.ipynb" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -70,7 +66,7 @@
         <entry file="file://$PROJECT_DIR$/SubgenomeClustering/subgenomeClusteringInterface.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="103">
-              <caret line="1458" column="26" lean-forward="true" selection-start-line="1458" selection-start-column="26" selection-end-line="1458" selection-end-column="26" />
+              <caret line="1458" column="16" lean-forward="false" selection-start-line="1458" selection-start-column="16" selection-end-line="1458" selection-end-column="16" />
               <folding>
                 <element signature="e#0#14#0" expanded="true" />
               </folding>
@@ -223,8 +219,8 @@
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="-1154" />
-    <option name="y" value="11" />
+    <option name="x" value="-1153" />
+    <option name="y" value="16" />
     <option name="width" value="1080" />
     <option name="height" value="808" />
   </component>
@@ -557,13 +553,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1497987891371</updated>
-    </task>
-    <task id="LOCAL-00020" summary="updates to kmer and clustering analysis">
-      <created>1501013603632</created>
-      <option name="number" value="00020" />
-      <option name="presentableId" value="LOCAL-00020" />
-      <option name="project" value="LOCAL" />
-      <updated>1501013603632</updated>
     </task>
     <task id="LOCAL-00021" summary="working with clustering algorithms">
       <created>1501113259068</created>
@@ -901,7 +890,14 @@
       <option name="project" value="LOCAL" />
       <updated>1505330303720</updated>
     </task>
-    <option name="localTasksCounter" value="69" />
+    <task id="LOCAL-00069" summary="experimentation with animations">
+      <created>1505341858398</created>
+      <option name="number" value="00069" />
+      <option name="presentableId" value="LOCAL-00069" />
+      <option name="project" value="LOCAL" />
+      <updated>1505341858398</updated>
+    </task>
+    <option name="localTasksCounter" value="70" />
     <servers />
   </component>
   <component name="TodoView">
@@ -914,7 +910,7 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="-1154" y="11" width="1080" height="808" extended-state="0" />
+    <frame x="-1153" y="16" width="1080" height="808" extended-state="0" />
     <editor active="false" />
     <layout>
       <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.17407407" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
@@ -940,7 +936,6 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="more changes to clustering pipeline, also modified parameter (BB mapping size) in scaffolding algorithm" />
     <MESSAGE value="more changes" />
     <MESSAGE value="changes to pipelines" />
     <MESSAGE value="changes to both pipelines. Need to fix Spectral Clustering!!!" />
@@ -965,7 +960,8 @@
     <MESSAGE value="added few new features: kmerLengths, and getting rid of nonchunks when doing clustering, or thresholding for certain chunk size" />
     <MESSAGE value="add user specify transform method" />
     <MESSAGE value="fixed a few bugs" />
-    <option name="LAST_COMMIT_MESSAGE" value="fixed a few bugs" />
+    <MESSAGE value="experimentation with animations" />
+    <option name="LAST_COMMIT_MESSAGE" value="experimentation with animations" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1351,7 +1347,7 @@
     <entry file="file://$PROJECT_DIR$/SubgenomeClustering/subgenomeClusteringInterface.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="103">
-          <caret line="1458" column="26" lean-forward="true" selection-start-line="1458" selection-start-column="26" selection-end-line="1458" selection-end-column="26" />
+          <caret line="1458" column="16" lean-forward="false" selection-start-line="1458" selection-start-column="16" selection-end-line="1458" selection-end-column="16" />
           <folding>
             <element signature="e#0#14#0" expanded="true" />
           </folding>
