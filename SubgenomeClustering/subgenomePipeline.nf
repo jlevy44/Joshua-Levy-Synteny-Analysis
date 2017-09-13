@@ -500,21 +500,23 @@ subgenomeFolders.map { it -> it - '\n' }
                           //Channel.watchPath('analysisOutputs/*.txt','create,modify')
                           //.map {file -> file.name - '.txt'}
 
+kmerBest500Files_preClassify = Channel.create()
+
 process subgenomeExtraction {
 
 
 //clusterOptions = { slurm == 0 ? { extract == 1 ? '-P plant-analysis.p -cwd -q normal.q -pe pe_slots 9 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt' } : '-N 9 -p regular -D . '}
 cpus = { extract == 1 ? 9 : 1 }
-memory = { extract == 1 ? '30 GB' : '10 MB'}//65.GB * task.attempt : '10 MB' }
-errorStrategy = 'retry' //{ task.exitStatus == 1 ? 'retry' : 'terminate' }
-maxRetries = 0//1//2
+//memory = { extract == 1 ? '30 GB' : '10 MB'}//65.GB * task.attempt : '10 MB' }
+//errorStrategy = 'retry' //{ task.exitStatus == 1 ? 'retry' : 'terminate' }
+//maxRetries = 0//1//2
 
 
 input:
     val subgenomeFolder from subgenomeFoldersFinal
 
-//output:
-//    val peakName into peaks3
+output:
+    file 'test.txt' into kmerBest500Files_preClassify
 
 
 script:
@@ -523,9 +525,11 @@ if(extract == 1)
     #!/bin/bash
     cd ${workingDir}
     python subgenomeClusteringInterface.py subgenomeExtraction ./analysisOutputs/${subgenomeFolder} ./analysisOutputs/${subgenomeFolder} ${fastaPath} ${genomeSplitName} ${genome2} ${BBstr} ${bootstrap} 0 ${kmerLength} 0 ${best500kmerPath} ${transformMetric} ${originalStr} ${blastMemory} ${kmer_low_count} ${diff_kmer_threshold} ${unionbed_threshold}
+    echo kmer500Best_${subgenomeFolder}_preClassify.fa > test.txt
     """
 else
     """
+    echo kmer500Best_${subgenomeFolder}_preClassify.fa > test.txt
     touch done
     """
 }
@@ -533,6 +537,11 @@ else
 //kmerBest500Files = Channel.watchPath(best500kmerPath + '*.fa','create,modify')
 //                          .unique()
 //                         .flatMap { file -> tuple(file.name, file.name - '.fa') }
+
+
+kmerBest500Files_preClassify.splitText()
+                .filter {it.toString().size() > 1}
+                .set {best_kmer3}
 
 kmerBest500Files.splitText()
                 .filter {it.toString().size() > 1}
@@ -542,8 +551,25 @@ kmerBest500Files.splitText()
 
 best_kmer.map { it -> tuple(it - '\n', it - '\n' - '.fa') }//.filter({ it })//( it =~ /recluster/ ) == 0 &&  it.isEmpty() == 0})//it.contains('recluster') == 0 && it.isEmpty() == 0})
          .set {best_kmer2}
+
+best_kmer3.map {it -> file(best500kmerPath + it.toString() - '\n')}
+          .set {best_kmer4}
+
+best_kmer4.filter {file.exists() == 1}
+          .set {best_kmer5}
+
+best_kmer5.map {file -> tuple(file.name - best500kmerPath , file.name - best500kmerPath - '.fa')}
+          .set {best_kmer6}
+
+                //.filter {exist(file(best500kmerPath + it.toString()))}
                 //.into {best_kmer2; printFlat}
                 //
+
+best_kmerSemi = Channel.create()
+                .concat(best_kmer2,best_kmer6)
+                .into { best_kmerFinal; printkmerFinal }
+
+printkmerFinal.println()
 
 printkmer.subscribe {println it}
 
@@ -558,7 +584,7 @@ cpus = { kmerBlast == 1 ? 16 : 1 }
 
 
 input:
-    set query, queryFolder from best_kmer2 // kmerBest500Files
+    set query, queryFolder from best_kmerFinal // kmerBest500Files
 
 output:
     val queryFolder into kmer_blasted

@@ -794,7 +794,7 @@ def kmercounttodict(kmercount2fname,kmercountPath):
     print 'my input to kcount to dict is: %s' % inputFile
     dictConverted = {}
     for line in inputFile:
-        if line:
+        if line and len(line.split()) == 2:
             lineList = line.split()
             dictConverted[lineList[0]]=(int(lineList[1].strip('\n')))
     inputFile.close()
