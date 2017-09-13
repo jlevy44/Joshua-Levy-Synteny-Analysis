@@ -3,9 +3,7 @@
   <component name="ChangeListManager">
     <list default="true" id="87dadfdf-9689-45cf-b4af-5fd342ee0ae6" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/SubgenomeClustering/kmerCountCompare.txt" afterPath="$PROJECT_DIR$/SubgenomeClustering/kmerCountCompare.txt" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/SubgenomeClustering/subgenomeClusteringInterface.py" afterPath="$PROJECT_DIR$/SubgenomeClustering/subgenomeClusteringInterface.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/SubgenomeClustering/subgenomePipeline.nf" afterPath="$PROJECT_DIR$/SubgenomeClustering/subgenomePipeline.nf" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -65,8 +63,8 @@
       <file leaf-file-name="subgenomeClusteringInterface.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/SubgenomeClustering/subgenomeClusteringInterface.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="223">
-              <caret line="761" column="14" lean-forward="false" selection-start-line="761" selection-start-column="4" selection-end-line="761" selection-end-column="14" />
+            <state relative-caret-position="538">
+              <caret line="1156" column="42" lean-forward="false" selection-start-line="1156" selection-start-column="42" selection-end-line="1156" selection-end-column="42" />
               <folding>
                 <element signature="e#0#14#0" expanded="true" />
               </folding>
@@ -118,8 +116,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>print</find>
-      <find>more</find>
       <find>Alb-AL1A.1</find>
       <find>Bdistachyon</find>
       <find>scaffas</find>
@@ -148,6 +144,8 @@
       <find>283</find>
       <find>pickle.load(</find>
       <find>writeKmerC</find>
+      <find>writekmer</find>
+      <find>kmercountex</find>
     </findStrings>
     <replaceStrings>
       <replace>val</replace>
@@ -213,8 +211,8 @@
         <option value="$PROJECT_DIR$/CircosDropper/dist110/grassnewick.nh" />
         <option value="$PROJECT_DIR$/CircosDropper/dist110/Distachyon110.py" />
         <option value="$PROJECT_DIR$/SubgenomeClustering/subgenomePipeline.nf" />
-        <option value="$PROJECT_DIR$/SubgenomeClustering/subgenomeClusteringInterface.py" />
         <option value="$PROJECT_DIR$/SubgenomeClustering/kmerCountCompare.txt" />
+        <option value="$PROJECT_DIR$/SubgenomeClustering/subgenomeClusteringInterface.py" />
       </list>
     </option>
   </component>
@@ -521,13 +519,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1497987891371</updated>
-    </task>
-    <task id="LOCAL-00016" summary="subgenome clustering: Adding PCA and kmeans clustering">
-      <created>1500405185006</created>
-      <option name="number" value="00016" />
-      <option name="presentableId" value="LOCAL-00016" />
-      <option name="project" value="LOCAL" />
-      <updated>1500405185006</updated>
     </task>
     <task id="LOCAL-00017" summary="updates to clustering and scaffolding pipelines">
       <created>1500503202453</created>
@@ -865,7 +856,14 @@
       <option name="project" value="LOCAL" />
       <updated>1505251279573</updated>
     </task>
-    <option name="localTasksCounter" value="65" />
+    <task id="LOCAL-00065" summary="quick fix">
+      <created>1505317695908</created>
+      <option name="number" value="00065" />
+      <option name="presentableId" value="LOCAL-00065" />
+      <option name="project" value="LOCAL" />
+      <updated>1505317695909</updated>
+    </task>
+    <option name="localTasksCounter" value="66" />
     <servers />
   </component>
   <component name="TodoView">
@@ -1313,8 +1311,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/SubgenomeClustering/subgenomeClusteringInterface.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="223">
-          <caret line="761" column="14" lean-forward="false" selection-start-line="761" selection-start-column="4" selection-end-line="761" selection-end-column="14" />
+        <state relative-caret-position="538">
+          <caret line="1156" column="42" lean-forward="false" selection-start-line="1156" selection-start-column="42" selection-end-line="1156" selection-end-column="42" />
           <folding>
             <element signature="e#0#14#0" expanded="true" />
           </folding>

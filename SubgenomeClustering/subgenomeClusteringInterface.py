@@ -1142,12 +1142,21 @@ def classify(classifyFolder, fastaPath, genomeName, kmerLength,model,kmer500Path
         scaffolds_unchecked = np.setdiff1d(scaffolds, total_subgenome_scaffolds)
         print 'scaffolds_unchecked', scaffolds_unchecked
         if list(scaffolds_unchecked):
+            kmerLengths = kmerLength.split(',')
             genomeFastaObj = Fasta(fastaPath + genomeName)
             with open(classifyFolder + 'ambiguous.fa', 'w') as f:
                 for scaff in total_subgenome_scaffolds:
                     f.write('>%s\n%s\n' % (scaff, str(genomeFastaObj[scaff][:])))
             subprocess.call(blastMemStr + ' && reformat.sh in=%s out=%s fastawrap=60' % (classifyFolder + 'ambiguous.fa', classifyFolder + 'ambiguous_wrapped.fa'), shell=True)
-            subprocess.call(blastMemStr + ' && kmercountexact.sh overwrite=true fastadump=f mincount=3 in=%s out=%s k=%s -Xmx60g' % (classifyFolder + 'ambiguous_wrapped.fa', classifyFolder + 'ambiguous.kcount',kmerLength), shell=True)
+            kmerFiles = []
+            open(classifyFolder + 'ambiguous.kcount','w').close()
+            for kmerL in kmerLengths:
+                kmerFiles.append(classifyFolder + 'ambiguous%s.kcount'%kmerL)
+                subprocess.call(blastMemStr + ' && kmercountexact.sh overwrite=true fastadump=f mincount=3 in=%s out=%s k=%s -Xmx60g' % (classifyFolder + 'ambiguous_wrapped.fa', classifyFolder + 'ambiguous%s.kcount'%kmerL,kmerL), shell=True)
+                with open(classifyFolder + 'ambiguous%s.kcount'%kmerL,'r') as f1, open(classifyFolder + 'ambiguous.kcount','a') as f2:
+                    f2.write(f1.read()+'\n')
+            for fname in kmerFiles:
+                os.remove(fname)
             with open(classifyFolder+'ambiguous.kcount','r') as f, open(classifyFolder+'ambiguous.kcount.fa','w') as f2:#kmer2Fasta((classifyFolder)) #ambiguous.kcount.fa
                 for line in f:
                     if line and int(line.split('\t')[-1]) >= kmer_low_count:
