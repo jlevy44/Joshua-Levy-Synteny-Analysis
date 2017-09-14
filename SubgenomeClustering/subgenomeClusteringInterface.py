@@ -1162,8 +1162,12 @@ def classify(classifyFolder, fastaPath, genomeName, kmerLength,model,kmer500Path
                 for line in f:
                     if line and int(line.split('\t')[-1]) >= kmer_low_count:
                         f2.write('>%s\n%s\n' % tuple([line.split('\t')[0]] * 2))
+            print fastaPath + genomeName
+            print classifyFolder + 'ambiguous.kcount.fa'
+            print classifyFolder + 'ambiguous.sam'
             print 'bbmap.sh vslow=t ambiguous=all noheader=t secondary=t perfectmode=t threads=8 maxsites=2000000000 outputunmapped=f ref=%s in=%s outm=%s' % (fastaPath + genomeName, classifyFolder + 'ambiguous.kcount.fa', classifyFolder + 'ambiguous.sam')
             subprocess.call(blastMemStr + ' && bbmap.sh vslow=t ambiguous=all noheader=t secondary=t perfectmode=t threads=8 maxsites=2000000000 outputunmapped=f ref=%s path=%s/ in=%s outm=%s' % (fastaPath + genomeName, classifyFolder, classifyFolder + 'ambiguous.kcount.fa', classifyFolder + 'ambiguous.sam'), shell=True)
+            print 'ALLCLEAR'
             kmerIdx = {line[1].split('\t')[0]: line[0] for line in
                        enumerate(open(classifyFolder + 'ambiguous.kcount', 'r').readlines())}
             scaffoldIdx = {scaffold[1]: scaffold[0] for scaffold in enumerate(scaffolds)}
@@ -1176,21 +1180,6 @@ def classify(classifyFolder, fastaPath, genomeName, kmerLength,model,kmer500Path
                         data[scaffoldIdx[line.split('\t')[2].split('::')[0]],kmerIdx[line.split('\t')[0]]] += 1.
                         #f2.write('\t'.join([l1] + ['0', str(int(l1.split('_')[-1]) - int(l1.split('_')[-2]))] + [
                         #    line.split('\t')[0]]) + '\n')
-
-
-            """b = pybedtools.BedTool(classifyFolder + 'blasted.bed').sort().merge(c=4, o='collapse', )
-            b.saveas(classifyFolder + 'blasted_merged.bed')
-            with open(classifyFolder + 'blasted_merged.bed', 'r') as f:
-                for line in f:
-                    if line:
-                        listLine = line.rstrip('\n').split('\t')
-                        counts = Counter(listLine[-1].split(','))
-                        interval = (abs(float(listLine[2]) - float(listLine[1]))) / 5000.
-                        for key in counts:
-                            try:
-                                data[scaffoldIdx[listLine[0]], kmerIdx[key]] = counts[key] / interval
-                            except:
-                                pass"""
             # FIXME pca only for now, maybe use supervised LDA in future!!!!!!!!!
             data = data.tocsc()
             # divide every row by scaffold length

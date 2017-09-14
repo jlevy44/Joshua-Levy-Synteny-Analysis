@@ -500,14 +500,14 @@ subgenomeFolders.map { it -> it - '\n' }
                           //Channel.watchPath('analysisOutputs/*.txt','create,modify')
                           //.map {file -> file.name - '.txt'}
 
-kmerBest500Files_preClassify = Channel.create()
+//kmerBest500Files_preClassify = Channel.create()
 
 process subgenomeExtraction {
 
 
 //clusterOptions = { slurm == 0 ? { extract == 1 ? '-P plant-analysis.p -cwd -q normal.q -pe pe_slots 9 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt' } : '-N 9 -p regular -D . '}
 cpus = { extract == 1 ? 9 : 1 }
-//memory = { extract == 1 ? '30 GB' : '10 MB'}//65.GB * task.attempt : '10 MB' }
+//memory = {{ extract == 1 ? '30 GB' : '10 MB'}//65.GB * task.attempt : '10 MB' }
 //errorStrategy = 'retry' //{ task.exitStatus == 1 ? 'retry' : 'terminate' }
 //maxRetries = 0//1//2
 
@@ -541,39 +541,61 @@ else
 //                         .flatMap { file -> tuple(file.name, file.name - '.fa') }
 
 
+
 kmerBest500Files_preClassify.splitText()
                 .filter {it.toString().size() > 1}
-                .set {best_kmer3}
+                .set {best_kmer1}
+
 
 kmerBest500Files.splitText()
                 .filter {it.toString().size() > 1}
-                .into {best_kmer;printkmer}
+                .set {best_kmer}
 
           //.filter {( it =~ /recluster/ ) == 0 &&  it.isEmpty() == 0}
+/*
+best_kmer.map {it -> file(best500kmerPath + it.toString() - '\n')}
+          .set {best_kmer2}
 
-best_kmer.map { it -> tuple(it - '\n', it - '\n' - '.fa') }//.filter({ it })//( it =~ /recluster/ ) == 0 &&  it.isEmpty() == 0})//it.contains('recluster') == 0 && it.isEmpty() == 0})
-         .set {best_kmer2}
+best_kmer2.filter { file -> file.exists() }
+          .set {best_kmer3}
+
+best_kmer3.map {file -> tuple(file.name - best500kmerPath , file.name - best500kmerPath - '.fa')}
+          .into {best_kmerFinal; printkmerFinal}
+
+*/
+//best_kmer.map { it -> tuple(it - '\n', it - '\n' - '.fa') } //.filter({ it })//( it =~ /recluster/ ) == 0 &&  it.isEmpty() == 0})//it.contains('recluster') == 0 && it.isEmpty() == 0})
+//         .set {best_kmer2}
+
+best_kmer2 = best_kmer.mix(best_kmer1)
+           .set {best_kmer3}
 
 best_kmer3.map {it -> file(best500kmerPath + it.toString() - '\n')}
-          .into {best_kmer4;printkmerFinal}
+          .set {best_kmer4}
 
 best_kmer4.filter { file -> file.exists() }
           .set {best_kmer5}
 
 best_kmer5.map {file -> tuple(file.name - best500kmerPath , file.name - best500kmerPath - '.fa')}
-          .set {best_kmer6}
+          .into {best_kmerFinal; printkmerFinal}
 
                 //.filter {exist(file(best500kmerPath + it.toString()))}
                 //.into {best_kmer2; printFlat}
                 //
 
-best_kmerSemi = Channel.create()
-                .concat(best_kmer2,best_kmer6)
-                .set { best_kmerFinal }
+//best_kmerSemi = best_kmer2.concat(best_kmer6)
+//                .into { best_kmerFinal; printkmerFinal }
+
+
+a = Channel.from(1..100)
+            .randomSample(10)
+b = Channel.from(300..400)
+            .randomSample(13)
+c = a.concat(b)
+     .println()
 
 printkmerFinal.println()
 
-printkmer.subscribe {println it}
+//printkmer.subscribe {println it}
 
 //printFlat.subscribe {println it}
 

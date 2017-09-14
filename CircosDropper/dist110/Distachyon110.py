@@ -275,99 +275,103 @@ tree_raw = """(100_0000007[&Created="Tue May 23 17:01:31 CEST 2017"]:0.0,BdtwD[&
 regex = re.compile(".*?\[(.*?)\]")
 results = re.findall(regex, tree_raw)
 tree = tree_raw.replace('[','').replace(']','').replace("'",'')
-for result in results:
-    tree = tree.replace(result,'')
-print tree
-#print tree#tree_raw.replace("""[&Created="Tue May 23 17:01:31 CEST 2017"]""",'').replace("""[&"Consensus support(%)"=100.0]""",'')
-df = pd.read_csv('merged_table_w_depth_deDuplicated_removedDupCols.tr.csv')
-#print df['project_id']
-#print Tree(tree)
-#print traceback
-strain = list(df['strain'])
-protDict = []
-noInclude = []
-valL = []
-for i,val in enumerate(df['joshua_assembly_name']):
-    if str(val) != 'nan':
-        #print val
-        try:
-            ID = val.split('_')[1]
-            IDnew = traceback[ID]
-            if IDnew in list110:
-                #print i,val
-                df.set_value(i,'TreeName','Bdist%s'%(IDnew))
-                df.set_value(i,'Fake ID',IDnew)
-                tree = tree.replace(strain[i],'Bdist%s'%(IDnew))
-                noInclude.append(i)
-                protDict.append('%s     %s'%(IDnew,'Bdist'+IDnew))
-        except:
-            valL.append((i,val))
-#print len(df[df['TreeName'] != 'a'])
-sL = len(df[df['TreeName'] != 'a'])
-for i,val in enumerate(strain):
-    if i not in noInclude:
-        try:
-            IDnew = oldDist[val.lower()]
-            print IDnew + 'num1'
-            if IDnew in list110:
-                df.set_value(i,'TreeName','Bdist%s'%(IDnew))
-                df.set_value(i,'Fake ID',IDnew)
-                tree = tree.replace(strain[i], 'Bdist%s' % (IDnew))
-                noInclude.append(i)
-            else:
-                print IDnew + ' in bad'
-        except:
+if 0:
+    for result in results:
+        tree = tree.replace(result,'')
+    print tree
+    #print tree#tree_raw.replace("""[&Created="Tue May 23 17:01:31 CEST 2017"]""",'').replace("""[&"Consensus support(%)"=100.0]""",'')
+    df = pd.read_csv('merged_table_w_depth_deDuplicated_removedDupCols.tr.csv')
+    #print df['project_id']
+    #print Tree(tree)
+    #print traceback
+    strain = list(df['strain'])
+    protDict = []
+    noInclude = []
+    valL = []
+    for i,val in enumerate(df['joshua_assembly_name']):
+        if str(val) != 'nan':
+            #print val
             try:
-                IDnew = more[val.lower()]
-                print IDnew + 'num2'
+                ID = val.split('_')[1]
+                IDnew = traceback[ID]
                 if IDnew in list110:
-                    df.set_value(i, 'TreeName', 'Bdist%s' % (IDnew))
-                    df.set_value(i, 'Fake ID', IDnew)
+                    #print i,val
+                    df.set_value(i,'TreeName','Bdist%s'%(IDnew))
+                    df.set_value(i,'Fake ID',IDnew)
+                    tree = tree.replace(strain[i],'Bdist%s'%(IDnew))
+                    noInclude.append(i)
+                    protDict.append('%s     %s'%(IDnew,'Bdist'+IDnew))
+            except:
+                valL.append((i,val))
+    #print len(df[df['TreeName'] != 'a'])
+    sL = len(df[df['TreeName'] != 'a'])
+    for i,val in enumerate(strain):
+        if i not in noInclude:
+            try:
+                IDnew = oldDist[val.lower()]
+                print IDnew + 'num1'
+                if IDnew in list110:
+                    df.set_value(i,'TreeName','Bdist%s'%(IDnew))
+                    df.set_value(i,'Fake ID',IDnew)
                     tree = tree.replace(strain[i], 'Bdist%s' % (IDnew))
                     noInclude.append(i)
+                else:
+                    print IDnew + ' in bad'
+            except:
+                try:
+                    IDnew = more[val.lower()]
+                    print IDnew + 'num2'
+                    if IDnew in list110:
+                        df.set_value(i, 'TreeName', 'Bdist%s' % (IDnew))
+                        df.set_value(i, 'Fake ID', IDnew)
+                        tree = tree.replace(strain[i], 'Bdist%s' % (IDnew))
+                        noInclude.append(i)
+                except:
+                    print val
+                    valL.append((i, val))
+    treenames  =list(df['TreeName'])
+    projId = list(df['project_id'])
+    """
+    for i,val in enumerate(projId):
+        if i not in noInclude:
+            try:
+                IDnew = oldDist[val.lower()]
+                df.set_value(i,'TreeName','Bdist%s'%(IDnew))
+                df.set_value(i,'Fake ID',IDnew)
             except:
                 print val
-                valL.append((i, val))
-treenames  =list(df['TreeName'])
-projId = list(df['project_id'])
-"""
-for i,val in enumerate(projId):
-    if i not in noInclude:
-        try:
-            IDnew = oldDist[val.lower()]
-            df.set_value(i,'TreeName','Bdist%s'%(IDnew))
-            df.set_value(i,'Fake ID',IDnew)
-        except:
-            print val
-            """
-#print Tree(tree)
-print more
-print traceback
-print oldDist
-print len(df[df['TreeName'] != 'a']) -  sL
-print len(valL)
-print len(list110)
-#print len(df[df['TreeName'] != 'a'])
-#print len(df[df['species']=='distachyon'])
-print len(set(bad))
-print len(df[df['TreeName'] == 'a'][df['species']=='distachyon'])
-#print df[df['species'] == 'distachyon'][df['TreeName'] == 'a']
-#print Tree(tree)
-print np.array(valL)
-#tree = tree.replace('Bd3-1_r','Bdistachyon')
-t = Tree(tree)
-#print t
-treenames = [treename for treename in list(df['TreeName']) if treename != 'a']
-t.prune([node.name for node in t.traverse('postorder') if node.name in treenames and node.name] + ['Bdistachyon'])
-#t.prune([node.name for node in list(t.traverse('postorder')) if node.name])
-print t
-#print [node.name for node in list(t.traverse('postorder')) if node.name == 'Bdistachyon']
-#print len(list(t.traverse('postorder')))
-df.to_csv('correspondence.csv')
-with open('prot_dict','w') as f:
-    f.write('\n'.join(protDict))
-#t.prune([node.name for node in t.traverse('postorder') if node.name in [] and node.name])
-t.write(format=1,outfile='grassnewick.nh')
-print bad
-print list110
-# make prot_dict
+                """
+    #print Tree(tree)
+    print more
+    print traceback
+    print oldDist
+    print len(df[df['TreeName'] != 'a']) -  sL
+    print len(valL)
+    print len(list110)
+    #print len(df[df['TreeName'] != 'a'])
+    #print len(df[df['species']=='distachyon'])
+    print len(set(bad))
+    print len(df[df['TreeName'] == 'a'][df['species']=='distachyon'])
+    #print df[df['species'] == 'distachyon'][df['TreeName'] == 'a']
+    #print Tree(tree)
+    print np.array(valL)
+    #tree = tree.replace('Bd3-1_r','Bdistachyon')
+    tree = tree.replace('Bdistachyon','Bdist314')
+    t = Tree(tree)
+    #print t
+    treenames = [treename for treename in list(df['TreeName']) if treename != 'a']
+    t.prune([node.name for node in t.traverse('postorder') if node.name in treenames and node.name] + ['Bdist314'])
+    #t.prune([node.name for node in list(t.traverse('postorder')) if node.name])
+    print t
+    #print [node.name for node in list(t.traverse('postorder')) if node.name == 'Bdistachyon']
+    #print len(list(t.traverse('postorder')))
+    df.to_csv('correspondence.csv')
+    with open('prot_dict','w') as f:
+        f.write('\n'.join(protDict+['314     Bdist314']))
+    #t.prune([node.name for node in t.traverse('postorder') if node.name in [] and node.name])
+    t.write(format=1,outfile='grassnewick.nh')
+    print bad
+    print list110
+    # make prot_dict
+tree = Tree(open('grassnewick_091117temp7.nh','r').read())
+print tree
