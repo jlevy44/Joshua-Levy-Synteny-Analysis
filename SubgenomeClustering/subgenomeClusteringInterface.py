@@ -1100,16 +1100,17 @@ def subgenomeExtraction(args):
         kmerratio2scaffasta(subgenome_folder, originalSubgenomePath, fastaPath, genomeName, originalGenome, BB, bootstrap, iteration, kmerLength,runFinal,kmer500Path,metric,originalStr, blastMem, kmer_low_count, diff_kmer_threshold, unionbed_threshold)
     if bootstrap < iteration and runFinal == 0:
         subgenome_folder = originalSubgenomePath
-        classifyFolder = subgenome_folder + '/classify/'
-        subgenome_folder, runFinal = classify(classifyFolder,fastaPath,genomeName,kmerLength, originalSubgenomePath.split('/')[-1],kmer500Path,metric,originalStr,originalGenome, blastMem, kmer_low_count)
-        print 'HAHA'
+        if 0: #FIXME classifier has been removed because it has been crashing... Will not be implemented in v1.0, needs work
+            classifyFolder = subgenome_folder + '/classify/'
+            subgenome_folder, runFinal = classify(classifyFolder,fastaPath,genomeName,kmerLength, originalSubgenomePath.split('/')[-1],kmer500Path,metric,originalStr,originalGenome, blastMem, kmer_low_count)
+        subgenome_folder, runFinal = 'null', 0
         iteration += 1
         if runFinal:
             subgenomeExtraction((subgenome_folder, originalSubgenomePath, fastaPath, genomeName, originalGenome, BB, bootstrap, iteration, kmerLength,runFinal,kmer500Path,metric,originalStr, blastMem, kmer_low_count, diff_kmer_threshold, unionbed_threshold))
 
 def classify(classifyFolder, fastaPath, genomeName, kmerLength,model,kmer500Path,metric,originalStr,originalGenome,blastMem,kmer_low_count):
     subgenome_files = [np.vectorize(lambda line: line.strip('\n'))(open(classifyFolder + file, 'r').readlines()) for file in os.listdir(classifyFolder) if file.endswith('.txt') and os.stat(classifyFolder+file).st_size]
-    blastMemStr = "export _JAVA_OPTIONS='-Xms5G -Xmx%sG'" % (blastMem)
+    blastMemStr = "export _JAVA_OPTIONS='-Xms5G -Xmx%sG'" %(blastMem)
     try:
         kmer_low_count = int(kmer_low_count)
     except:
@@ -1138,6 +1139,13 @@ def classify(classifyFolder, fastaPath, genomeName, kmerLength,model,kmer500Path
         else:
             with open(fastaPath+genomeName+'.fai', 'r') as f:
                 scaffolds = np.array([line.split()[0] for line in f if line])
+        print fastaPath + genomeName
+        print classifyFolder + 'ambiguous.kcount.fa'
+        print classifyFolder + 'ambiguous.sam'
+        print blastMemStr
+        print blastMemStr + ' && bbmap.sh vslow=t ambiguous=all noheader=t secondary=t perfectmode=t threads=8 maxsites=2000000000 outputunmapped=f ref=%s path=%s/ in=%s outm=%s' % (
+                fastaPath + genomeName, classifyFolder, classifyFolder + 'ambiguous.kcount.fa',
+                classifyFolder + 'ambiguous.sam')
             #scaffolds = np.array(pickle.load(open('scaffolds.p', 'rb')))
         runFinal = 0
         scaffolds_unchecked = np.setdiff1d(scaffolds, total_subgenome_scaffolds)
@@ -1162,12 +1170,10 @@ def classify(classifyFolder, fastaPath, genomeName, kmerLength,model,kmer500Path
                 for line in f:
                     if line and int(line.split('\t')[-1]) >= kmer_low_count:
                         f2.write('>%s\n%s\n' % tuple([line.split('\t')[0]] * 2))
-            print fastaPath + genomeName
-            print classifyFolder + 'ambiguous.kcount.fa'
-            print classifyFolder + 'ambiguous.sam'
-            print 'bbmap.sh vslow=t ambiguous=all noheader=t secondary=t perfectmode=t threads=8 maxsites=2000000000 outputunmapped=f ref=%s in=%s outm=%s' % (fastaPath + genomeName, classifyFolder + 'ambiguous.kcount.fa', classifyFolder + 'ambiguous.sam')
-            subprocess.call(blastMemStr + ' && bbmap.sh vslow=t ambiguous=all noheader=t secondary=t perfectmode=t threads=8 maxsites=2000000000 outputunmapped=f ref=%s path=%s/ in=%s outm=%s' % (fastaPath + genomeName, classifyFolder, classifyFolder + 'ambiguous.kcount.fa', classifyFolder + 'ambiguous.sam'), shell=True)
-            print 'ALLCLEAR'
+            #with open(classifyFolder+'test.txt','w') as f:
+            #    f.write('\n'.join([]))
+            subprocess.call(blastMemStr + ' && bbmap.sh vslow=t ambiguous=all noheader=t secondary=t perfectmode=t threads=8 maxsites=2000000000 outputunmapped=f ref=%s nodisk in=%s outm=%s' % (fastaPath + genomeName, classifyFolder + 'ambiguous.kcount.fa', classifyFolder + 'ambiguous.sam'), shell=True)
+            #print 'ALLCLEAR'
             kmerIdx = {line[1].split('\t')[0]: line[0] for line in
                        enumerate(open(classifyFolder + 'ambiguous.kcount', 'r').readlines())}
             scaffoldIdx = {scaffold[1]: scaffold[0] for scaffold in enumerate(scaffolds)}
@@ -1210,12 +1216,12 @@ def classify(classifyFolder, fastaPath, genomeName, kmerLength,model,kmer500Path
                     f.write('\n'.join(subgenome_files[i]))
             runFinal = 1
         else:
-            print 'heyHEY'
+            #print 'heyHEY'
             return 'null', 0
     else:
-        print 'HOHO'
+        #print 'HOHO'
         return 'null', 0
-    print 'HEHE'
+    #print 'HEHE'
     return subgenomeFolder, runFinal
 
 def generateKmerGraph(args):
@@ -1531,8 +1537,12 @@ def clusterGraph(args): #FIXME under development
         print 'Proper iterations input is comma delimitted'
         print helpStr
         quit()
-    for i in iterations:
-        pos = nx.spring_layout(G,dim=3,iterations=i,pos=pos_i)
+    masterData = [] #FIXME get slider to work
+    for idx,i in enumerate(iterations):
+        if i != 0: #FIXME change computation route, takes too much time to calculate all of those iterations, maybe do 1 iteration at a time
+            pos = nx.spring_layout(G,dim=3,iterations=i,pos=pos_i)
+        else:
+            pos = pos_i
         plots = []
         Xv = [pos[k][0] for k in nodes]
         Yv = [pos[k][1] for k in nodes]
@@ -1571,7 +1581,75 @@ def clusterGraph(args): #FIXME under development
                 showticklabels=False,
                 title=''
                 )
-
+        if idx == 0:
+            masterLayout = dict(
+                title="Graph of Scaffolds",
+                updatemenus= [{'direction': 'left',
+                            'pad': {'r': 10, 't': 87},
+                            'showactive': False,
+                            'type': 'buttons',
+                            'x': 0.1,
+                            'xanchor': 'right',
+                            'y': 0,
+                            'yanchor': 'top','buttons': [
+                        {
+                            'args': [None, {'frame': {'duration': 500, 'redraw': False},
+                                     'fromcurrent': True, 'transition': {'duration': 300, 'easing': 'quadratic-in-out'}}],
+                            'label': 'Play',
+                            'method': 'animate'
+                        },
+                        {
+                            'args': [[None], {'frame': {'duration': 0, 'redraw': False}, 'mode': 'immediate',
+                            'transition': {'duration': 0}}],
+                            'label': 'Pause',
+                            'method': 'animate'
+                            }
+                        ]}],
+                sliders = [],
+                width=1000,
+                height=1000,
+                showlegend=True,
+                scene=go.Scene(
+                    xaxis=go.XAxis(axis),
+                    yaxis=go.YAxis(axis),
+                    zaxis=go.ZAxis(axis),
+                ),
+                margin=go.Margin(
+                    t=100
+                ),
+                hovermode='closest',
+                annotations=go.Annotations([
+                    go.Annotation(
+                        showarrow=False,
+                        text="",
+                        xref='paper',
+                        yref='paper',
+                        x=0,
+                        y=0.1,
+                        xanchor='left',
+                        yanchor='bottom',
+                        font=go.Font(
+                            size=14
+                        )
+                    )
+                ]), )
+            sliders_dict = {
+                'active': 0,
+                'yanchor': 'top',
+                'xanchor': 'left',
+                'currentvalue': {
+                    'font': {'size': 20},
+                    'prefix': 'Frame:',
+                    'visible': True,
+                    'xanchor': 'right'
+                },
+                'transition': {'duration': 300, 'easing': 'cubic-in-out'},
+                'pad': {'b': 10, 't': 50},
+                'len': 0.9,
+                'x': 0.1,
+                'y': 0,
+                'steps': []
+            }
         layout = go.Layout(
             title="Graph of Scaffolds",
             width=1000,
@@ -1601,9 +1679,31 @@ def clusterGraph(args): #FIXME under development
                     )
                 )
             ]), )
-        data1 = go.Data(plots)
-        fig1 = go.Figure(data=data1, layout=layout)
-        py.plot(fig1, filename=outDir + '/OutputGraph_frame%d.html'%i)
+        slider_step = {'args': [
+            [str(i)],
+            {'frame': {'duration': 300, 'redraw': False},
+             'mode': 'immediate',
+             'transition': {'duration': 300}}
+            ],
+            'label': str(i),
+            'method': 'animate'}
+        sliders_dict['steps'].append(slider_step)
+        masterData.append({'data' : go.Data(plots), 'layout': layout})
+    masterLayout['sliders']= {
+            'args': [
+                'transition', {
+                    'duration': 400,
+                    'easing': 'cubic-in-out'
+                }
+            ],
+            'initialValue': str(iterations[0]),
+            'plotlycommand': 'animate',
+            'values': map(str,iterations),
+            'visible': True
+        }
+    masterLayout['sliders'] = [sliders_dict]
+    fig1 = go.Figure(data=masterData[0]['data'], layout=masterLayout, frames=masterData)
+    py.plot(fig1, filename=outDir + '/OutputGraph_frames_%s.html'%iteration)
 
 
 

@@ -2,19 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="87dadfdf-9689-45cf-b4af-5fd342ee0ae6" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/CircosDropper/dist110/run110/configCNSAnalysis.txt" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/CircosDropper/dist110/run110/configCNSAnalysis_hyb.txt" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/CircosDropper/dist110/run110/convert2CNSconfig.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/CircosDropper/dist110/run110/grassnewick_091117temp7.nh" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/CircosDropper/dist110/run110/prot_dict_hyb" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/CircosDropper/dist110/run110/test|filename.txt" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/CircosDropper/dist110/grassnewick.nh" afterPath="$PROJECT_DIR$/CircosDropper/dist110/run110/grassnewick.nh" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/CircosDropper/dist110/prot_dict" afterPath="$PROJECT_DIR$/CircosDropper/dist110/run110/prot_dict" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/CircosDropper/dist110/Distachyon110.py" afterPath="$PROJECT_DIR$/CircosDropper/dist110/Distachyon110.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/SubgenomeClustering/reset_cluster.sh" afterPath="$PROJECT_DIR$/SubgenomeClustering/reset_cluster.sh" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/SubgenomeClustering/subgenomeClusteringInterface.py" afterPath="$PROJECT_DIR$/SubgenomeClustering/subgenomeClusteringInterface.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/SubgenomeClustering/subgenomePipeline.nf" afterPath="$PROJECT_DIR$/SubgenomeClustering/subgenomePipeline.nf" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -29,21 +18,21 @@
   <component name="ExecutionTargetManager" SELECTED_TARGET="default_target" />
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="subgenomePipeline.nf" pinned="false" current-in-tab="true">
+      <file leaf-file-name="subgenomePipeline.nf" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/SubgenomeClustering/subgenomePipeline.nf">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="90">
-              <caret line="563" column="0" lean-forward="true" selection-start-line="563" selection-start-column="0" selection-end-line="563" selection-end-column="0" />
+            <state relative-caret-position="60">
+              <caret line="561" column="26" lean-forward="false" selection-start-line="561" selection-start-column="26" selection-end-line="561" selection-end-column="26" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="subgenomeClusteringInterface.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="subgenomeClusteringInterface.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/SubgenomeClustering/subgenomeClusteringInterface.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="131">
-              <caret line="1153" column="29" lean-forward="true" selection-start-line="1153" selection-start-column="29" selection-end-line="1153" selection-end-column="29" />
+            <state relative-caret-position="198">
+              <caret line="1539" column="45" lean-forward="false" selection-start-line="1539" selection-start-column="45" selection-end-line="1539" selection-end-column="45" />
               <folding>
                 <element signature="e#0#14#0" expanded="true" />
               </folding>
@@ -83,8 +72,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>clusterMo</find>
-      <find>283</find>
       <find>pickle.load(</find>
       <find>writeKmerC</find>
       <find>writekmer</find>
@@ -111,8 +98,10 @@
       <find>cluster(</find>
       <find>kmerL</find>
       <find>{</find>
-      <find>/*</find>
       <find>classify(</find>
+      <find>/*</find>
+      <find>path=</find>
+      <find>classify</find>
     </findStrings>
     <replaceStrings>
       <replace>val</replace>
@@ -177,15 +166,15 @@
         <option value="$PROJECT_DIR$/CircosDropper/dist110/grassnewick_091117temp7.nh" />
         <option value="$PROJECT_DIR$/CircosDropper/dist110/run110/prot_dict" />
         <option value="$PROJECT_DIR$/CircosDropper/dist110/run110/convert2CNSconfig.py" />
-        <option value="$PROJECT_DIR$/SubgenomeClustering/subgenomeClusteringInterface.py" />
         <option value="$PROJECT_DIR$/SubgenomeClustering/reset_cluster.sh" />
         <option value="$PROJECT_DIR$/SubgenomeClustering/subgenomePipeline.nf" />
+        <option value="$PROJECT_DIR$/SubgenomeClustering/subgenomeClusteringInterface.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="-1609" />
-    <option name="y" value="194" />
+    <option name="x" value="-1657" />
+    <option name="y" value="21" />
     <option name="width" value="1080" />
     <option name="height" value="808" />
   </component>
@@ -577,13 +566,6 @@
       <option name="presentableId" value="Default" />
       <updated>1497987891371</updated>
     </task>
-    <task id="LOCAL-00022" summary="working on subgenome clustering and scaffolding pipelines">
-      <created>1501541611514</created>
-      <option name="number" value="00022" />
-      <option name="presentableId" value="LOCAL-00022" />
-      <option name="project" value="LOCAL" />
-      <updated>1501541611514</updated>
-    </task>
     <task id="LOCAL-00023" summary="working on subgenome clustering and scaffolding pipelines">
       <created>1501619274212</created>
       <option name="number" value="00023" />
@@ -920,7 +902,14 @@
       <option name="project" value="LOCAL" />
       <updated>1505343169769</updated>
     </task>
-    <option name="localTasksCounter" value="71" />
+    <task id="LOCAL-00071" summary="fixing classifier bug">
+      <created>1505417056825</created>
+      <option name="number" value="00071" />
+      <option name="presentableId" value="LOCAL-00071" />
+      <option name="project" value="LOCAL" />
+      <updated>1505417056826</updated>
+    </task>
+    <option name="localTasksCounter" value="72" />
     <servers />
   </component>
   <component name="TodoView">
@@ -933,7 +922,7 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="-1609" y="194" width="1080" height="808" extended-state="0" />
+    <frame x="-1657" y="21" width="1080" height="808" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.17407407" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
@@ -959,7 +948,6 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="changes to pipelines" />
     <MESSAGE value="changes to both pipelines. Need to fix Spectral Clustering!!!" />
     <MESSAGE value="Updates to pipeline" />
     <MESSAGE value="updates for the day" />
@@ -984,7 +972,8 @@
     <MESSAGE value="fixed a few bugs" />
     <MESSAGE value="experimentation with animations" />
     <MESSAGE value="animation" />
-    <option name="LAST_COMMIT_MESSAGE" value="animation" />
+    <MESSAGE value="fixing classifier bug" />
+    <option name="LAST_COMMIT_MESSAGE" value="fixing classifier bug" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1355,16 +1344,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/SubgenomeClustering/subgenomeClusteringInterface.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="131">
-          <caret line="1153" column="29" lean-forward="true" selection-start-line="1153" selection-start-column="29" selection-end-line="1153" selection-end-column="29" />
-          <folding>
-            <element signature="e#0#14#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/SubgenomeClustering/reset_cluster.sh">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="30">
@@ -1375,9 +1354,19 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/SubgenomeClustering/subgenomePipeline.nf">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="90">
-          <caret line="563" column="0" lean-forward="true" selection-start-line="563" selection-start-column="0" selection-end-line="563" selection-end-column="0" />
+        <state relative-caret-position="60">
+          <caret line="561" column="26" lean-forward="false" selection-start-line="561" selection-start-column="26" selection-end-line="561" selection-end-column="26" />
           <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/SubgenomeClustering/subgenomeClusteringInterface.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="198">
+          <caret line="1539" column="45" lean-forward="false" selection-start-line="1539" selection-start-column="45" selection-end-line="1539" selection-end-column="45" />
+          <folding>
+            <element signature="e#0#14#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
