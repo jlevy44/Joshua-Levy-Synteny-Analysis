@@ -400,7 +400,7 @@ input:
     each technique from reduction_techniques
 
 output: // maybe instead write to a text file and filter out ?
-    val 'main_${technique}_${n_subgenomes}_transformed3D.npy' into transformedData
+    file 'test.txt' into transformedData // 'main_${technique}_${n_subgenomes}_transformed3D.npy' into transformedData
 
 script:
 if(trans == 1)
@@ -408,12 +408,16 @@ if(trans == 1)
     #!/bin/bash
     cd ${workingDir}
     python subgenomeClusteringInterface.py transform_main 1 ${reclusterPath} ${technique} ${n_subgenomes} ${transformMetric}
+    cd -
+    echo main_${technique}_${n_subgenomes}_transformed3D.npy > test.txt
     """
 else
     """
     #!/bin/bash
     cd ${workingDir}
     touch main_${technique}_${n_subgenomes}_transformed3D.npy
+    cd -
+    echo main_${technique}_${n_subgenomes}_transformed3D.npy > test.txt
     """
 
 }
@@ -458,11 +462,16 @@ else
 
 //transformedData = Channel.watchPath('*transformed3D.npy','create,modify')
 //                         .unique()
-transformedData.unique()
-               .map {file -> file.name - 'transformed3D.npy'}
-               .set {transformedData2}
+transformedData.splitText()
+                .filter {it.toString().size() > 1}
+                .set {transformedData1}
+
+transformedData1.unique()
+                .map {it -> it - 'transformed3D.npy' - '\n'}
+                .into {transformedData2; printTransform}
                          //.filter((file.name).startsWith('main'))
 
+printTransform.println()
 
 kmerBest500Files = Channel.create()
 subgenomeFoldersRaw = Channel.create()
@@ -592,13 +601,14 @@ best_kmer5.map {file -> tuple(file.name - best500kmerPath , file.name - best500k
 //best_kmerSemi = best_kmer2.concat(best_kmer6)
 //                .into { best_kmerFinal; printkmerFinal }
 
-
+/*
 a = Channel.from(1..100)
             .randomSample(10)
 b = Channel.from(300..400)
             .randomSample(13)
 c = a.concat(b)
      .println()
+*/
 
 printkmerFinal.println()
 

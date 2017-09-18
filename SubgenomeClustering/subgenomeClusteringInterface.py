@@ -497,7 +497,6 @@ def transform_plot(args):
 
 def cluster(args):
     file, reclusterFolder, kmer500Path, clusterMethod, n_subgenomes, metric, n_neighbors = args
-    print clusterMethod
     try:
         n_subgenomes = int(n_subgenomes)
     except:
@@ -518,7 +517,6 @@ def cluster(args):
         #kmerIdx = {i : kmer for i, kmer in enumerate(kmers)}
         Tname = file.split('transformed3D')[0]
         transformed_data = np.load(file)
-
         transformed_data = StandardScaler().fit_transform(transformed_data)
 
         #clustering_names = ['SpectralClustering','KMeans']
@@ -1709,6 +1707,27 @@ def clusterGraph(args): #FIXME under development
     fig1 = go.Figure(data=masterData[0]['data'], layout=masterLayout, frames=masterData)
     py.plot(fig1, filename=outDir + '/OutputGraph_frames_%s.html'%iteration)
 
+def generateOutBed(args):
+    outDir, original, faiFile, outfname = args
+    try:
+        original = int(original)
+    except:
+        original = 0
+    if outDir.endswith('/') == 0:
+        outDir += '/'
+    #outfname = outDir + 'subgenomes.bed'
+    open(outfname,'w').close()
+    for file in os.listdir(outDir):
+        if file.endswith('.txt') and file.startswith('subgenome_'):
+            subgenome = file.split('.')[0]
+            if original == 0:
+                with open(outDir+file,'r') as f ,open(outfname,'a') as f2:
+                    f2.write('\n'.join(['\t'.join(['_'.join(line.strip('\n').split('_')[0:-2])] + line.strip('\n').split('_')[-2:] + [subgenome]) for line in f if line])+'\n')
+            else:
+                genomeDict = { line.split('\t')[0] : line.split('\t')[1] for line in open(faiFile,'r') if line }
+                with open(outDir + file, 'r') as f, open(outfname, 'a') as f2:
+                    f2.write('\n'.join(['\t'.join([line.strip('\n').split('\t')[0],'0',genomeDict[line.strip('\n').split('\t')[0]]] + [subgenome]) for
+                                        line in f if line]) + '\n')
 
 
 #os.chdir('../../..')
@@ -1732,7 +1751,8 @@ options = {
     'transform_main': transform_main,
     'subgenomeExtraction': subgenomeExtraction,
     'generateKmerGraph': generateKmerGraph,
-    'clusterGraph': clusterGraph
+    'clusterGraph': clusterGraph,
+    'generateOutBed': generateOutBed
 }
 
 def main():
