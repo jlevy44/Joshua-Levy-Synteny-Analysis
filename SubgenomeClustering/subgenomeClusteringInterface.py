@@ -124,11 +124,13 @@ def findKmerNames(args):
             return listKmer
 
 def blast2bed(args):
-    blastFile, BB = args
+    blastFile, BB ,lowMemory = args
     try:
         BB = int(BB)
+        lowMemory = int(lowMemory)
     except:
         BB = 0
+        lowMemory = 0
     if BB:
         with open(blastFile,'r') as f, open('blasted.bed','w') as f2:
             for line in f:
@@ -141,9 +143,9 @@ def blast2bed(args):
                 if line:
                     l1 = line.split('\t')[1].split('::')[0] # FIXME .split('::')[0] added for blast+
                     f2.write('\t'.join([l1] + ['0',str(int(l1.split('_')[-1])-int(l1.split('_')[-2]))] + [line.split('\t')[0]])+'\n')
-
-    b = pybedtools.BedTool('blasted.bed').sort().merge(c=4,o='collapse',)
-    b.saveas('blasted_merged.bed')
+    if lowMemory == 0:
+        b = pybedtools.BedTool('blasted.bed').sort().merge(c=4,o='collapse',)
+        b.saveas('blasted_merged.bed')
     #return b
 
 def kmerRelatedHistogram(args):
@@ -262,15 +264,19 @@ def splitFasta(args):
     print args[0].split('.fa')[0]+'_split.fa'
 
 def generateClusteringMatrixAndKmerPrevalence(args):
-    kmercountPath, save, genome, chunkSize, minChunkSize, removeNonChunk, minChunkThreshold = args
+    kmercountPath, save, genome, chunkSize, minChunkSize, removeNonChunk, minChunkThreshold, lowMemory = args
     try:
         removeNonChunk = int(removeNonChunk)
         chunkSize = int(chunkSize)
         minChunkSize = int(minChunkSize)
         minChunkThreshold = int(minChunkThreshold)
+        lowMemory = int(lowMemory)
         save = int(save)
     except:
         chunkSize = 75000
+        minChunkSize = 0
+        minChunkThreshold = 0
+        lowMemory = 0
         removeNonChunk = 0
         save = 0
 
@@ -303,48 +309,55 @@ def generateClusteringMatrixAndKmerPrevalence(args):
     #d=0
     start = clock()
     #f3.write(str(start) + '\n')
-    with open('blasted_merged.bed', 'r') as f:
-        for line in f:
-            if line:
-                listLine = line.rstrip('\n').split('\t')
-                if listLine[0] in scaffolds:
-                    counts = Counter(listLine[-1].split(','))
-                    interval = (abs(float(listLine[2]) - float(listLine[1]))) / 5000.
-                    #scalingFactor = interval * 5000. / len(kmers)
-                    #kmerText = ','.join(counts.keys())
-                    #kmerCountsNum = len(counts.keys())
-                    #f3.write(listLine[0] + '\n')
-                    #kmerCountsNumbers = [kmerIdx[kmer] for kmer in kmerCountsNames]
-                    #kmerGraph.add_edges_from(list(combinations(kmerCountsNumbers, 2)))
-                    for key in counts:
-                        #f2.write('%s\t0\t100\t%s\n'%(key,kmerText))
-                        try:
-                            #row_idx.append(scaffoldIdx[listLine[0]])
-                            #column_idx.append(kmerIdx[key])
-                            #values.append(counts[key] / interval)
-                            data[scaffoldIdx[listLine[0]], kmerIdx[key]] = counts[key] / interval
-                            #kmerCount[key][0] += kmerCountsNum #/ scalingFactor
-                            #kmerCount[key][1] += 1
-                        except:
-                            pass
-                #[(np.uint32(kmerIdx[key]),np.uint32(kmerIdx[kmername])) for kmername in kmerCountsNames])
-                    #for kmername in kmerCountsNames:
-                    #    kmer_SparseMatrix[kmerIdx[key],kmerIdx[kmername]] = 1
-                #c += 1
-                #if c > 100:
-                #    d += c
-                #f3.write(str(d) + '\t' + str(clock()-start) + '\n')
-                #    c=0
-                #    print line
+    if lowMemory:
+        with open('blasted.bed', 'r') as f:  # , open(classifyFolder + 'blasted.bed', 'w') as f2:
+            for line in f:
+                if line:
+                    lineL = line.strip('\n').split('\t')
+                    data[scaffoldIdx[lineL[0]], kmerIdx[lineL[-1]]] += 1.
+    else:
+        with open('blasted_merged.bed', 'r') as f:
+            for line in f:
+                if line:
+                    listLine = line.rstrip('\n').split('\t')
+                    if listLine[0] in scaffolds:
+                        counts = Counter(listLine[-1].split(','))
+                        interval = (abs(float(listLine[2]) - float(listLine[1]))) / 5000.
+                        #scalingFactor = interval * 5000. / len(kmers)
+                        #kmerText = ','.join(counts.keys())
+                        #kmerCountsNum = len(counts.keys())
+                        #f3.write(listLine[0] + '\n')
+                        #kmerCountsNumbers = [kmerIdx[kmer] for kmer in kmerCountsNames]
+                        #kmerGraph.add_edges_from(list(combinations(kmerCountsNumbers, 2)))
+                        for key in counts:
+                            #f2.write('%s\t0\t100\t%s\n'%(key,kmerText))
+                            try:
+                                #row_idx.append(scaffoldIdx[listLine[0]])
+                                #column_idx.append(kmerIdx[key])
+                                #values.append(counts[key] / interval)
+                                data[scaffoldIdx[listLine[0]], kmerIdx[key]] = counts[key] / interval
+                                #kmerCount[key][0] += kmerCountsNum #/ scalingFactor
+                                #kmerCount[key][1] += 1
+                            except:
+                                pass
+                    #[(np.uint32(kmerIdx[key]),np.uint32(kmerIdx[kmername])) for kmername in kmerCountsNames])
+                        #for kmername in kmerCountsNames:
+                        #    kmer_SparseMatrix[kmerIdx[key],kmerIdx[kmername]] = 1
+                    #c += 1
+                    #if c > 100:
+                    #    d += c
+                    #f3.write(str(d) + '\t' + str(clock()-start) + '\n')
+                    #    c=0
+                    #    print line
 
-                    #f2.close()
-                    #f3.write(str(d) + '\n' + line + '\n' + str(counts) + '\n')
-                    #BedTool('kmerPrevalence.bed').sort().merge(c=4, o='distinct', delim=',').saveas(
-                    #    'kmerPrevalence.bed')
-                    #f2 = open('kmerPrevalence.bed','a')
-                #    c = 0
+                        #f2.close()
+                        #f3.write(str(d) + '\n' + line + '\n' + str(counts) + '\n')
+                        #BedTool('kmerPrevalence.bed').sort().merge(c=4, o='distinct', delim=',').saveas(
+                        #    'kmerPrevalence.bed')
+                        #f2 = open('kmerPrevalence.bed','a')
+                    #    c = 0
 
-                    #data[scaffoldIdx[listLine[0]],kmerIdx[key]] = counts[key] / interval
+                        #data[scaffoldIdx[listLine[0]],kmerIdx[key]] = counts[key] / interval
     #f2.close()
     #f3.close()
     #with open('kmerPrevalence.txt','w') as f:
@@ -1492,22 +1505,35 @@ def clusterGraph(args): #FIXME under development
         featureBed = BedTool(bedFeaturesFile)
         featuresDict = {scaffold: '' for scaffold in scaffolds}
         finalBed = scaffoldsBed.intersect(featureBed,wa=True,wb=True).sort().merge(d=-1,c=7,o='distinct')
+        #print finalBed.head()
+        finalBed.saveas('finalBed.bed')
         omittedRegions = scaffoldsBed.intersect(featureBed,v=True,wa=True)
-        for line in str(finalBed).splitlines()+[line2+'\tunlabelled_white' for line2 in str(omittedRegions).splitlines()]:
-            lineList = line.split('\t')
+        omittedRegions.saveas('ommitted.bed')
+        #print omittedRegions.head()
+        for line in str(finalBed).splitlines()+[line2+'\tunlabelled' for line2 in str(omittedRegions).splitlines()]:
+            lineList = line.strip('\n').split('\t')
             feature = lineList[-1]
             scaffold = '_'.join(lineList[0:-1])
             if ',' in feature:
-                featuresDict[scaffold] = '|'.join([ft.split('_')[0] for ft in feature.split(',')])
-                feature = 'ambiguous_black'
+                featuresDict[scaffold] = '|'.join(feature.split(','))#[ft for ft in feature.split(',')])#.split('_')[0]
+                feature = 'ambiguous'
             else:
-                featuresDict[scaffold] = feature.split('_')[0]
-            idx = scaffoldIdx[scaffold]
-            outputFeatures[idx] = tuple(feature.split('_'))
-        outputFeaturesArray = np.array([outputFeatures[i] for i in range(len(scaffolds))])
-        names = outputFeaturesArray[:,0]
-        colors = outputFeaturesArray[:,1]
+                featuresDict[scaffold] = feature#.split('_')[0]
+            #idx = scaffoldIdx[scaffold]
+            outputFeatures[scaffold] = feature#tuple(feature)#.split('_'))
+        mainFeatures = set(outputFeatures.values())
+        N = len(mainFeatures)
+        c = ['hsl(' + str(h) + ',50%' + ',50%)' for h in np.linspace(0, 360, N + 1)]
+        #print c
+        featuresColors = {feature : c[i] for i, feature in enumerate(mainFeatures)}
+        #print featuresColors
+        outputFeaturesArray = np.array([outputFeatures[scaffold] for scaffold in scaffolds])
+        names = np.vectorize(lambda name: 'Scaffolds: ' + name)(outputFeaturesArray)#[:,0]
+        #print names
+        colors = np.vectorize(lambda feature: featuresColors[feature])(outputFeaturesArray)#[:,1]
         nodesText = ['%s, %d connections, feature= %s' % (scaffold, int(G.degree(scaffold)),featuresDict[scaffold]) for scaffold in nodes]  # , Related: %s'%(kmer, int(G.degree(kmer)), ' '.join(G[kmer].keys())) for kmer in nodes]
+        #print [names[names==feature] for feature in mainFeatures]
+        #print { feature : np.vectorize(lambda feature: featuresColors[feature])(list(set(names[names==feature]))) for feature in mainFeatures}
     else:
         names = 'Scaffolds'
         colors = c[0]
@@ -1554,6 +1580,7 @@ def clusterGraph(args): #FIXME under development
             Xed += [pos[edge[0]][0], pos[edge[1]][0], None]
             Yed += [pos[edge[0]][1], pos[edge[1]][1], None]
             Zed += [pos[edge[0]][2], pos[edge[1]][2], None]
+        print names
         plots.append(go.Scatter3d(x=Xv,
                               y=Yv,
                               z=Zv,

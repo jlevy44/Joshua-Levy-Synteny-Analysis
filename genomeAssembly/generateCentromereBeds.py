@@ -56,6 +56,10 @@ for chrom in histInterval:
         idxs_peaks = argrelextrema(filtered_density, np.greater)[0]
         idxs_valleys = argrelextrema(filtered_density, np.less)[0]
         maxIndex = np.argmax(filtered_density, axis=0)
+        if any([pk > maxIndex for pk in idxs_valleys]) == 0:
+            idxs_valleys = list(idxs_valleys) + [len(filtered_density) - 1]
+        if any([pk < maxIndex for pk in idxs_valleys]) == 0:
+            idxs_valleys = list(idxs_valleys) + [0]
         halfWidth = np.min(np.abs(idxs_valleys-maxIndex))
         centromereInterval = [maxIndex - halfWidth, maxIndex + halfWidth]
         fig = plt.figure()

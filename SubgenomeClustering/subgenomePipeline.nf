@@ -51,6 +51,7 @@ unionbed_threshold = findValue('unionbed_threshold ')
 minChunkSize = findValue('minChunkSize ')
 removeNonChunk = findValue('removeNonChunk ')
 minChunkThreshold = findValue('minChunkThreshold ')
+lowMemory = findValue('lowMemory ')
 
 
 
@@ -337,7 +338,7 @@ if(b2b == 1)
     """
     #!/bin/bash
     cd ${workingDir}
-    python subgenomeClusteringInterface.py blast2bed ${blastPath}${blastName} ${BBstr}
+    python subgenomeClusteringInterface.py blast2bed ${blastPath}${blastName} ${BBstr} ${lowMemory}
     """
 else
     """
@@ -368,7 +369,7 @@ if(genMat == 1)
     """
     #!/bin/bash
     cd ${workingDir}
-    python subgenomeClusteringInterface.py genClusterKmer ${kmercountPath} ${save} ${genomeName} ${splitLength} ${minChunkSize} ${removeNonChunk} ${minChunkThreshold}
+    python subgenomeClusteringInterface.py genClusterKmer ${kmercountPath} ${save} ${genomeName} ${splitLength} ${minChunkSize} ${removeNonChunk} ${minChunkThreshold} ${lowMemory}
     """
 else
     """

@@ -25,6 +25,7 @@ runBlastParallel = 0
 blastMemory = 100
 blast2bed = 1
 generateClusteringMatrix = 1
+lowMemory = 1
 minChunkSize = 50000
 removeNonChunk = 1
 minChunkThreshold = 0
