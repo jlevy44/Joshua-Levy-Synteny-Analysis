@@ -460,6 +460,7 @@ else
 //                         .unique()
 transformedData.unique()
                .map {file -> file.name - 'transformed3D.npy'}
+               .set {transformedData2}
                          //.filter((file.name).startsWith('main'))
 
 
@@ -472,11 +473,11 @@ cpus = { clust == 1 ? 2 : 1 }
 
 
 input:
-    val transformedData
+    val transformedData2
     each model from clusterModels
 
 output:
-    file 'test.txt' into kmerBest500Files//stdout into kmerBest500Files//val 'kmer500Best_${model}${transformedData}n3.fa' into kmerBest500Files
+    file 'test.txt' into kmerBest500Files//stdout into kmerBest500Files//val 'kmer500Best_${model}${transformedData2}n3.fa' into kmerBest500Files
     file 'test2.txt' into subgenomeFoldersRaw
 //${best500kmerPath}/
 
@@ -485,16 +486,16 @@ if(clust == 1)
     """
     #!/bin/bash
     cd ${workingDir}
-    python subgenomeClusteringInterface.py cluster ${transformedData}transformed3D.npy ${reclusterPath} ${best500kmerPath} ${model} ${n_subgenomes} ${metric} ${n_neighbors}
+    python subgenomeClusteringInterface.py cluster ${transformedData2}transformed3D.npy ${reclusterPath} ${best500kmerPath} ${model} ${n_subgenomes} ${metric} ${n_neighbors}
     echo ${model}
     cd -
-    echo kmer500Best_${model}${transformedData}n${n_clusters}.fa > test.txt
-    echo ${model}${transformedData}n${n_clusters} > test2.txt
+    echo kmer500Best_${model}${transformedData2}n${n_clusters}.fa > test.txt
+    echo ${model}${transformedData2}n${n_clusters} > test2.txt
     """
 else
     """
-    echo kmer500Best_${model}${transformedData}n${n_clusters}.fa > test.txt
-    echo ${model}${transformedData}n${n_clusters} > test2.txt
+    echo kmer500Best_${model}${transformedData2}n${n_clusters}.fa > test.txt
+    echo ${model}${transformedData2}n${n_clusters} > test2.txt
     """
 
 }

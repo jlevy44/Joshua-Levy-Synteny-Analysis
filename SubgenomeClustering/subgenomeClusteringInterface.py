@@ -1637,36 +1637,6 @@ def clusterGraph(args): #FIXME under development
                 'y': 0,
                 'steps': []
             }
-        """
-        layout = go.Layout(
-            title="Graph of Scaffolds",
-            width=1000,
-            height=1000,
-            showlegend=True,
-            scene=go.Scene(
-                xaxis=go.XAxis(axis),
-                yaxis=go.YAxis(axis),
-                zaxis=go.ZAxis(axis),
-            ),
-            margin=go.Margin(
-                t=100
-            ),
-            hovermode='closest',
-            annotations=go.Annotations([
-                go.Annotation(
-                    showarrow=False,
-                    text="",
-                    xref='paper',
-                    yref='paper',
-                    x=0,
-                    y=0.1,
-                    xanchor='left',
-                    yanchor='bottom',
-                    font=go.Font(
-                        size=14
-                    )
-                )
-            ]), )"""
         slider_step = {'args': [
             [str(i)],
             {'frame': {'duration': 300, 'redraw': False},
@@ -1736,20 +1706,6 @@ def clusterGraph(args): #FIXME under development
                 )
             )
         ]), )
-    """
-    masterLayout['sliders']= {
-            'args': [
-                'transition', {
-                    'duration': 400,
-                    'easing': 'cubic-in-out'
-                }
-            ],
-            'initialValue': str(iterations[0]),
-            'plotlycommand': 'animate',
-            'values': map(str,iterations),
-            'visible': True
-        }
-    masterLayout['sliders'] = [sliders_dict]"""
     fig1 = go.Figure(data=masterData[0]['data'], layout=masterLayout, frames=masterData)
     py.plot(fig1, filename=outDir + '/OutputGraph_frames_%s.html'%iteration)
 
