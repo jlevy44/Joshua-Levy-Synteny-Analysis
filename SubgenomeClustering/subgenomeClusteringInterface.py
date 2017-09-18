@@ -1707,7 +1707,7 @@ def clusterGraph(args): #FIXME under development
     fig1 = go.Figure(data=masterData[0]['data'], layout=masterLayout, frames=masterData)
     py.plot(fig1, filename=outDir + '/OutputGraph_frames_%s.html'%iteration)
 
-def generateOutBed(args):
+def generateOutBed(args): # FIXME run additional tests NEEDED
     outDir, original, faiFile, outfname = args
     try:
         original = int(original)
