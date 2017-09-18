@@ -14,7 +14,10 @@ import sys
 
 """python generate"""
 try:
-    fastaFile, transposonGFF, numberChr, histInt, window, option = sys.argv[1:]
+    try:
+        fastaFile, transposonGFF, numberChr, histInt, window, poly_degree, savgol_order, gaussian_bandwidth, option = sys.argv[1:]
+    except:
+        fastaFile, transposonGFF = sys.argv[1:3]
     # search for fai file and transposonDensity file
     """
     for file in os.listdir('.'):
@@ -23,15 +26,23 @@ try:
     faiFile = [file for file in os.listdir('.') if file.endswith('.fai')][0]
     transposonGFF = 'transposonDensity.gff'
     """
-
     try:
         numberChr = int(numberChr) + 1
         histInt = float(histInt)
         window = int(window)
+        poly_degree = int(poly_degree)
+        gaussian_bandwidth = int(gaussian_bandwidth)
+        savgol_order = int(savgol_order)
     except:
         numberChr = 10
         histInt = 250000.
         window = 21
+        poly_degree = 15
+        savgol_order = 8
+        gaussian_bandwidth = 4
+
+    print """python extractCentroTelomere.py path_to_fasta repeat_GFF_file number_Chromosomes[default=10] histogramIntervalLength[default=250000.] Window_Size[default=21] Polynomial_Fit_Degree[default=15] Savgol_Filter_Order[default=8] Gaussian_Bandwidth[default=4] Option[centromere|telomere]"""
+
 
     if os.path.isfile(fastaFile + '.fai') and os.stat(fastaFile + '.fai').st_size > 0:
         faiFile = fastaFile + '.fai'
@@ -78,7 +89,7 @@ try:
         if len(histInterval[chrom]) > window:
             arraySubset = transposonDensityArr[transposonDensityArr[:,0] == chrom]
             #print arraySubset
-            filtered_density = np.vectorize(np.poly1d(np.polyfit(range(len(arraySubset[:,0])),gaussian_filter1d(savgol_filter(arraySubset[:,-1],polyorder=8,window_length=window),4),15)))(range(len(arraySubset[:,0])))#scipy.ndimage.filters., hilbert np.abs
+            filtered_density = np.vectorize(np.poly1d(np.polyfit(range(len(arraySubset[:,0])),gaussian_filter1d(savgol_filter(arraySubset[:,-1],polyorder=savgol_order,window_length=window),gaussian_bandwidth),poly_degree)))(range(len(arraySubset[:,0])))#scipy.ndimage.filters., hilbert np.abs
             idxs_peaks = argrelextrema(filtered_density, np.greater)[0]
             #print len(filtered_density)
             for i,pk in enumerate(idxs_peaks):
@@ -116,4 +127,4 @@ try:
 
     BedTool(centromereRegions,from_string=True).sort().saveas('centromere.bed')
 except:
-    print """python extractCentroTelomere.py path_to_fasta repeat_GFF_file number_Chromosomes histogramIntervalLength Window_Size Option[centromere|telomere]"""
+    print """python extractCentroTelomere.py path_to_fasta repeat_GFF_file number_Chromosomes[default=10] histogramIntervalLength[default=250000.] Window_Size[default=21] Polynomial_Fit_Degree[default=15] Savgol_Filter_Order[default=8] Gaussian_Bandwidth[default=4] Option[centromere|telomere]"""

@@ -1506,9 +1506,9 @@ def clusterGraph(args): #FIXME under development
         featuresDict = {scaffold: '' for scaffold in scaffolds}
         finalBed = scaffoldsBed.intersect(featureBed,wa=True,wb=True).sort().merge(d=-1,c=7,o='distinct')
         #print finalBed.head()
-        finalBed.saveas('finalBed.bed')
+        finalBed.saveas(outDir+'/finalBed.bed')
         omittedRegions = scaffoldsBed.intersect(featureBed,v=True,wa=True)
-        omittedRegions.saveas('ommitted.bed')
+        omittedRegions.saveas(outDir+'/ommitted.bed')
         #print omittedRegions.head()
         for line in str(finalBed).splitlines()+[line2+'\tunlabelled' for line2 in str(omittedRegions).splitlines()]:
             lineList = line.strip('\n').split('\t')
@@ -1581,19 +1581,35 @@ def clusterGraph(args): #FIXME under development
             Yed += [pos[edge[0]][1], pos[edge[1]][1], None]
             Zed += [pos[edge[0]][2], pos[edge[1]][2], None]
         print names
-        plots.append(go.Scatter3d(x=Xv,
-                              y=Yv,
-                              z=Zv,
-                              mode='markers',
-                              name=names,
-                              marker=go.Marker(symbol='dot',
-                                               size=5,
-                                               color=colors,
-                                               line=go.Line(color='rgb(50,50,50)', width=0.5)
-                                               ),
-                              text=nodesText,
-                              hoverinfo='text'
-                              ))
+        if featureMap:
+            for name in set(names):
+                plots.append(go.Scatter3d(x=Xv[names == name],
+                                      y=Yv[names == name],
+                                      z=Zv[names == name],
+                                      mode='markers',
+                                      name=name,
+                                      marker=go.Marker(symbol='dot',
+                                                       size=5,
+                                                       color=featuresColors[name],
+                                                       line=go.Line(color='rgb(50,50,50)', width=0.5)
+                                                       ),
+                                      text=nodesText[names == name],
+                                      hoverinfo='text'
+                                      ))
+        else:
+            plots.append(go.Scatter3d(x=Xv,
+                                      y=Yv,
+                                      z=Zv,
+                                      mode='markers',
+                                      name=names,
+                                      marker=go.Marker(symbol='dot',
+                                                       size=5,
+                                                       color=colors,
+                                                       line=go.Line(color='rgb(50,50,50)', width=0.5)
+                                                       ),
+                                      text=nodesText,
+                                      hoverinfo='text'
+                                      ))
         plots.append(go.Scatter3d(x=Xed,
                                   y=Yed,
                                   z=Zed,

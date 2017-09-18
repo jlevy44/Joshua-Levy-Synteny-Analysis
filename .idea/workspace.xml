@@ -3,7 +3,8 @@
   <component name="ChangeListManager">
     <list default="true" id="87dadfdf-9689-45cf-b4af-5fd342ee0ae6" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/SubgenomeClustering/subgenomePipeline.nf" afterPath="$PROJECT_DIR$/SubgenomeClustering/subgenomePipeline.nf" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/SubgenomeClustering/extractCentroTelomeres.py" afterPath="$PROJECT_DIR$/SubgenomeClustering/extractCentroTelomeres.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/SubgenomeClustering/subgenomeClusteringInterface.py" afterPath="$PROJECT_DIR$/SubgenomeClustering/subgenomeClusteringInterface.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -28,11 +29,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="subgenomeClusteringInterface.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="subgenomeClusteringInterface.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/SubgenomeClustering/subgenomeClusteringInterface.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="328">
-              <caret line="306" column="27" lean-forward="true" selection-start-line="306" selection-start-column="27" selection-end-line="306" selection-end-column="27" />
+            <state relative-caret-position="490">
+              <caret line="1590" column="68" lean-forward="true" selection-start-line="1590" selection-start-column="68" selection-end-line="1590" selection-end-column="68" />
               <folding>
                 <element signature="e#0#14#0" expanded="true" />
               </folding>
@@ -40,11 +41,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="extractCentroTelomeres.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="extractCentroTelomeres.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/SubgenomeClustering/extractCentroTelomeres.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="60">
-              <caret line="77" column="45" lean-forward="true" selection-start-line="77" selection-start-column="45" selection-end-line="77" selection-end-column="45" />
+            <state relative-caret-position="508">
+              <caret line="42" column="0" lean-forward="true" selection-start-line="42" selection-start-column="0" selection-end-line="42" selection-end-column="0" />
               <folding>
                 <element signature="e#0#9#0" expanded="true" />
               </folding>
@@ -84,8 +85,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>kmer2Fas</find>
-      <find>.</find>
       <find>quit</find>
       <find>blast2bed3</find>
       <find>subgenomeEx</find>
@@ -114,6 +113,8 @@
       <find>b2b</find>
       <find>lowmem</find>
       <find>watch</find>
+      <find>saveas</find>
+      <find>clusterGraph(</find>
     </findStrings>
     <replaceStrings>
       <replace>val</replace>
@@ -177,10 +178,10 @@
         <option value="$PROJECT_DIR$/CircosDropper/dist110/run110/convert2CNSconfig.py" />
         <option value="$PROJECT_DIR$/SubgenomeClustering/reset_cluster.sh" />
         <option value="$PROJECT_DIR$/genomeAssembly/generateCentromereBeds.py" />
-        <option value="$PROJECT_DIR$/SubgenomeClustering/extractCentroTelomeres.py" />
-        <option value="$PROJECT_DIR$/SubgenomeClustering/subgenomeClusteringInterface.py" />
         <option value="$PROJECT_DIR$/SubgenomeClustering/kmerCountCompare.txt" />
         <option value="$PROJECT_DIR$/SubgenomeClustering/subgenomePipeline.nf" />
+        <option value="$PROJECT_DIR$/SubgenomeClustering/extractCentroTelomeres.py" />
+        <option value="$PROJECT_DIR$/SubgenomeClustering/subgenomeClusteringInterface.py" />
       </list>
     </option>
   </component>
@@ -578,13 +579,6 @@
       <option name="presentableId" value="Default" />
       <updated>1497987891371</updated>
     </task>
-    <task id="LOCAL-00025" summary="made changes to scaffolding pipeline and clustering algorithm">
-      <created>1501713675106</created>
-      <option name="number" value="00025" />
-      <option name="presentableId" value="LOCAL-00025" />
-      <option name="project" value="LOCAL" />
-      <updated>1501713675106</updated>
-    </task>
     <task id="LOCAL-00026" summary="continuing to make changes to scaffolding pipeline and clustering algorithm. Tested different clustering algorithms and adding classifier support">
       <created>1502321168329</created>
       <option name="number" value="00026" />
@@ -921,7 +915,14 @@
       <option name="project" value="LOCAL" />
       <updated>1505756749773</updated>
     </task>
-    <option name="localTasksCounter" value="74" />
+    <task id="LOCAL-00074" summary="attempt at shutting down pipeline">
+      <created>1505757198082</created>
+      <option name="number" value="00074" />
+      <option name="presentableId" value="LOCAL-00074" />
+      <option name="project" value="LOCAL" />
+      <updated>1505757198082</updated>
+    </task>
+    <option name="localTasksCounter" value="75" />
     <servers />
   </component>
   <component name="TodoView">
@@ -960,7 +961,6 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="updates for the day" />
     <MESSAGE value="update temp" />
     <MESSAGE value="added peak analysis of 500 best kmers as well as matching them up with differential kmers, need help getting pipeline to work with slurm" />
     <MESSAGE value="adding polyploid over 2 subgenomes option" />
@@ -985,7 +985,8 @@
     <MESSAGE value="fixing classifier bug" />
     <MESSAGE value="clusterGraph, removed classifier" />
     <MESSAGE value="still working on clusterGraph, added generation of centromere beds, added low memory option to pipeline" />
-    <option name="LAST_COMMIT_MESSAGE" value="still working on clusterGraph, added generation of centromere beds, added low memory option to pipeline" />
+    <MESSAGE value="attempt at shutting down pipeline" />
+    <option name="LAST_COMMIT_MESSAGE" value="attempt at shutting down pipeline" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1345,16 +1346,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/SubgenomeClustering/subgenomeClusteringInterface.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="328">
-          <caret line="306" column="27" lean-forward="true" selection-start-line="306" selection-start-column="27" selection-end-line="306" selection-end-column="27" />
-          <folding>
-            <element signature="e#0#14#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/SubgenomeClustering/subgenomePipeline.nf">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="103">
@@ -1365,10 +1356,20 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/SubgenomeClustering/extractCentroTelomeres.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="60">
-          <caret line="77" column="45" lean-forward="true" selection-start-line="77" selection-start-column="45" selection-end-line="77" selection-end-column="45" />
+        <state relative-caret-position="508">
+          <caret line="42" column="0" lean-forward="true" selection-start-line="42" selection-start-column="0" selection-end-line="42" selection-end-column="0" />
           <folding>
             <element signature="e#0#9#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/SubgenomeClustering/subgenomeClusteringInterface.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="490">
+          <caret line="1590" column="68" lean-forward="true" selection-start-line="1590" selection-start-column="68" selection-end-line="1590" selection-end-column="68" />
+          <folding>
+            <element signature="e#0#14#0" expanded="true" />
           </folding>
         </state>
       </provider>
