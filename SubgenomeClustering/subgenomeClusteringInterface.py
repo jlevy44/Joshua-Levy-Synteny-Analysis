@@ -1618,65 +1618,8 @@ def clusterGraph(args): #FIXME under development
                                   line=go.Line(color='rgb(210,210,210)', width=1),
                                   hoverinfo='none'
                                   ))
-        axis = dict(showbackground=False,
-                showline=False,
-                zeroline=False,
-                showgrid=False,
-                showticklabels=False,
-                title=''
-                )
+
         if idx == 0:
-            masterLayout = dict(
-                title="Graph of Scaffolds",
-                updatemenus= [{'direction': 'left',
-                            'pad': {'r': 10, 't': 87},
-                            'showactive': False,
-                            'type': 'buttons',
-                            'x': 0.1,
-                            'xanchor': 'right',
-                            'y': 0,
-                            'yanchor': 'top','buttons': [
-                        {
-                            'args': [None, {'frame': {'duration': 500, 'redraw': False},
-                                     'fromcurrent': True, 'transition': {'duration': 300, 'easing': 'quadratic-in-out'}}],
-                            'label': 'Play',
-                            'method': 'animate'
-                        },
-                        {
-                            'args': [[None], {'frame': {'duration': 0, 'redraw': False}, 'mode': 'immediate',
-                            'transition': {'duration': 0}}],
-                            'label': 'Pause',
-                            'method': 'animate'
-                            }
-                        ]}],
-                sliders = [],
-                width=1000,
-                height=1000,
-                showlegend=True,
-                scene=go.Scene(
-                    xaxis=go.XAxis(axis),
-                    yaxis=go.YAxis(axis),
-                    zaxis=go.ZAxis(axis),
-                ),
-                margin=go.Margin(
-                    t=100
-                ),
-                hovermode='closest',
-                annotations=go.Annotations([
-                    go.Annotation(
-                        showarrow=False,
-                        text="",
-                        xref='paper',
-                        yref='paper',
-                        x=0,
-                        y=0.1,
-                        xanchor='left',
-                        yanchor='bottom',
-                        font=go.Font(
-                            size=14
-                        )
-                    )
-                ]), )
             sliders_dict = {
                 'active': 0,
                 'yanchor': 'top',
@@ -1694,6 +1637,7 @@ def clusterGraph(args): #FIXME under development
                 'y': 0,
                 'steps': []
             }
+        """
         layout = go.Layout(
             title="Graph of Scaffolds",
             width=1000,
@@ -1722,7 +1666,7 @@ def clusterGraph(args): #FIXME under development
                         size=14
                     )
                 )
-            ]), )
+            ]), )"""
         slider_step = {'args': [
             [str(i)],
             {'frame': {'duration': 300, 'redraw': False},
@@ -1732,7 +1676,67 @@ def clusterGraph(args): #FIXME under development
             'label': str(i),
             'method': 'animate'}
         sliders_dict['steps'].append(slider_step)
-        masterData.append({'data' : go.Data(plots), 'layout': layout})
+        masterData.append({'data' : go.Data(plots),'name' : str(i)})#, 'layout': layout})
+    axis = dict(showbackground=False,
+                showline=False,
+                zeroline=False,
+                showgrid=False,
+                showticklabels=False,
+                title=''
+                )
+    masterLayout = dict(
+        title="Graph of Scaffolds",
+        updatemenus=[{'direction': 'left',
+                      'pad': {'r': 10, 't': 87},
+                      'showactive': False,
+                      'type': 'buttons',
+                      'x': 0.1,
+                      'xanchor': 'right',
+                      'y': 0,
+                      'yanchor': 'top', 'buttons': [
+                {
+                    'args': [None, {'frame': {'duration': 500, 'redraw': False},
+                                    'fromcurrent': True,
+                                    'transition': {'duration': 300, 'easing': 'quadratic-in-out'}}],
+                    'label': 'Play',
+                    'method': 'animate'
+                },
+                {
+                    'args': [[None], {'frame': {'duration': 0, 'redraw': False}, 'mode': 'immediate',
+                                      'transition': {'duration': 0}}],
+                    'label': 'Pause',
+                    'method': 'animate'
+                }
+            ]}],
+        sliders=[sliders_dict],
+        width=1000,
+        height=1000,
+        showlegend=True,
+        scene=go.Scene(
+            xaxis=go.XAxis(axis),
+            yaxis=go.YAxis(axis),
+            zaxis=go.ZAxis(axis),
+        ),
+        margin=go.Margin(
+            t=100
+        ),
+        hovermode='closest',
+        annotations=go.Annotations([
+            go.Annotation(
+                showarrow=False,
+                text="",
+                xref='paper',
+                yref='paper',
+                x=0,
+                y=0.1,
+                xanchor='left',
+                yanchor='bottom',
+                font=go.Font(
+                    size=14
+                )
+            )
+        ]), )
+    """
     masterLayout['sliders']= {
             'args': [
                 'transition', {
@@ -1745,7 +1749,7 @@ def clusterGraph(args): #FIXME under development
             'values': map(str,iterations),
             'visible': True
         }
-    masterLayout['sliders'] = [sliders_dict]
+    masterLayout['sliders'] = [sliders_dict]"""
     fig1 = go.Figure(data=masterData[0]['data'], layout=masterLayout, frames=masterData)
     py.plot(fig1, filename=outDir + '/OutputGraph_frames_%s.html'%iteration)
 

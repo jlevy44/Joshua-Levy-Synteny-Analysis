@@ -31,8 +31,8 @@
       <file leaf-file-name="subgenomeClusteringInterface.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/SubgenomeClustering/subgenomeClusteringInterface.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="10">
-              <caret line="1531" column="20" lean-forward="false" selection-start-line="1531" selection-start-column="20" selection-end-line="1531" selection-end-column="20" />
+            <state relative-caret-position="970">
+              <caret line="1675" column="28" lean-forward="false" selection-start-line="1675" selection-start-column="28" selection-end-line="1675" selection-end-column="28" />
               <folding>
                 <element signature="e#0#14#0" expanded="true" />
               </folding>
@@ -578,13 +578,6 @@
       <option name="presentableId" value="Default" />
       <updated>1497987891371</updated>
     </task>
-    <task id="LOCAL-00027" summary="fixed a bug in scaffolding pipeline and added more classifier options">
-      <created>1502392928599</created>
-      <option name="number" value="00027" />
-      <option name="presentableId" value="LOCAL-00027" />
-      <option name="project" value="LOCAL" />
-      <updated>1502392928599</updated>
-    </task>
     <task id="LOCAL-00028" summary="Still working on fixing scaffolding. Changed bbmap kmer size to 750... Clustering algorithm being converted to nextflow">
       <created>1502752045948</created>
       <option name="number" value="00028" />
@@ -921,7 +914,14 @@
       <option name="project" value="LOCAL" />
       <updated>1505761598977</updated>
     </task>
-    <option name="localTasksCounter" value="76" />
+    <task id="LOCAL-00076" summary="clusterGraph Coloring now works!">
+      <created>1505763063298</created>
+      <option name="number" value="00076" />
+      <option name="presentableId" value="LOCAL-00076" />
+      <option name="project" value="LOCAL" />
+      <updated>1505763063298</updated>
+    </task>
+    <option name="localTasksCounter" value="77" />
     <servers />
   </component>
   <component name="TodoView">
@@ -960,7 +960,6 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="added peak analysis of 500 best kmers as well as matching them up with differential kmers, need help getting pipeline to work with slurm" />
     <MESSAGE value="adding polyploid over 2 subgenomes option" />
     <MESSAGE value="adding polyploid over 2 subgenomes option, still working on it..." />
     <MESSAGE value="need to fix blast2bed, analyze more subgenomes" />
@@ -985,7 +984,8 @@
     <MESSAGE value="still working on clusterGraph, added generation of centromere beds, added low memory option to pipeline" />
     <MESSAGE value="attempt at shutting down pipeline" />
     <MESSAGE value="added more options to centromere bed generation" />
-    <option name="LAST_COMMIT_MESSAGE" value="added more options to centromere bed generation" />
+    <MESSAGE value="clusterGraph Coloring now works!" />
+    <option name="LAST_COMMIT_MESSAGE" value="clusterGraph Coloring now works!" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1365,8 +1365,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/SubgenomeClustering/subgenomeClusteringInterface.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="10">
-          <caret line="1531" column="20" lean-forward="false" selection-start-line="1531" selection-start-column="20" selection-end-line="1531" selection-end-column="20" />
+        <state relative-caret-position="970">
+          <caret line="1675" column="28" lean-forward="false" selection-start-line="1675" selection-start-column="28" selection-end-line="1675" selection-end-column="28" />
           <folding>
             <element signature="e#0#14#0" expanded="true" />
           </folding>
