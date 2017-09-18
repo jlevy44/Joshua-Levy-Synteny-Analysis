@@ -399,6 +399,9 @@ input:
     val genomeName from genomeChan8
     each technique from reduction_techniques
 
+output: // maybe instead write to a text file and filter out ?
+    val 'main_${technique}_${n_subgenomes}_transformed3D.npy' into transformedData
+
 script:
 if(trans == 1)
     """
@@ -417,9 +420,10 @@ else
 
 
 //peaks4 = peaks3.map { it -> findPeak(it) }
-bestKmerMatrices = Channel.watchPath(reclusterPath+'*.npz','create,modify')
-                          .map { file -> findPeak(file.name) }
-                          .unique()
+//bestKmerMatrices = Channel.watchPath(reclusterPath+'*.npz','create,modify')
+//                          .map { file -> findPeak(file.name) }
+//                          .unique()
+bestKmerMatrices = Channel.fromPath(reclusterPath+'*.npz')
 if(trans2 == 1) {
 process transform {
 
@@ -452,9 +456,10 @@ else
 }
 }
 
-transformedData = Channel.watchPath('*transformed3D.npy','create,modify')
-                         .unique()
-                         .map {file -> file.name - 'transformed3D.npy'}
+//transformedData = Channel.watchPath('*transformed3D.npy','create,modify')
+//                         .unique()
+transformedData.unique()
+               .map {file -> file.name - 'transformed3D.npy'}
                          //.filter((file.name).startsWith('main'))
 
 
