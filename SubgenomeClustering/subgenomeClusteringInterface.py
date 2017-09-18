@@ -1527,11 +1527,12 @@ def clusterGraph(args): #FIXME under development
         #print c
         featuresColors = {feature : c[i] for i, feature in enumerate(mainFeatures)}
         #print featuresColors
-        outputFeaturesArray = np.array([outputFeatures[scaffold] for scaffold in scaffolds])
+        outputFeaturesArray = np.array([outputFeatures[scaffold] for scaffold in nodes])
         names = np.vectorize(lambda name: 'Scaffolds: ' + name)(outputFeaturesArray)#[:,0]
         #print names
         colors = np.vectorize(lambda feature: featuresColors[feature])(outputFeaturesArray)#[:,1]
-        nodesText = ['%s, %d connections, feature= %s' % (scaffold, int(G.degree(scaffold)),featuresDict[scaffold]) for scaffold in nodes]  # , Related: %s'%(kmer, int(G.degree(kmer)), ' '.join(G[kmer].keys())) for kmer in nodes]
+        nodesText = np.array(['%s, %d connections, feature= %s' % (scaffold, int(G.degree(scaffold)),featuresDict[scaffold]) for scaffold in nodes])  # , Related: %s'%(kmer, int(G.degree(kmer)), ' '.join(G[kmer].keys())) for kmer in nodes]
+        print np.column_stack((scaffolds,outputFeaturesArray,colors,nodesText,names))
         #print [names[names==feature] for feature in mainFeatures]
         #print { feature : np.vectorize(lambda feature: featuresColors[feature])(list(set(names[names==feature]))) for feature in mainFeatures}
     else:
@@ -1570,9 +1571,9 @@ def clusterGraph(args): #FIXME under development
         else:
             pos = pos_i
         plots = []
-        Xv = [pos[k][0] for k in nodes]
-        Yv = [pos[k][1] for k in nodes]
-        Zv = [pos[k][2] for k in nodes]
+        Xv = np.array([pos[k][0] for k in nodes])
+        Yv = np.array([pos[k][1] for k in nodes])
+        Zv = np.array([pos[k][2] for k in nodes])
         Xed = []
         Yed = []
         Zed = []
@@ -1580,20 +1581,20 @@ def clusterGraph(args): #FIXME under development
             Xed += [pos[edge[0]][0], pos[edge[1]][0], None]
             Yed += [pos[edge[0]][1], pos[edge[1]][1], None]
             Zed += [pos[edge[0]][2], pos[edge[1]][2], None]
-        print names
+        #print names
         if featureMap:
-            for name in set(names):
-                plots.append(go.Scatter3d(x=Xv[names == name],
-                                      y=Yv[names == name],
-                                      z=Zv[names == name],
+            for name in mainFeatures:
+                plots.append(go.Scatter3d(x=Xv[outputFeaturesArray == name],
+                                      y=Yv[outputFeaturesArray == name],
+                                      z=Zv[outputFeaturesArray == name],
                                       mode='markers',
-                                      name=name,
+                                      name= name,
                                       marker=go.Marker(symbol='dot',
                                                        size=5,
                                                        color=featuresColors[name],
                                                        line=go.Line(color='rgb(50,50,50)', width=0.5)
                                                        ),
-                                      text=nodesText[names == name],
+                                      text=nodesText[outputFeaturesArray == name],
                                       hoverinfo='text'
                                       ))
         else:
