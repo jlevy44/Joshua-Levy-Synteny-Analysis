@@ -2,8 +2,51 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="87dadfdf-9689-45cf-b4af-5fd342ee0ae6" name="Default" comment="">
+      <change type="MOVED" beforePath="$PROJECT_DIR$/SubgenomeClustering/OlderScipts/README.md" afterPath="$PROJECT_DIR$/SubgenomeClustering_old_v0.9/OlderScipts/README.md" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/SubgenomeClustering/OlderScipts/__init__.py" afterPath="$PROJECT_DIR$/SubgenomeClustering_old_v0.9/OlderScipts/__init__.py" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/SubgenomeClustering/OlderScipts/blastTsv2bed.py" afterPath="$PROJECT_DIR$/SubgenomeClustering_old_v0.9/OlderScipts/blastTsv2bed.py" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/SubgenomeClustering/OlderScipts/clusteringWork.py" afterPath="$PROJECT_DIR$/SubgenomeClustering_old_v0.9/OlderScipts/clusteringWork.py" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/SubgenomeClustering/OlderScipts/compareKmerCountsDictsv3.py" afterPath="$PROJECT_DIR$/SubgenomeClustering_old_v0.9/OlderScipts/compareKmerCountsDictsv3.py" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/SubgenomeClustering/OlderScipts/compareKmerCountsDictsv4.py" afterPath="$PROJECT_DIR$/SubgenomeClustering_old_v0.9/OlderScipts/compareKmerCountsDictsv4.py" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/SubgenomeClustering/OlderScipts/deepLearningClustering.py" afterPath="$PROJECT_DIR$/SubgenomeClustering_old_v0.9/OlderScipts/deepLearningClustering.py" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/SubgenomeClustering/OlderScipts/fetch.tobacco_subgenome_sequences.py" afterPath="$PROJECT_DIR$/SubgenomeClustering_old_v0.9/OlderScipts/fetch.tobacco_subgenome_sequences.py" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/SubgenomeClustering/OlderScipts/fetch.virgatum_subgenome_sequences.py" afterPath="$PROJECT_DIR$/SubgenomeClustering_old_v0.9/OlderScipts/fetch.virgatum_subgenome_sequences.py" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/SubgenomeClustering/OlderScipts/houghClusteringTest.py" afterPath="$PROJECT_DIR$/SubgenomeClustering_old_v0.9/OlderScipts/houghClusteringTest.py" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/SubgenomeClustering/OlderScipts/kmeansCluster.py" afterPath="$PROJECT_DIR$/SubgenomeClustering_old_v0.9/OlderScipts/kmeansCluster.py" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/SubgenomeClustering/OlderScipts/kmerRelatedHistogram.py" afterPath="$PROJECT_DIR$/SubgenomeClustering_old_v0.9/OlderScipts/kmerRelatedHistogram.py" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/SubgenomeClustering/OlderScipts/multiplot_gRNA.py" afterPath="$PROJECT_DIR$/SubgenomeClustering_old_v0.9/OlderScipts/multiplot_gRNA.py" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/SubgenomeClustering/OlderScipts/multiplot_gRNA_chrIter.py" afterPath="$PROJECT_DIR$/SubgenomeClustering_old_v0.9/OlderScipts/multiplot_gRNA_chrIter.py" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/SubgenomeClustering/OlderScipts/multiplot_gRNA_chrIter_2colBedGraph.py" afterPath="$PROJECT_DIR$/SubgenomeClustering_old_v0.9/OlderScipts/multiplot_gRNA_chrIter_2colBedGraph.py" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/SubgenomeClustering/OlderScipts/multiplot_gRNA_chrIter_2colBedGraphv2.py" afterPath="$PROJECT_DIR$/SubgenomeClustering_old_v0.9/OlderScipts/multiplot_gRNA_chrIter_2colBedGraphv2.py" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/SubgenomeClustering/OlderScipts/sgordonScript.py" afterPath="$PROJECT_DIR$/SubgenomeClustering_old_v0.9/OlderScipts/sgordonScript.py" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/SubgenomeClustering/OlderScipts/splitFasta.py" afterPath="$PROJECT_DIR$/SubgenomeClustering_old_v0.9/OlderScipts/splitFasta.py" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/SubgenomeClustering/OlderScipts/splitRef.tobacco.py" afterPath="$PROJECT_DIR$/SubgenomeClustering_old_v0.9/OlderScipts/splitRef.tobacco.py" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/SubgenomeClustering/OlderScipts/subgenomeClustering.py" afterPath="$PROJECT_DIR$/SubgenomeClustering_old_v0.9/OlderScipts/subgenomeClustering.py" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/SubgenomeClustering/OlderScipts/subgenomeOldCode.nf" afterPath="$PROJECT_DIR$/SubgenomeClustering_old_v0.9/OlderScipts/subgenomeOldCode.nf" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/SubgenomeClustering/OlderScipts/testDataFrameCreation.py" afterPath="$PROJECT_DIR$/SubgenomeClustering_old_v0.9/OlderScipts/testDataFrameCreation.py" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/SubgenomeClustering/OlderScipts/transformData.py" afterPath="$PROJECT_DIR$/SubgenomeClustering_old_v0.9/OlderScipts/transformData.py" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/SubgenomeClustering/OlderScipts/transform_plot.py" afterPath="$PROJECT_DIR$/SubgenomeClustering_old_v0.9/OlderScipts/transform_plot.py" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/SubgenomeClustering/__init__.py" afterPath="$PROJECT_DIR$/SubgenomeClustering_old_v0.9/__init__.py" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/SubgenomeClustering/analysisOutputs/.gitignore" afterPath="$PROJECT_DIR$/SubgenomeClustering_old_v0.9/analysisOutputs/.gitignore" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/SubgenomeClustering/bed_files/.gitignore" afterPath="$PROJECT_DIR$/SubgenomeClustering_old_v0.9/bed_files/.gitignore" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/SubgenomeClustering/blast_files/.gitignore" afterPath="$PROJECT_DIR$/SubgenomeClustering_old_v0.9/blast_files/.gitignore" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/SubgenomeClustering/extractCentroTelomeres.py" afterPath="$PROJECT_DIR$/SubgenomeClustering_old_v0.9/extractCentroTelomeres.py" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/SubgenomeClustering/fasta_files/.gitignore" afterPath="$PROJECT_DIR$/SubgenomeClustering_old_v0.9/fasta_files/.gitignore" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/SubgenomeClustering/kmerCountCompare.txt" afterPath="$PROJECT_DIR$/SubgenomeClustering_old_v0.9/kmerCountCompare.txt" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/SubgenomeClustering/kmercount_500Best_files/.gitignore" afterPath="$PROJECT_DIR$/SubgenomeClustering_old_v0.9/kmercount_500Best_files/.gitignore" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/SubgenomeClustering/kmercount_files/.gitignore" afterPath="$PROJECT_DIR$/SubgenomeClustering_old_v0.9/kmercount_files/.gitignore" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/SubgenomeClustering/nextflow.config" afterPath="$PROJECT_DIR$/SubgenomeClustering_old_v0.9/nextflow.config" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/SubgenomeClustering/playKmer/__init__.py" afterPath="$PROJECT_DIR$/SubgenomeClustering_old_v0.9/playKmer/__init__.py" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/SubgenomeClustering/playKmer/compareKmerGraph.py" afterPath="$PROJECT_DIR$/SubgenomeClustering_old_v0.9/playKmer/compareKmerGraph.py" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/SubgenomeClustering/recluster_files/.gitignore" afterPath="$PROJECT_DIR$/SubgenomeClustering_old_v0.9/recluster_files/.gitignore" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/SubgenomeClustering/reset_cluster.sh" afterPath="$PROJECT_DIR$/SubgenomeClustering_old_v0.9/reset_cluster.sh" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/SubgenomeClustering/run.sl" afterPath="$PROJECT_DIR$/SubgenomeClustering_old_v0.9/run.sl" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/SubgenomeClustering/runCluster.sh" afterPath="$PROJECT_DIR$/SubgenomeClustering_old_v0.9/runCluster.sh" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/SubgenomeClustering/sortedbed_files/.gitignore" afterPath="$PROJECT_DIR$/SubgenomeClustering_old_v0.9/sortedbed_files/.gitignore" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/SubgenomeClustering/subgenomeClusteringInterface.py" afterPath="$PROJECT_DIR$/SubgenomeClustering_old_v0.9/subgenomeClusteringInterface.py" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/SubgenomeClustering/subgenomePipeline.nf" afterPath="$PROJECT_DIR$/SubgenomeClustering_old_v0.9/subgenomePipeline.nf" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/SubgenomeClustering/updateNextflowConfig.py" afterPath="$PROJECT_DIR$/SubgenomeClustering_old_v0.9/updateNextflowConfig.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/SubgenomeClustering/subgenomePipeline.nf" afterPath="$PROJECT_DIR$/SubgenomeClustering/subgenomePipeline.nf" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -19,17 +62,17 @@
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
       <file leaf-file-name="subgenomePipeline.nf" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/SubgenomeClustering/subgenomePipeline.nf">
+        <entry file="file://$PROJECT_DIR$/SubgenomeClustering_old_v0.9/subgenomePipeline.nf">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="223">
-              <caret line="30" column="13" lean-forward="false" selection-start-line="30" selection-start-column="5" selection-end-line="30" selection-end-column="13" />
+            <state relative-caret-position="343">
+              <caret line="38" column="34" lean-forward="true" selection-start-line="38" selection-start-column="34" selection-end-line="38" selection-end-column="34" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
       <file leaf-file-name="subgenomeClusteringInterface.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/SubgenomeClustering/subgenomeClusteringInterface.py">
+        <entry file="file://$PROJECT_DIR$/SubgenomeClustering_old_v0.9/subgenomeClusteringInterface.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="-575">
               <caret line="1733" column="4" lean-forward="false" selection-start-line="1733" selection-start-column="4" selection-end-line="1733" selection-end-column="4" />
@@ -41,7 +84,7 @@
         </entry>
       </file>
       <file leaf-file-name="extractCentroTelomeres.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/SubgenomeClustering/extractCentroTelomeres.py">
+        <entry file="file://$PROJECT_DIR$/SubgenomeClustering_old_v0.9/extractCentroTelomeres.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="555">
               <caret line="42" column="0" lean-forward="false" selection-start-line="42" selection-start-column="0" selection-end-line="42" selection-end-column="0" />
@@ -53,7 +96,7 @@
         </entry>
       </file>
       <file leaf-file-name="reset_cluster.sh" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/SubgenomeClustering/reset_cluster.sh">
+        <entry file="file://$PROJECT_DIR$/SubgenomeClustering_old_v0.9/reset_cluster.sh">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="30">
               <caret line="2" column="37" lean-forward="false" selection-start-line="2" selection-start-column="37" selection-end-line="2" selection-end-column="37" />
@@ -231,7 +274,7 @@
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
-              <option name="myItemId" value="SubgenomeClustering" />
+              <option name="myItemId" value="SubgenomeClustering_old_v0.9" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
@@ -549,13 +592,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1497987891371</updated>
-    </task>
-    <task id="LOCAL-00033" summary="more changes">
-      <created>1502930531312</created>
-      <option name="number" value="00033" />
-      <option name="presentableId" value="LOCAL-00033" />
-      <option name="project" value="LOCAL" />
-      <updated>1502930531312</updated>
     </task>
     <task id="LOCAL-00034" summary="more changes">
       <created>1503004769450</created>
@@ -893,7 +929,14 @@
       <option name="project" value="LOCAL" />
       <updated>1505835616778</updated>
     </task>
-    <option name="localTasksCounter" value="82" />
+    <task id="LOCAL-00082" summary="final changes v 0.9">
+      <created>1505836624663</created>
+      <option name="number" value="00082" />
+      <option name="presentableId" value="LOCAL-00082" />
+      <option name="project" value="LOCAL" />
+      <updated>1505836624663</updated>
+    </task>
+    <option name="localTasksCounter" value="83" />
     <servers />
   </component>
   <component name="TodoView">
@@ -907,9 +950,9 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="-1307" y="-29" width="1080" height="808" extended-state="0" />
-    <editor active="true" />
+    <editor active="false" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.17407407" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.17407407" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.20314735" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32933334" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.23007247" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
@@ -963,7 +1006,7 @@
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/SubgenomeClustering/OlderScipts/transform_plot.py</url>
+          <url>file://$PROJECT_DIR$/SubgenomeClustering_old_v0.9/OlderScipts/transform_plot.py</url>
           <option name="timeStamp" value="3" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
@@ -977,14 +1020,14 @@
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/SubgenomeClustering/OlderScipts/kmerRelatedHistogram.py">
+    <entry file="file://$PROJECT_DIR$/SubgenomeClustering_old_v0.9/OlderScipts/kmerRelatedHistogram.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="165">
           <caret line="12" column="45" lean-forward="false" selection-start-line="12" selection-start-column="45" selection-end-line="12" selection-end-column="45" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/SubgenomeClustering/analysisOutputs/.gitignore">
+    <entry file="file://$PROJECT_DIR$/SubgenomeClustering_old_v0.9/analysisOutputs/.gitignore">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
@@ -1005,7 +1048,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/SubgenomeClustering/OlderScipts/multiplot_gRNA_chrIter_2colBedGraphv2.py">
+    <entry file="file://$PROJECT_DIR$/SubgenomeClustering_old_v0.9/OlderScipts/multiplot_gRNA_chrIter_2colBedGraphv2.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
@@ -1082,35 +1125,35 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/SubgenomeClustering/updateNextflowConfig.py">
+    <entry file="file://$PROJECT_DIR$/SubgenomeClustering_old_v0.9/updateNextflowConfig.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="285">
           <caret line="19" column="23" lean-forward="false" selection-start-line="19" selection-start-column="23" selection-end-line="19" selection-end-column="23" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/SubgenomeClustering/OlderScipts/kmeansCluster.py">
+    <entry file="file://$PROJECT_DIR$/SubgenomeClustering_old_v0.9/OlderScipts/kmeansCluster.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1665">
           <caret line="119" column="35" lean-forward="false" selection-start-line="116" selection-start-column="4" selection-end-line="119" selection-end-column="35" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/SubgenomeClustering/OlderScipts/clusteringWork.py">
+    <entry file="file://$PROJECT_DIR$/SubgenomeClustering_old_v0.9/OlderScipts/clusteringWork.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1395">
           <caret line="120" column="18" lean-forward="false" selection-start-line="120" selection-start-column="18" selection-end-line="120" selection-end-column="18" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/SubgenomeClustering/OlderScipts/subgenomeOldCode.nf">
+    <entry file="file://$PROJECT_DIR$/SubgenomeClustering_old_v0.9/OlderScipts/subgenomeOldCode.nf">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="60">
           <caret line="4" column="0" lean-forward="false" selection-start-line="4" selection-start-column="0" selection-end-line="4" selection-end-column="0" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/SubgenomeClustering/OlderScipts/transform_plot.py">
+    <entry file="file://$PROJECT_DIR$/SubgenomeClustering_old_v0.9/OlderScipts/transform_plot.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="300">
           <caret line="26" column="53" lean-forward="false" selection-start-line="26" selection-start-column="53" selection-end-line="26" selection-end-column="53" />
@@ -1118,21 +1161,21 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/SubgenomeClustering/OlderScipts/sgordonScript.py">
+    <entry file="file://$PROJECT_DIR$/SubgenomeClustering_old_v0.9/OlderScipts/sgordonScript.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="15">
           <caret line="206" column="59" lean-forward="false" selection-start-line="206" selection-start-column="30" selection-end-line="206" selection-end-column="59" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/SubgenomeClustering/playKmer/compareKmerGraph.py">
+    <entry file="file://$PROJECT_DIR$/SubgenomeClustering_old_v0.9/playKmer/compareKmerGraph.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="390">
           <caret line="26" column="0" lean-forward="false" selection-start-line="26" selection-start-column="0" selection-end-line="26" selection-end-column="0" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/SubgenomeClustering/run.sl">
+    <entry file="file://$PROJECT_DIR$/SubgenomeClustering_old_v0.9/run.sl">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="105">
           <caret line="7" column="20" lean-forward="false" selection-start-line="7" selection-start-column="20" selection-end-line="7" selection-end-column="20" />
@@ -1174,7 +1217,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/SubgenomeClustering/runCluster.sh">
+    <entry file="file://$PROJECT_DIR$/SubgenomeClustering_old_v0.9/runCluster.sh">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="60">
           <caret line="4" column="0" lean-forward="false" selection-start-line="4" selection-start-column="0" selection-end-line="4" selection-end-column="37" />
@@ -1189,7 +1232,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/SubgenomeClustering/nextflow.config">
+    <entry file="file://$PROJECT_DIR$/SubgenomeClustering_old_v0.9/nextflow.config">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="5" selection-end-column="1" />
@@ -1297,14 +1340,14 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/SubgenomeClustering/kmerCountCompare.txt">
+    <entry file="file://$PROJECT_DIR$/SubgenomeClustering_old_v0.9/kmerCountCompare.txt">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="216">
           <caret line="27" column="13" lean-forward="false" selection-start-line="27" selection-start-column="13" selection-end-line="27" selection-end-column="13" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/SubgenomeClustering/subgenomeClusteringInterface.py">
+    <entry file="file://$PROJECT_DIR$/SubgenomeClustering_old_v0.9/subgenomeClusteringInterface.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-575">
           <caret line="1733" column="4" lean-forward="false" selection-start-line="1733" selection-start-column="4" selection-end-line="1733" selection-end-column="4" />
@@ -1314,7 +1357,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/SubgenomeClustering/extractCentroTelomeres.py">
+    <entry file="file://$PROJECT_DIR$/SubgenomeClustering_old_v0.9/extractCentroTelomeres.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="555">
           <caret line="42" column="0" lean-forward="false" selection-start-line="42" selection-start-column="0" selection-end-line="42" selection-end-column="0" />
@@ -1324,7 +1367,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/SubgenomeClustering/reset_cluster.sh">
+    <entry file="file://$PROJECT_DIR$/SubgenomeClustering_old_v0.9/reset_cluster.sh">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="30">
           <caret line="2" column="37" lean-forward="false" selection-start-line="2" selection-start-column="37" selection-end-line="2" selection-end-column="37" />
@@ -1332,10 +1375,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/SubgenomeClustering/subgenomePipeline.nf">
+    <entry file="file://$PROJECT_DIR$/SubgenomeClustering_old_v0.9/subgenomePipeline.nf">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="223">
-          <caret line="30" column="13" lean-forward="false" selection-start-line="30" selection-start-column="5" selection-end-line="30" selection-end-column="13" />
+        <state relative-caret-position="343">
+          <caret line="38" column="34" lean-forward="true" selection-start-line="38" selection-start-column="34" selection-end-line="38" selection-end-column="34" />
           <folding />
         </state>
       </provider>
