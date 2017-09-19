@@ -1729,8 +1729,90 @@ def generateOutBed(args): # FIXME run additional tests NEEDED
                     f2.write('\n'.join(['\t'.join([line.strip('\n').split('\t')[0],'0',genomeDict[line.strip('\n').split('\t')[0]]] + [subgenome]) for
                                         line in f if line]) + '\n')
 
+def plotPositions(args):
+    helpLine = """python polyCracker.py plotPositions path_npy[graphPositions.npy] bed_file[features.bed] scaffolds_file[scaffolds.p] metric outputDir outputfname[.html]"""
+    try:
+        transformed_name, bed_file, scaffoldsFile, metric, outDir, outfname = args
+        transformed_data = np.load(transformed_name)
+        if outDir[-1] != '/':
+            outDir += '/'
+        if outfname.endswith('.html') == 0:
+            outfname += '.html'
+        scaffolds = pickle.load(open(scaffoldsFile,'rb'))
+        if bed_file.endswith('.bed'):
+            scaffoldsDict = {scaffold: '\t'.join(['_'.join(scaffold.split('_')[0:-2])] + scaffold.split('_')[-2:]) for
+                             scaffold in scaffolds}
+            outputFeatures = defaultdict(list)
+            scaffoldsBed = BedTool('\n'.join(scaffoldsDict.values()), from_string=True)
+            featureBed = BedTool(bed_file)
+            featuresDict = {scaffold: '' for scaffold in scaffolds}
+            finalBed = scaffoldsBed.intersect(featureBed, wa=True, wb=True).sort().merge(d=-1, c=7, o='distinct')
+            # print finalBed.head()
+            finalBed.saveas(outDir + '/finalBed.bed')
+            omittedRegions = scaffoldsBed.intersect(featureBed, v=True, wa=True)
+            omittedRegions.saveas(outDir + '/ommitted.bed')
+            # print omittedRegions.head()
+            for line in str(finalBed).splitlines() + [line2 + '\tunlabelled' for line2 in
+                                                      str(omittedRegions).splitlines()]:
+                lineList = line.strip('\n').split('\t')
+                feature = lineList[-1]
+                scaffold = '_'.join(lineList[0:-1])
+                if ',' in feature:
+                    featuresDict[scaffold] = '|'.join(
+                        feature.split(','))  # [ft for ft in feature.split(',')])#.split('_')[0]
+                    feature = 'ambiguous'
+                else:
+                    featuresDict[scaffold] = feature  # .split('_')[0]
+                # idx = scaffoldIdx[scaffold]
+                outputFeatures[scaffold] = feature  # tuple(feature)#.split('_'))
+            mainFeatures = set(outputFeatures.values())
+            N = len(mainFeatures)
+            c = ['hsl(' + str(h) + ',50%' + ',50%)' for h in np.linspace(0, 360, N + 1)]
+            # print c
+            featuresColors = {feature: c[i] for i, feature in enumerate(mainFeatures)}
+            # print featuresColors
+            outputFeaturesArray = np.array([outputFeatures[scaffold] for scaffold in scaffolds])
+            # print names
+            #colors = np.vectorize(lambda feature: featuresColors[feature])(outputFeaturesArray)  # [:,1]
+            nodesText = np.array(
+                ['%s, feature= %s' % (scaffold, featuresDict[scaffold]) for
+                 scaffold in
+                 scaffolds])
+        else:
+            N = 2
+            c = ['hsl(' + str(h) + ',50%' + ',50%)' for h in np.linspace(0, 360, N + 1)]
+            featuresColors = { 'Scaffolds' : c[0]}
+            outputFeaturesArray = np.array(['Scaffolds' for scaffold in scaffolds])
+            nodesText = np.array(scaffolds)
+        if np.shape(transformed_data)[1] > 3:
+            reduction = KernelPCA(n_components=3,kernel=metric)
+            reduction.fit(transformed_data)
+            reductionT = reduction.transform(transformed_data)
+            scaledfit = StandardScaler()
+            scaledfit.fit(reductionT)
+            transformed_data2 = scaledfit.transform(reductionT)
+        else:
+            transformed_data2 = transformed_data
 
-#os.chdir('../../..')
+        # plot
+        plots = []
+
+        for key in set(outputFeaturesArray):
+            # print key
+            cluster_scaffolds = np.array(scaffolds)[outputFeaturesArray == key]
+            if list(cluster_scaffolds):
+                plots.append(
+                    go.Scatter3d(x=transformed_data2[outputFeaturesArray == key, 0], y=transformed_data2[outputFeaturesArray == key, 1],
+                                 z=transformed_data2[outputFeaturesArray == key, 2],
+                                 name=key+', %d points'%(sum(outputFeaturesArray == key)), mode='markers',
+                                 marker=dict(color=featuresColors[key], size=2), text=nodesText[outputFeaturesArray == key]))
+
+        fig = go.Figure(data=plots)
+
+        py.plot(fig, filename=outDir + outfname)
+    except:
+        print helpLine
+
 
 funct = sys.argv[1]
 arguments = sys.argv[2:]
@@ -1752,7 +1834,8 @@ options = {
     'subgenomeExtraction': subgenomeExtraction,
     'generateKmerGraph': generateKmerGraph,
     'clusterGraph': clusterGraph,
-    'generateOutBed': generateOutBed
+    'generateOutBed': generateOutBed,
+    'plotPositions': plotPositions
 }
 
 def main():
