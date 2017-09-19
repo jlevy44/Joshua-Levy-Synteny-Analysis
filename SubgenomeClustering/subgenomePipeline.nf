@@ -189,7 +189,7 @@ executor = 'local'
 //clusterOptions = { slurm == 0 ? { fromFasta == 1 ? '-P plant-analysis.p -cwd -q normal.q -pe pe_slots 2 -e OutputFile.txt' : '-P plant-analysis.p -cwd -l high.c -pe pe_slots 1 -e OutputFile.txt' } : '-N 2 -p regular -D . '}
 //clusterOptions = { slurm == 1 ? '-D .' : '-P plant-analysis.p -cwd' }
 cpus = { fromFasta == 1 ? 2 : 1 }
-memory = { fromFasta == 1 ? '100 GB' : '60 GB' }
+//memory = { fromFasta == 1 ? '100 GB' : '60 GB' }
 
 
 input:
