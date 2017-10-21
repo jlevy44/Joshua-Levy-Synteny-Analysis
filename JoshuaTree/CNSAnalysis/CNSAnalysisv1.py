@@ -379,10 +379,10 @@ if pickleSkip == 0:
         #    bedCNSFinal = bedCNSFinal.cat(bedCNS[key],postmerge = False).sort()
         #FIXME start here!!!
         #bedCNSFinal = bedCNSFinal.merge(o='distinct',c=4,delim = '|').sort()
-        CNSOutFiles = [('%s_CNSElements_Intronic.bed'%speciesInfo[species].speciesName,bedCNSIntronic[species]),
-                       ('%s_CNSElements_Intergenic.bed'%speciesInfo[species].speciesName,bedCNSIntergenic[species]),
-                       ('%s_Conserved_CDS.bed' % speciesInfo[species].speciesName,bedConservedCDS[species]),
-                       ('%s_AllCNSElements.bed' % speciesInfo[species].speciesName,bedCNS[species])]
+        CNSOutFiles = [('%s_CNSElements_Intronic.bed'%speciesInfo[species].speciesName,bedCNSIntronic[species].filter(lambda x: len(x) > 1)),
+                       ('%s_CNSElements_Intergenic.bed'%speciesInfo[species].speciesName,bedCNSIntergenic[species].filter(lambda x: len(x) > 1)),
+                       ('%s_Conserved_CDS.bed' % speciesInfo[species].speciesName,bedConservedCDS[species].filter(lambda x: len(x) > 1)),
+                       ('%s_AllCNSElements.bed' % speciesInfo[species].speciesName,bedCNS[species].filter(lambda x: len(x) > 1))]
         for bedOut in CNSOutFiles: # for each of the above described files, append the sequences from the original fastas and include closest gene/ distance information
             open(bedOut[0],'w').close()
 
