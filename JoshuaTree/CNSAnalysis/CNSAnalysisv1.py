@@ -385,19 +385,32 @@ if pickleSkip == 0:
                        ('%s_AllCNSElements.bed' % speciesInfo[species].speciesName,bedCNS[species].filter(lambda x: len(x) > 1))]
         for bedOut in CNSOutFiles: # for each of the above described files, append the sequences from the original fastas and include closest gene/ distance information
             open(bedOut[0],'w').close()
+            if 1:
+                bedOutFile = open(bedOut[0],'w')
 
-            bedOutFile = open(bedOut[0],'w')
+                for line in str(bedOut[1]).split('\n'):
+                    if line:
+                        lineList = line.split()
+                        # need to have a long enough sequence to get outputted...
+                        if len(outputSequence) >= 15 and findBadCharPosition(outputSequence) >= 15:
+                            if 'CNSElements_Intronic' in bedOut[0] or 'Conserved_CDS' in bedOut[0]:
+                                bedOutFile.write('%s\t%s\t%s\t%s;geneID=%s\n'%tuple(lineList[0:4]+[lineList[-1]]))
+                            elif 'CNSElements_Intergenic' in bedOut[0] or 'AllCNSElements' in bedOut[0]:
+                                bedOutFile.write('%s\t%s\t%s\t%s;closestGene=%s;distance=%s\n'%tuple(lineList[0:4]+[lineList[-2:],lineList[-1].strip('\n')]))
 
-            for line in str(bedOut[1]).split('\n'):
-                if line:
-                    lineList = line.split()
-                    outputSequence = str(speciesInfo[species].genome[lineList[0]][int(lineList[1]):int(lineList[2])])
-                    # need to have a long enough sequence to get outputted...
-                    if len(outputSequence) >= 15 and findBadCharPosition(outputSequence) >= 15:
-                        if 'CNSElements_Intronic' in bedOut[0] or 'Conserved_CDS' in bedOut[0]:
-                            bedOutFile.write('%s\t%s\t%s\t%s;geneID=%s;%s\n'%(tuple(lineList[0:4])+(lineList[-1],outputSequence)))
-                        elif 'CNSElements_Intergenic' in bedOut[0] or 'AllCNSElements' in bedOut[0]:
-                            bedOutFile.write('%s\t%s\t%s\t%s;closestGene=%s;distance=%s;%s\n'%(tuple(lineList[0:4])+(lineList[-2],lineList[-1].strip('\n'),outputSequence)))
+            if 0: #FIXME removed for now, please add later
+                bedOutFile = open(bedOut[0],'w')
+
+                for line in str(bedOut[1]).split('\n'):
+                    if line:
+                        lineList = line.split()
+                        outputSequence = str(speciesInfo[species].genome[lineList[0]][int(lineList[1]):int(lineList[2])])
+                        # need to have a long enough sequence to get outputted...
+                        if len(outputSequence) >= 15 and findBadCharPosition(outputSequence) >= 15:
+                            if 'CNSElements_Intronic' in bedOut[0] or 'Conserved_CDS' in bedOut[0]:
+                                bedOutFile.write('%s\t%s\t%s\t%s;geneID=%s;%s\n'%(tuple(lineList[0:4])+(lineList[-1],outputSequence)))
+                            elif 'CNSElements_Intergenic' in bedOut[0] or 'AllCNSElements' in bedOut[0]:
+                                bedOutFile.write('%s\t%s\t%s\t%s;closestGene=%s;distance=%s;%s\n'%(tuple(lineList[0:4])+(lineList[-2],lineList[-1].strip('\n'),outputSequence)))
 
 
 
