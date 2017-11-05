@@ -162,19 +162,30 @@ for species in inputList:
                                  fai2karyotype([file for file in listFiles if protId[species] in file and file.endswith('.fai')][0],species,300000),
                                 'heatmap.%s.txt'%species,open('heatmap.%s.txt'%species,'w')]
 generateRadii = np.linspace(0.40,0.80,len(speciesDict.keys())+1)
+print generateRadii
 totalNumberSpecies = float(len(speciesDict.keys()))
 for species in inputList:
     try:
         histInterval = defaultdict(list)
         with open([file for file in listFiles if protId[species] in file and file.endswith('.fai')][0],'r') as f:
-            chromCount = 0
-            for line in f:
-                chromCount+=1
+            #chromCount = 0
+            #print 'a1'
+            faiArray = np.array([line.split('\t')[0:2] for line in f if line])
+
+            faiArray = faiArray[np.argsort(faiArray[:,1].astype(np.int32),axis=0)[::-1],:]
+            faiArray = faiArray[0:22,:]
+            #print faiArray
+            #print 'a2'
+            #for line in f:
+                #chromCount+=1
                 #bedread = '\n'.join('\t'.join('%s\t%d\t%d'%tuple([line.split('\t')[0]]+sorted(np.vectorize(lambda x: int(x))(line.split('\t')[1:3])))))
-                interval = sorted(np.vectorize(lambda x: int(x))(line.split('\t')[1:3]))
-                histInterval[line.split('\t')[0]] = list(np.arange(0.,interval[-1],250000.)) + [interval[-1]]
-                if chromCount > 22:
-                    break
+            for chrom in faiArray:
+                histInterval[chrom[0]] = list(np.arange(0.,int(chrom[1]),250000.)) + [int(chrom[1])]
+                #interval = sorted(np.vectorize(lambda x: int(x))(line.split('\t')[1:3]))
+                #histInterval[line.split('\t')[0]] = list(np.arange(0.,interval[-1],250000.)) + [interval[-1]]
+                #if chromCount > 22:
+                #    break
+            print histInterval.keys()
             bedHist = BedTool('\n'.join('\n'.join('\t'.join([key] + [str(int(x)) for x in [histInterval[key][i],histInterval[key][i+1]]]) for i in range(len(histInterval[key])-1)) for key in histInterval.keys()),from_string=True)
         print speciesDict[species][1]
         with open(speciesDict[species][1],'r') as f:
@@ -186,11 +197,12 @@ for species in inputList:
                     lineList = line.split('\t')
                     f.write('\t'.join(lineList[0:3])+'\t%f'%(float(lineList[-1])/(float(lineList[2])-float(lineList[1])))+'\n')
         transposonDensityFile = next((file for file in os.listdir('.') if '%s_transposonDensity' % protId[species] in file and (file.endswith('.gff') or file.endswith('.gff2') or file.endswith('.gff3'))), ['emptyDensity.txt'])
+        print protId[species],transposonDensityFile
         if transposonDensityFile != 'emptyDensity.txt': #FIXME start here
             with open(transposonDensityFile, 'r') as f:
                 #print 'hello'
                 #print '\n'.join('\t'.join(operator.itemgetter(0, 3, 4)(line.split('\t'))) for line in f.readlines())
-                bedTrans = bedHist.intersect(BedTool('\n'.join('\t'.join(operator.itemgetter(0, 3, 4)(line.split('\t'))) for line in f.readlines()),from_string=True).sort().merge(),wao = True).merge(c=7,o='sum',d=-1)
+                bedTrans = bedHist.intersect(BedTool('\n'.join('\t'.join(operator.itemgetter(0, 3, 4)(line.split('\t'))) for line in f.readlines() if line.startswith("##") == 0),from_string=True).sort().merge(),wao = True).merge(c=7,o='sum',d=-1)
             with open('%s_transposonDensity.bed'%protId[species],'w') as f:
                 for line in str(bedTrans).split('\n'):
                     if line:

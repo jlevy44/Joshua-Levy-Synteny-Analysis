@@ -60,6 +60,7 @@ PhyML = 1
 bootstrap = 1
 treeOut = 1
 treeFile = 0
+short_fasta_output_name = 1
 masterListSpecies =
 %s
 Stop

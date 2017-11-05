@@ -1,10 +1,6 @@
 import re
 import sys
 
-for path in sys.path:
-    if path and 'anaconda' in path:
-        sys.path.remove(path)
-
 import numpy as np
 from pybedtools import *
 from pyfaidx import Fasta
@@ -12,6 +8,7 @@ import subprocess, os, shutil
 from collections import *
 import time
 import dill as pickle
+from ete3 import Tree,TreeStyle,NodeStyle
 #from multiprocessing import Pool
 
 
@@ -68,6 +65,7 @@ treeFile = parseConfigFindPath('treeFile',configFile)
 treeOut = parseConfigFindPath('treeOut',configFile)
 ratioCopy = parseConfigFindPath('ratioCopy',configFile)
 outputTreeImages = parseConfigFindPath('outputTreeImages',configFile)
+shortFastaOutputName = parseConfigFindPath('short_fasta_output_name',configFile)
 configFile.close()
 
 if phyML == '1':
@@ -100,6 +98,11 @@ if pickleSkip == '1':
     pickleSkip = 1
 else:
     pickleSkip = 0
+
+if shortFastaOutputName == '1':
+    shortFastaOutputName = 1
+else:
+    shortFastaOutputName = 0
 
 if checkValidity == '0':
     checkValidity = 0
@@ -385,7 +388,7 @@ if pickleSkip == 0:
                        ('%s_AllCNSElements.bed' % speciesInfo[species].speciesName,bedCNS[species].filter(lambda x: len(x) > 1))]
         for bedOut in CNSOutFiles: # for each of the above described files, append the sequences from the original fastas and include closest gene/ distance information
             open(bedOut[0],'w').close()
-            if 1:
+            if 0:
                 bedOutFile = open(bedOut[0],'w')
 
                 for line in str(bedOut[1]).split('\n'):
@@ -398,20 +401,22 @@ if pickleSkip == 0:
                             elif 'CNSElements_Intergenic' in bedOut[0] or 'AllCNSElements' in bedOut[0]:
                                 bedOutFile.write('%s\t%s\t%s\t%s;closestGene=%s;distance=%s\n'%tuple(lineList[0:4]+[lineList[-2:],lineList[-1].strip('\n')]))
 
-            if 0: #FIXME removed for now, please add later
+            if 1: #FIXME removed for now, please add later
                 bedOutFile = open(bedOut[0],'w')
 
                 for line in str(bedOut[1]).split('\n'):
                     if line:
                         lineList = line.split()
-                        outputSequence = str(speciesInfo[species].genome[lineList[0]][int(lineList[1]):int(lineList[2])])
-                        # need to have a long enough sequence to get outputted...
-                        if len(outputSequence) >= 15 and findBadCharPosition(outputSequence) >= 15:
-                            if 'CNSElements_Intronic' in bedOut[0] or 'Conserved_CDS' in bedOut[0]:
-                                bedOutFile.write('%s\t%s\t%s\t%s;geneID=%s;%s\n'%(tuple(lineList[0:4])+(lineList[-1],outputSequence)))
-                            elif 'CNSElements_Intergenic' in bedOut[0] or 'AllCNSElements' in bedOut[0]:
-                                bedOutFile.write('%s\t%s\t%s\t%s;closestGene=%s;distance=%s;%s\n'%(tuple(lineList[0:4])+(lineList[-2],lineList[-1].strip('\n'),outputSequence)))
-
+                        try:
+                            outputSequence = str(speciesInfo[species].genome[lineList[0]][int(lineList[1]):int(lineList[2])])
+                            # need to have a long enough sequence to get outputted...
+                            if len(outputSequence) >= 15 and findBadCharPosition(outputSequence) >= 15:
+                                if 'CNSElements_Intronic' in bedOut[0] or 'Conserved_CDS' in bedOut[0]:
+                                    bedOutFile.write('%s\t%s\t%s\t%s;geneID=%s;%s\n'%(tuple(lineList[0:4])+(lineList[-1],outputSequence)))
+                                elif 'CNSElements_Intergenic' in bedOut[0] or 'AllCNSElements' in bedOut[0]:
+                                    bedOutFile.write('%s\t%s\t%s\t%s;closestGene=%s;distance=%s;%s\n'%(tuple(lineList[0:4])+(lineList[-2],lineList[-1].strip('\n'),outputSequence)))
+                        except:
+                            print species,lineList
 
 
         #bedOut.write(str(bedCNSFinal))
@@ -460,6 +465,7 @@ ratio2CopyStats = dict.fromkeys(mafAnalysisStructure.keys(),{'CS':0,'ProteinCodi
                      'Mixed_CS':0,'NonProteinCoding_CS':0})
 print 'Generating final fasta files...','time=',time.clock()-start
 # generate final fastas
+#print conditionalDictionary
 for conditional in mafAnalysisStructure.keys():
     if type(conditionalDictionary[conditional] )==type(list):
         a=1
@@ -492,20 +498,27 @@ for conditional in mafAnalysisStructure.keys():
             for species in speciesListCDSTest:
                 conservedSeqs['NonProteinCoding_CS'][species] += conservedSeq[species]
     for analysisType in ['CS','ProteinCoding_CS','Mixed_CS','NonProteinCoding_CS']:
-        finalFastaFileName = conditional+'_'+analysisType+'.fasta'
-        open(conservedFastaPath+finalFastaFileName,'w').close()
-        outputFinalFastaFile = open(conservedFastaPath+finalFastaFileName,'w')
-        outputFinalFastaFile.write(''.join('>%s\n%s\n'%(species,conservedSeqs[analysisType][species]) for species in conservedSeqs[analysisType].keys() if conservedSeqs[analysisType][species]))
-        outputFinalFastaFile.close()
-        if analysisType == 'CS':
+        try:
+            if shortFastaOutputName:
+                #print conditional, conditionalDictionary[conditional]
+                conditional = ''.join(map(str,conditionalDictionary[conditional].values()))
+                #print conditional
+            finalFastaFileName = conditional+'_'+analysisType+'.fasta'
+            open(conservedFastaPath+finalFastaFileName,'w').close()
+            outputFinalFastaFile = open(conservedFastaPath+finalFastaFileName,'w')
+            outputFinalFastaFile.write(''.join('>%s\n%s\n'%(species,conservedSeqs[analysisType][species]) for species in conservedSeqs[analysisType].keys() if conservedSeqs[analysisType][species]))
+            outputFinalFastaFile.close()
+        except:
+            print conditional
+        """if analysisType == 'CS': #FIXME removed for now
             ratio2CopyStats[conditional][analysisType]= len(mafAnalysisStructure[conditional][analysisType].keys())
         else:
-            ratio2CopyStats[conditional][analysisType]= len(mafAnalysisStructure[conditional][analysisType])
+            ratio2CopyStats[conditional][analysisType]= len(mafAnalysisStructure[conditional][analysisType])"""
 #FIXME everything below needs to be fixed...
 # output two copy statistics
 
 
-if ratioCopy:
+if ratioCopy: #FIXME defunct for now...
     print 'Performing 2 copy ratio statistics...','time=',time.clock()-start
     #species Lists
     listConditionals = conditionalDictionary.keys()
@@ -571,11 +584,28 @@ if fasta2phylip:
             subprocess.call(['perl', 'Fasta2Phylip.pl', conservedFastaPath+fasta, conservedFastaPath+fasta.replace('fasta','phylip')])
 if phyML:
     print 'Now running PhyML on working outputs... Producing ancestral trees...','time=',time.clock()-start
+    phymlLine = next(path for path in sys.path if 'conda/' in path and '/lib/' in path).split('/lib/')[0]+'/bin/ete3_apps/bin/phyml'
     phylipFiles = [phylip for phylip in os.listdir(conservedFastaPath) if phylip.endswith('.phylip')]
     #if treeOut == 0:
     for phylip in phylipFiles:
         if phylip:
-            subprocess.call(['PhyML', '-i', conservedFastaPath+phylip, '-s', 'BEST', '-q', '-b', bootstrap, '-m', 'GTR'])
+            subprocess.call([phymlLine, '-i', conservedFastaPath+phylip, '-s', 'BEST', '-q', '-b', bootstrap, '-m', 'GTR']) #FIXME works for now...
+            tree = phylip+'_phyml_tree.txt'
+            try:
+                with open(conservedFastaPath + tree, 'r') as f:  # FIXME boot_trees verus phyml_tree
+                    t = Tree(open(tree,'r').read())
+                    ts = TreeStyle()
+                    ns = NodeStyle()
+                    ns['size']=0
+                    ts.show_leaf_name = True
+                    ts.show_branch_length = False
+                    ts.show_branch_support = True
+                    for n in t.traverse():
+                        n.set_style(ns)
+                    #t.show(tree_style=ts)
+                    t.render( conservedFastaPath+'/'+tree.replace('_phyml_tree.txt', '.png'),tree_style = ts)
+            except:
+                pass
     #else:
     #    for phylip in phylipFiles:
     #        if phylip:
@@ -606,9 +636,6 @@ for tree in [file for file in os.listdir(conservedFastaPath) if file and file.en
         pass"""%(conservedFastaPath))
         subprocess.call(['sh', 'runTree.sh'])
 
-for path in sys.path:
-    if path and 'anaconda' in path:
-        sys.path.remove(path)
 
 # FIXME add user specified output location
 # FIXME add tree figure generation PDF!!
