@@ -133,14 +133,18 @@ class speciesClass(): # add information about species that stores name and proty
         open(outputfilename2, 'w').close()
         outputFile = open(outputfilename, 'w')
         outputFile2 = open(outputfilename2, 'w')
+        CDS_read = 0
         for line in open(self.gffFile, 'r'):
             if line:
                 if 'mRNA' in line and 'longest=1' in line and int(line.split('\t')[3] >= 0):
                     geneName = line.split()[-1].split(';')[1].replace('Name=','')
                     outputFile.write('%s\t%d\t%s\t%s\n'%(line.split()[0],int(line.split()[3]) - 1,line.split()[4],geneName))
+                    CDS_read = 1
+                elif 'mRNA' in line and 'longest=1' not in line:
+                    CDS_read = 0
 
                 if 'CDS' in line:
-                    if not geneName:
+                    if CDS_read and not geneName:
                         geneName = 'NoCNSName'
                     outputFile2.write('%s\t%d\t%s\t%s\n' % (line.split()[0], int(line.split()[3]) -1, line.split()[4], geneName))
                 #outputFile.write('%s\t%d\t%s\n' % (line.split()[1],int(line.split()[2])-1,line.split()[3]))
@@ -593,7 +597,7 @@ if phyML:
             tree = phylip+'_phyml_tree.txt'
             try:
                 with open(conservedFastaPath + tree, 'r') as f:  # FIXME boot_trees verus phyml_tree
-                    t = Tree(open(tree,'r').read())
+                    t = Tree(f.read())
                     ts = TreeStyle()
                     ns = NodeStyle()
                     ns['size']=0
@@ -610,7 +614,7 @@ if phyML:
     #    for phylip in phylipFiles:
     #        if phylip:
     #            subprocess.call(['PhyML', '-i', conservedFastaPath+phylip, '-s', 'BEST', '-q', '-b', bootstrap, '-m', 'GTR','-u',treeFile])
-    if outputTreeImages: #FIXME need to install SIP PyQt4
+    if 0:#outputTreeImages: #FIXME need to install SIP PyQt4
         print "Generating images for produced trees...",'time=',time.clock()-start
         with open('runTree.sh','w') as f:
             f.write('export PATH=~/anaconda_ete/bin:$PATH\npython treeImage.py')
