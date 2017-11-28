@@ -1,6 +1,7 @@
 import begin, ete3
 from ete3 import PhyloTree,Tree,TreeStyle,NodeStyle
 import subprocess, os
+import re
 
 def parseConfigFindList(stringFind,configFile):
     """parseConfigFindList inputs a particular string to find and read file after and a configuration file object
@@ -44,7 +45,34 @@ def output_Tree(aln_output_txt,aln_file, out_fname):
     #t.show(tree_style=ts)
     t.render(out_fname,tree_style = ts)
 
-@begin.subcomand
+def change_of_coordinates(in_file,out_file): # FIXME USE PYTABIX FIXES NEEDED, maffilter change coordinates??
+    with open(in_file,'r') as f, open(out_file,'w') as f2:
+        for line in f:
+            if line.startswith('#') == 0:
+                break
+            else:
+                f2.write(line)
+        #    offset = f.tell()
+        #f.seek(offset) #FIXME TEST
+        for line in f:
+            lineList = line.split()
+            lineList[1] = str(int(lineList[0].split('_')[-2]) + int(lineList[1]))
+            lineList[0] = lineList[0][lineList[0].find('.')+1:[m.start(0) for m in re.finditer('_',lineList[0])][-2]]
+            f2.write('\t'.join(lineList)+'\n')
+
+def check_vcf_empty(vcf_in):
+    with open(vcf_in,'r') as f:
+        for line in f:
+            if line.startswith('#') == 0:
+                break
+            offset = f.tell()
+        f.seek(offset)
+        if f.readline():
+            return False
+        else:
+            return True
+
+@begin.subcommand
 def maf2vcf(cns_config, reference_species):
     mafFiles = [file for file in os.listdir('.') if file.endswith('.maf') and file.startswith('out_maf') == 0]
     try:
@@ -79,11 +107,21 @@ def maf2vcf(cns_config, reference_species):
                 genotypes=(%s),\
                 all=no,\
                 reference=%s)
-
             """%(','.join(all_species),reference_species,i,','.join(all_species_but_one),reference_species))
-        finalOutVCFFiles.append('vcfs/Out%d_all.vcf'%i)
-        subprocess.call('./maffilter param=maf_filter_config.bpp')
-    subprocess.call('bcftools concat -o vcfs/final_all.vcf %s'%(' '.join(finalOutVCFFiles)),shell=True)
+        subprocess.call('./maffilter param=maf_filter_config.bpp',shell=True)
+        if check_vcf_empty('vcfs/Out%d_all.vcf'%i) == 0:
+        # see if there is anything in file
+        # if yes, change coordinates and sort
+            finalOutVCFFiles.append('vcfs/Out%d_all.vcf.gz'%i)
+            change_of_coordinates('vcfs/Out%d_all.vcf'%i,'vcfs/Out%d_new_coord_unsorted.vcf'%i)
+            subprocess.call("""bgzip -c %s > %s
+                (zcat %s.gz | head -100 | grep ^#;
+                zcat %s.gz | grep -v ^# | sort -k1,1d -k2,2n;) \
+                | bgzip -c > %s.gz
+                bcftools index %s.gz"""%('vcfs/Out%d_all.vcf.gz'%i,)*5, shell=True)#tabix -p vcf %s.gz
+        # change the coordinate system and sort the file, also remove empty vcf files, fix merge/concat
+    subprocess.call('bcftools concat -O v -o vcfs/final_all.vcf %s'%(' '.join(finalOutVCFFiles)),shell=True)
+    subprocess.call('bcftools sort -o vcfs/final_all.vcf vcfs/final_all.vcf')
     #FIXME add sort function
 
 
