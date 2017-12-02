@@ -2,6 +2,8 @@ import begin, ete3
 from ete3 import PhyloTree,Tree,TreeStyle,NodeStyle
 import subprocess, os
 import re
+from Bio import Phylo
+from Bio.Phylo import Consensus as CS
 
 def parseConfigFindList(stringFind,configFile):
     """parseConfigFindList inputs a particular string to find and read file after and a configuration file object
@@ -72,8 +74,19 @@ def check_vcf_empty(vcf_in):
         else:
             return True
 
+def filter_and_format():
+    return 'in dev'
+
+def sort_vcf(vcf_in,vcf_out):
+    subprocess.call("""bgzip -c {0} > vcfs/out.vcf.gz
+                (zcat vcfs/out.vcf.gz | head -300 | grep ^#;
+                zcat vcfs/out.vcf.gz | grep -v ^# | sort -k1,1d -k2,2n;) \
+                | bgzip -c > {1}.gz
+                bcftools index {1}.gz""".format(vcf_in,vcf_out), shell=True)
+
 @begin.subcommand
-def maf2vcf(cns_config, reference_species):
+def maf2vcf(cns_config, reference_species, change_coordinates):
+    change_coordinates = int(change_coordinates)
     mafFiles = [file for file in os.listdir('.') if file.endswith('.maf') and file.startswith('out_maf') == 0]
     try:
         os.mkdir('vcfs')
@@ -113,17 +126,89 @@ def maf2vcf(cns_config, reference_species):
         # see if there is anything in file
         # if yes, change coordinates and sort
             finalOutVCFFiles.append('vcfs/Out%d_all.vcf.gz'%i)
-            change_of_coordinates('vcfs/Out%d_all.vcf'%i,'vcfs/Out%d_new_coord_unsorted.vcf'%i)
-            subprocess.call("""bgzip -c %s > %s
-                (zcat %s.gz | head -100 | grep ^#;
-                zcat %s.gz | grep -v ^# | sort -k1,1d -k2,2n;) \
-                | bgzip -c > %s.gz
-                bcftools index %s.gz"""%('vcfs/Out%d_all.vcf.gz'%i,)*5, shell=True)#tabix -p vcf %s.gz
+            change_file = 'vcfs/Out%d_all.vcf'%i
+            if change_coordinates:
+                change_of_coordinates('vcfs/Out%d_all.vcf'%i,'vcfs/Out%d_new_coord_unsorted.vcf'%i)
+                change_file = 'vcfs/Out%d_new_coord_unsorted.vcf'%i
+            sort_vcf(change_file,'vcfs/Out%d_all.vcf'%i)
+            #tabix -p vcf %s.gz
         # change the coordinate system and sort the file, also remove empty vcf files, fix merge/concat
     subprocess.call('bcftools concat -O v -o vcfs/final_all.vcf %s'%(' '.join(finalOutVCFFiles)),shell=True)
-    subprocess.call('bcftools sort -o vcfs/final_all.vcf vcfs/final_all.vcf')
+    subprocess.call("sed 's/##source=Bio++/##INFO=<ID=AC>/g' vcfs/final_all.vcf > vcfs/final_all_edit.vcf && mv vcfs/final_all_edit.vcf vcfs/final_all.vcf && rm vcfs/final_all_edit.vcf",shell=True)
+    sort_vcf('vcfs/final_all.vcf','vcfs/final_all_sorted.vcf')
+    subprocess.call('gzip -d vcfs/final_all_sorted.vcf.gz',shell=True)
+    #subprocess.call('bcftools sort -o vcfs/final_all_sorted.vcf vcfs/final_all.vcf',shell=True)
     #FIXME add sort function
 
+@begin.subcommand
+def estimate_phylogeny(cns_config, consensus_algorithm, major_cutoff, min_block_length):
+    min_block_length = int(min_block_length)
+    try:
+        os.mkdir('./maf_trees')
+    except:
+        pass
+    mafFiles = [file for file in os.listdir('.') if file.endswith('.maf') and file.startswith('out_maf') == 0]
+    try:
+        os.mkdir('vcfs')
+    except:
+        pass
+    with open(cns_config,'r') as f:
+        master_species = parseConfigFindList("masterListSpecies",f)
+    all_species = set([species.split('_')[0] for species in master_species])
+    fileOutTrees = []
+    for i,maf in enumerate(mafFiles):
+        subprocess.call("sed '/Anc/d' %s > out_maf.maf"%maf,shell=True)
+        with open('maf_filter_config.bpp','w') as f:
+            f.write("""
+    input.file=./out_maf.maf
+    input.format=Maf
+    output.log=out.log
+    maf.filter=\
+        MinBlockLength(min_length=%d), \
+        Subset(\
+                strict=yes,\
+                keep=no,\
+                species=(%s),\
+                remove_duplicates=yes),\
+        DistanceEstimation(\
+                method=ml,\
+                model=GTR,\
+                extended_names=no),\
+        DistanceBasedPhylogeny(\
+                method=bionj,\
+                dist_mat=MLDistance),\
+        OutputTrees(\
+                tree=BioNJ,\
+                file=./maf_trees/trees_%d.nwk,\
+                compression=none,\
+                strip_names=yes)
+            """%(min_block_length,','.join(all_species),i))
+        subprocess.call('./maffilter param=maf_filter_config.bpp',shell=True)
+        fileOutTrees.append('./maf_trees/trees_%d.nwk'%i)
+    with open('./maf_trees/final_trees.nwk','w') as f:
+        for tree in fileOutTrees:
+            with open(tree,'r') as f2:
+                for line in f2:
+                    if line:
+                        f.write(line)
+    #subprocess.call('for f in ./maf_trees/trees_*.nwk; do cat "$f"; echo "\\newline"; done > out && mv out ./maf_trees/final_trees.nwk',shell=True)
+    trees = list(Phylo.parse('./maf_trees/final_trees.nwk', 'newick'))
+    if consensus_algorithm == 'strict':
+        tree = CS.strict_consensus(trees)
+    elif consensus_algorithm == 'majority':
+        tree = CS.majority_consensus(trees,float(major_cutoff))
+    else:
+        tree = CS.adam_consensus(trees)
+    Phylo.write(tree,'./maf_trees/output_tree_consensus.nh','newick')
+
+
+@begin.subcommand
+def find_Tree():
+    return 'in dev'
+
+@begin.subcommand
+def intersect_vcf(vcf_in, bed_regions, vcf_out):
+    subprocess.call('bedtools intersect -wa -a %s -b %s > %s'%(vcf_in, bed_regions, vcf_out),shell=True)
 
 
 
