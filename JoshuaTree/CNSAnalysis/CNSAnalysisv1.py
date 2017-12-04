@@ -451,12 +451,12 @@ if pickleSkip == 0:
             ultimateBedDicts[file[file.find('_')+1:]][file[:file.find('_')]] = bed2dict(file) # a dictionary with keys [species] and inside a key of MASEG
         # hierarchy is ultimate[CDS or CNS][species][MASeg]
     print 'Writing data to %s'%pickleName,'time=',time.clock()-start
-    pickle.dump(tuple([ultimateBedDicts,mafAnalysisStructure, speciesInfo, conditionalDictionary]), open(pickleName, 'wb'))
+    pickle.dump(tuple([ultimateBedDicts,mafAnalysisStructure, speciesInfo, conditionalDictionary]), open(pickleName, 'wb'),protocol=2)
 
 
 if pickleSkip == 1:
     print 'Skipping MAF file reading and loading bed file structures, species class instances, conditional dictionary, and maf analysis structure','time=',time.clock()-start
-    (ultimateBedDicts,mafAnalysisStructure, speciesInfo, conditionalDictionary) = pickle.load(open(pickleName,'rb'))
+    (ultimateBedDicts,mafAnalysisStructure, speciesInfo, conditionalDictionary) = pickle.load(open(pickleName,'rb'),protocol=2)
 
 def conditional2SpeciesList(conditionalDict): # code obsolete
     global masterListSpecies

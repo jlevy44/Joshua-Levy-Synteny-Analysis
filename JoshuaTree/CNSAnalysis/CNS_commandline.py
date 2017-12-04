@@ -1,9 +1,12 @@
 import begin, ete3
-from ete3 import PhyloTree,Tree,TreeStyle,NodeStyle
+from ete3 import PhyloTree,Tree,TreeStyle,NodeStyle,EvolTree
 import subprocess, os
 import re
 from Bio import Phylo
 from Bio.Phylo import Consensus as CS
+import dill as pickle
+import numpy as np
+from collections import Counter
 
 def parseConfigFindList(stringFind,configFile):
     """parseConfigFindList inputs a particular string to find and read file after and a configuration file object
@@ -85,17 +88,25 @@ def sort_vcf(vcf_in,vcf_out):
                 bcftools index {1}.gz""".format(vcf_in,vcf_out), shell=True)
 
 @begin.subcommand
-def maf2vcf(cns_config, reference_species, change_coordinates):
+def maf2vcf(cns_config, reference_species, change_coordinates, out_all_species):
     change_coordinates = int(change_coordinates)
+    out_all_species = int(out_all_species)
     mafFiles = [file for file in os.listdir('.') if file.endswith('.maf') and file.startswith('out_maf') == 0]
     try:
         os.mkdir('vcfs')
     except:
         pass
-    with open(cns_config,'r') as f:
-        master_species = parseConfigFindList("masterListSpecies",f)
+    if cns_config.endswith('.txt'):
+        with open(cns_config,'r') as f:
+            master_species = parseConfigFindList("masterListSpecies",f)
+    else:
+        master_species = cns_config.split(',')
     all_species = set([species.split('_')[0] for species in master_species])
     all_species_but_one = all_species - {reference_species}
+    if out_all_species:
+        species = all_species
+    else:
+        species = all_species_but_one
     finalOutVCFFiles = []
     for i,maf in enumerate(mafFiles):
         subprocess.call("sed '/Anc/d' %s > out_maf.maf"%maf,shell=True)
@@ -120,12 +131,13 @@ def maf2vcf(cns_config, reference_species, change_coordinates):
                 genotypes=(%s),\
                 all=no,\
                 reference=%s)
-            """%(','.join(all_species),reference_species,i,','.join(all_species_but_one),reference_species))
+            """%(','.join(all_species),reference_species,i,','.join(species),reference_species))
         subprocess.call('./maffilter param=maf_filter_config.bpp',shell=True)
         if check_vcf_empty('vcfs/Out%d_all.vcf'%i) == 0:
         # see if there is anything in file
         # if yes, change coordinates and sort
             finalOutVCFFiles.append('vcfs/Out%d_all.vcf.gz'%i)
+            subprocess.call("sed 's/##source=Bio++/##INFO=<ID=AC>/g' %s > vcfs/temp.vcf && mv vcfs/temp.vcf %s && rm vcfs/temp.vcf"%('vcfs/Out%d_all.vcf'%i,'vcfs/Out%d_all.vcf'%i),shell=True)
             change_file = 'vcfs/Out%d_all.vcf'%i
             if change_coordinates:
                 change_of_coordinates('vcfs/Out%d_all.vcf'%i,'vcfs/Out%d_new_coord_unsorted.vcf'%i)
@@ -133,21 +145,23 @@ def maf2vcf(cns_config, reference_species, change_coordinates):
             sort_vcf(change_file,'vcfs/Out%d_all.vcf'%i)
             #tabix -p vcf %s.gz
         # change the coordinate system and sort the file, also remove empty vcf files, fix merge/concat
-    subprocess.call('bcftools concat -O v -o vcfs/final_all.vcf %s'%(' '.join(finalOutVCFFiles)),shell=True)
-    subprocess.call("sed 's/##source=Bio++/##INFO=<ID=AC>/g' vcfs/final_all.vcf > vcfs/final_all_edit.vcf && mv vcfs/final_all_edit.vcf vcfs/final_all.vcf && rm vcfs/final_all_edit.vcf",shell=True)
+    subprocess.call('bcftools concat --allow-overlaps -O v -o vcfs/final_all.vcf %s'%(' '.join(finalOutVCFFiles)),shell=True)
+    #subprocess.call("sed 's/##source=Bio++/##INFO=<ID=AC>/g' vcfs/final_all.vcf > vcfs/final_all_edit.vcf && mv vcfs/final_all_edit.vcf vcfs/final_all.vcf && rm vcfs/final_all_edit.vcf",shell=True)
     sort_vcf('vcfs/final_all.vcf','vcfs/final_all_sorted.vcf')
-    subprocess.call('gzip -d vcfs/final_all_sorted.vcf.gz',shell=True)
+    subprocess.call('rm vcfs/final_all_sorted.vcf && gzip -d vcfs/final_all_sorted.vcf.gz',shell=True)
     #subprocess.call('bcftools sort -o vcfs/final_all_sorted.vcf vcfs/final_all.vcf',shell=True)
     #FIXME add sort function
 
 @begin.subcommand
-def estimate_phylogeny(cns_config, consensus_algorithm, major_cutoff, min_block_length):
+def estimate_phylogeny(cns_config, consensus_algorithm, major_cutoff, min_block_length, concat_size, consensus_tree):
     min_block_length = int(min_block_length)
+    consensus_tree = int(consensus_tree)
+    concat_size = int(concat_size)
     try:
         os.mkdir('./maf_trees')
     except:
         pass
-    mafFiles = [file for file in os.listdir('.') if file.endswith('.maf') and file.startswith('out_maf') == 0]
+    mafFiles = [file for file in os.listdir('.') if file.endswith('.maf') and (file.startswith('merged') + file.startswith('out_maf') == 0)]
     try:
         os.mkdir('vcfs')
     except:
@@ -155,52 +169,158 @@ def estimate_phylogeny(cns_config, consensus_algorithm, major_cutoff, min_block_
     with open(cns_config,'r') as f:
         master_species = parseConfigFindList("masterListSpecies",f)
     all_species = set([species.split('_')[0] for species in master_species])
-    fileOutTrees = []
-    for i,maf in enumerate(mafFiles):
-        subprocess.call("sed '/Anc/d' %s > out_maf.maf"%maf,shell=True)
-        with open('maf_filter_config.bpp','w') as f:
-            f.write("""
-    input.file=./out_maf.maf
-    input.format=Maf
-    output.log=out.log
-    maf.filter=\
-        MinBlockLength(min_length=%d), \
-        Subset(\
-                strict=yes,\
-                keep=no,\
-                species=(%s),\
-                remove_duplicates=yes),\
-        DistanceEstimation(\
-                method=ml,\
-                model=GTR,\
-                extended_names=no),\
-        DistanceBasedPhylogeny(\
-                method=bionj,\
-                dist_mat=MLDistance),\
-        OutputTrees(\
-                tree=BioNJ,\
-                file=./maf_trees/trees_%d.nwk,\
-                compression=none,\
-                strip_names=yes)
-            """%(min_block_length,','.join(all_species),i))
-        subprocess.call('./maffilter param=maf_filter_config.bpp',shell=True)
-        fileOutTrees.append('./maf_trees/trees_%d.nwk'%i)
-    with open('./maf_trees/final_trees.nwk','w') as f:
-        for tree in fileOutTrees:
-            with open(tree,'r') as f2:
-                for line in f2:
-                    if line:
-                        f.write(line)
-    #subprocess.call('for f in ./maf_trees/trees_*.nwk; do cat "$f"; echo "\\newline"; done > out && mv out ./maf_trees/final_trees.nwk',shell=True)
-    trees = list(Phylo.parse('./maf_trees/final_trees.nwk', 'newick'))
-    if consensus_algorithm == 'strict':
-        tree = CS.strict_consensus(trees)
-    elif consensus_algorithm == 'majority':
-        tree = CS.majority_consensus(trees,float(major_cutoff))
+    if consensus_tree:
+        fileOutTrees = []
+        for i,maf in enumerate(mafFiles):
+            subprocess.call("sed '/Anc/d' %s > out_maf.maf"%maf,shell=True)
+            with open('maf_filter_config.bpp','w') as f:
+                f.write("""
+        input.file=./out_maf.maf
+        input.format=Maf
+        output.log=out.log
+        maf.filter=\
+            Subset(\
+                    strict=yes,\
+                    keep=no,\
+                    species=(%s),\
+                    remove_duplicates=yes),\
+            MaskFilter(species=(%s)),\
+            MinBlockLength(min_length=%d), \
+            Merge(species=(%s)),\
+            Concatenate(minimum_size=%d),\
+            DistanceEstimation(\
+                    method=ml,\
+                    model=GTR,\
+                    gap_option=no_gap,\
+                    parameter_estimation=initial,\
+                    gaps_as_unresolved=yes,\
+                    unresolved_as_gap=yes,\
+                    extended_names=no),\
+            DistanceBasedPhylogeny(\
+                    method=bionj,\
+                    dist_mat=MLDistance),\
+            OutputTrees(\
+                    tree=BioNJ,\
+                    file=./maf_trees/trees_%d.nwk,\
+                    compression=none,\
+                    strip_names=yes)
+                """%(','.join(all_species),','.join(all_species),min_block_length,','.join(all_species),concat_size,i))
+            subprocess.call('./maffilter param=maf_filter_config.bpp',shell=True)
+            with open('./maf_trees/trees_%d.nwk'%i,'r') as f:
+                if f.readline():
+                    fileOutTrees.append('./maf_trees/trees_%d.nwk'%i)
+        with open('./maf_trees/final_trees.nwk','w') as f: #FIXME maf filter throws exception while calculating distance matrix at empty sites
+            for tree in fileOutTrees:
+                with open(tree,'r') as f2:
+                    for line in f2:
+                        if line and line.count('(') == line.count(')'):
+                            f.write(line)
+        #subprocess.call('for f in ./maf_trees/trees_*.nwk; do cat "$f"; echo "\\newline"; done > out && mv out ./maf_trees/final_trees.nwk',shell=True)
+        trees_gen = Phylo.parse('./maf_trees/final_trees.nwk', 'newick')
+        trees = []
+        with open('./maf_trees/final_trees.nwk','r') as f:
+            for i in range(len(f.readlines())):
+                try:
+                    trees.append(trees_gen.next())
+                except:
+                    pass
+        if consensus_algorithm == 'strict':
+            tree = CS.strict_consensus(trees)
+        elif consensus_algorithm == 'majority':
+            tree = CS.majority_consensus(trees,float(major_cutoff))
+        else:
+            tree = CS.adam_consensus(trees)
+        Phylo.write(tree,'./maf_trees/output_tree_consensus.nh','newick')
     else:
-        tree = CS.adam_consensus(trees)
-    Phylo.write(tree,'./maf_trees/output_tree_consensus.nh','newick')
+        subprocess.call('rm merged.maf',shell=True)
+        for file in mafFiles:
+            subprocess.call("sed -e '/Anc/d;/#/d' %s >> merged.maf"%file,shell=True)
+        with open('merged.maf','r') as f: #FIXME
+            txt = f.read().replace('\n\n\n','\n\n')
+        with open('merged.maf','w') as f:
+            f.write(txt)
+        del txt
+        #subprocess.call("sed '/#/d' merged.maf > out_maf.maf",shell=True)
+        with open('maf_filter_config.bpp','w') as f:
+                f.write("""
+        input.file=./merged.maf
+        input.format=Maf
+        output.log=out.log
+        maf.filter=\
+            Subset(\
+                    strict=yes,\
+                    keep=no,\
+                    species=(%s),\
+                    remove_duplicates=yes),\
+            MaskFilter(species=(%s)),\
+            MinBlockLength(min_length=%d), \
+            Merge(species=(%s)),\
+            Concatenate(minimum_size=1000000000000),\
+            DistanceEstimation(\
+                    method=ml,\
+                    model=GTR,\
+                    gap_option=no_gap,\
+                    parameter_estimation=initial,\
+                    gaps_as_unresolved=yes,\
+                    unresolved_as_gap=yes,\
+                    extended_names=no),\
+            DistanceBasedPhylogeny(\
+                    method=bionj,\
+                    dist_mat=MLDistance),\
+            OutputTrees(\
+                    tree=BioNJ,\
+                    file=./maf_trees/output_tree_consensus.nh,\
+                    compression=none,\
+                    strip_names=yes)
+                """%(','.join(all_species),','.join(all_species),min_block_length,','.join(all_species)))
+        subprocess.call('./maffilter param=maf_filter_config.bpp',shell=True)
 
+@begin.subcommand
+def evaluate_selective_pressure(maf_structure_pickle, neutral_tree_nwk):
+    try:
+        os.mkdir('./selectivePressureTests')
+    except:
+        pass
+    maf = pickle.load(open('MAFWork.p','rb'))
+    onesCondition = maf[3].keys()[np.argmax([sum(val.values()) if type(val) != type([]) else 0 for val in maf[3].values()])]
+    for maseg in maf[1][onesCondition]['CS']:
+        model_tree = EvolTree(open(neutral_tree_nwk,'rb').read()) #FIXME is this the right tree to be using???
+        aln_lines = maf[1][onesCondition]['CS'][maseg].splitlines()
+        coord_info = {}
+        for i in range(len(aln_lines))[::2]:
+            coord_info[aln_lines[i].find('>')+1:aln_lines[i].find('.')] = aln_lines[i][aln_lines[i].find('.'):] #FIXME output these coordinates to bed file
+            aln_lines[i] = aln_lines[i][:aln_lines[i].find('.')]
+            alignment = '\n'.join(aln_lines)
+        model_tree.link_to_alignment(alignment)
+        model_tree.workdir = './selectivePressureTests'
+        model_tree.run_model('M1')
+        model_tree.run_model('M2')
+        pval = model_tree.get_most_likely('M2','M1')
+        if pval < 0.05:
+            for s in range(len(model2.sites['BEB']['aa'])):
+                print 'positively selected site %s at position: %s, with probability: %s' % (model2.sites['BEB']['aa'][s], s+1, model2.sites['BEB']['p2'][s])
+        # FIXME first fix codeml, then print out selective pressure density after removing --, append that to masegment, bed file with coordinates, maSeg, and selective pressure density, or could just output one-base coordinate and calculate density through bedtools
+        else:
+            print 'fail to reject null hypothesis'
+        """
+        best_model = None
+        best_lnl = float('-inf')
+        for starting_omega in [0.2, 0.7, 1.2]: # FIXME optimize and choose parameters
+            model_tree.run_model('b_free.'+str(starting_omega))
+            current_model = model_treetree.get_evol_model('b_free.'+str(starting_omega))
+            if current_model.lnL > best_lnl:
+                best_lnl = current_model.lnL
+                best_model = current_model
+        """
+        #print best_model
+        break # FIXME remove after testing
+        "FIXME UNDER DEVELOPMENT"
+
+@begin.subcommand
+def reroot_Tree(tree_in,root_species,tree_out):
+    t = PhyloTree(open(tree_in,'r').read())
+    t.set_outgroup(root_species)
+    t.write(tree_out)
 
 @begin.subcommand
 def find_Tree():
@@ -235,6 +355,13 @@ maf.filter=\
                 genotypes=(Sbicolor,Osativa,Bstacei,ABRD,BdtwD,BhybsixD,BhybzeroD,ABRS,BdtwS,BhybsixS,BhybzeroS,Phallii,PvirgatumK,PvirgatumN,ZmaysAGPv3),\
                 all=no,\
                 reference=Bdistachyon)
+
+        MaskFilter(\
+                species=(%s),\
+                window.size=10,\
+                window.step=1,\
+                max.masked=3),\
+        MinBlockLength(min_length=%d), \
 
 
                 CAN ADD TO ABOVE with .gz extension included
