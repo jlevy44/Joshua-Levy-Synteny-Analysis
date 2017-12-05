@@ -6,6 +6,7 @@ from Bio import Phylo
 from Bio.Phylo import Consensus as CS
 import dill as pickle
 import numpy as np
+import sys
 from collections import Counter
 
 def parseConfigFindList(stringFind,configFile):
@@ -275,8 +276,135 @@ def estimate_phylogeny(cns_config, consensus_algorithm, major_cutoff, min_block_
                 """%(','.join(all_species),','.join(all_species),min_block_length,','.join(all_species)))
         subprocess.call('./maffilter param=maf_filter_config.bpp',shell=True)
 
+def maf_change_coordinates(segment):
+    aln_lines = segment.splitlines()
+    for i,line in enumerate(aln_lines):
+        if line.startswith('s'):
+            lineList = line.split()
+            orientation = lineList[4]
+            lineList2 = lineList[1].split('.')
+            lineList3 = lineList2[-1].split('_')[-2:]
+            lineList2[2] = lineList2[2].replace('_'+'_'.join(lineList3),'')
+            if orientation == '-':
+                lineList[2] = str(int(lineList3[-1])-int(lineList[2]))#-int(lineList[3]))
+            else:
+                lineList[2] = str(int(lineList3[-2]) + int(lineList[2]))
+            lineList[1] = '.'.join(lineList2[1::2])
+            aln_lines[i] = '\t'.join(lineList)
+    return '\n'.join(filter(None,aln_lines))
+
+
+
+@begin.subcommand
+def selective_pressure_statistics(cns_config,reference_species, min_block_length, dist_max, window_size, root_species):
+    min_block_length = int(min_block_length)
+    window_size = int(window_size)
+    dist_max = int(dist_max)
+    try:
+        os.mkdir('./maf_trees')
+    except:
+        pass
+    if cns_config.endswith('.txt'):
+        with open(cns_config,'r') as f:
+            master_species = parseConfigFindList("masterListSpecies",f)
+    else:
+        master_species = cns_config.split(',')
+    mafFiles = [file for file in os.listdir('.') if file.startswith('FastaOut') and file.endswith('.maf')]
+    subprocess.call('rm merged.maf',shell=True)
+    for file in mafFiles:
+        subprocess.call("sed -e '/Anc/d;/#/d' %s >> merged.maf"%file,shell=True)
+    with open('merged.maf','r') as f: #FIXME
+        txt = f.read().replace('\n\n\n','\n\n')
+    with open('merged.maf','w') as f:
+        f.write(txt)
+    with open('maf_filter_config.bpp','w') as f:
+                f.write("""
+        input.file=./merged.maf
+        input.format=Maf
+        output.log=out.log
+        maf.filter=\
+            Subset(\
+                    strict=yes,\
+                    keep=no,\
+                    species=(%s),\
+                    remove_duplicates=yes),\
+            MaskFilter(species=(%s)),\
+            MinBlockLength(min_length=%d),\
+            Output(\
+                    file=merged.filtered.maf,\
+                    compression=none,\
+                    mask=no)
+                """%(master_species,master_species,min_block_length))
+    subprocess.call('./maffilter param=maf_filter_config.bpp',shell=True)
+    with open('merged.filtered.maf','r') as f, open('merged.filtered.new_coords.maf','w') as f2:
+        for segment in f.split('\n\n')[1:]: # can turn this to generator in future
+            f2.write(maf_change_coordinates(segment)+'\n\n')
+    with open('maf_filter_config.bpp','w') as f:
+        f.write("""
+        input.file=./merged.filtered.new_coords.maf
+        input.format=Maf
+        output.log=out.log
+        maf.filter=\
+            Merge(\
+                    species=(%s),\
+                    dist_max=%d),\
+            WindowSplit(\
+                    preferred_size=%d,\
+                    align=adjust),\
+            Output(\
+                    file=merged.filtered.new_coords.syntenic.maf,\
+                    compression=none,\
+                    mask=no),
+            DistanceEstimation(\
+                    method=ml,\
+                    model=GTR,\
+                    gap_option=no_gap,\
+                    parameter_estimation=initial,\
+                    gaps_as_unresolved=yes,\
+                    unresolved_as_gap=yes,\
+                    extended_names=no),\
+            DistanceBasedPhylogeny(\
+                    method=bionj,\
+                    dist_mat=MLDistance),\
+            NewOutgroup(\
+                    tree_input=BioNJ,\
+                    tree_output=BioNJ,\
+                    outgroup=%s),\
+            SequenceStatistics(\
+                statistics=(\
+                    BlockCounts,\
+                    AlnScore,\
+                    BlockLength,\
+                    CountClusters(\
+                        tree=bionj,\
+                        threshold=0.001),\
+                    SiteFrequencySpectrum(\
+                        bounds=(-0.5,0.5,1.5,2.5,3.5,4.5),\
+                        ingroup=(%s),\
+                        outgroup=%s),\
+                    SiteStatistics(\
+                        species=%s),\
+                        ),\
+                ref_species=%s,\
+                file=data.statistics.csv),\
+            OutputTrees(\
+                    tree=BioNJ,\
+                    file=./maf_trees/output_trees.nwk,\
+                    compression=none,\
+                    strip_names=yes)
+                """%(reference_species,dist_max,window_size,root_species,master_species,root_species,reference_species,reference_species))
+    subprocess.call('./maffilter param=maf_filter_config.bpp',shell=True)
+    # output will be trees and statistics, use pandas and grab tree lengths to pandas, encode array, then add polymorphism density from vcf possibly, and then pca the results and cluster the regions
+    # neural network model???
+
+
 @begin.subcommand
 def evaluate_selective_pressure(maf_structure_pickle, neutral_tree_nwk):
+    # FIXME codeml only works in protein coding regions https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1470900/ need to add for CNS!!! https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3725466/
+    # FIXME branch specific rate changes??
+    # FIXME also degree of conservation when looking at selective pressure density
+    # FIXME add new metric? Conserved pressure metric, conserved ratio (# conserved/total conserved weighted) * selective pressure density?? for different elements??
+    codeMLPath = next(path for path in sys.path if 'conda/' in path and '/lib/' in path).split('/lib/')[0]+'/bin/ete3_apps/bin'
     try:
         os.mkdir('./selectivePressureTests')
     except:
@@ -284,7 +412,7 @@ def evaluate_selective_pressure(maf_structure_pickle, neutral_tree_nwk):
     maf = pickle.load(open('MAFWork.p','rb'))
     onesCondition = maf[3].keys()[np.argmax([sum(val.values()) if type(val) != type([]) else 0 for val in maf[3].values()])]
     for maseg in maf[1][onesCondition]['CS']:
-        model_tree = EvolTree(open(neutral_tree_nwk,'rb').read()) #FIXME is this the right tree to be using???
+        model_tree = EvolTree(open(neutral_tree_nwk,'rb').read(),binpath=codeMLPath) #FIXME is this the right tree to be using???
         aln_lines = maf[1][onesCondition]['CS'][maseg].splitlines()
         coord_info = {}
         for i in range(len(aln_lines))[::2]:
@@ -313,6 +441,7 @@ def evaluate_selective_pressure(maf_structure_pickle, neutral_tree_nwk):
                 best_model = current_model
         """
         #print best_model
+        tree.render(maseg+'.png')
         break # FIXME remove after testing
         "FIXME UNDER DEVELOPMENT"
 

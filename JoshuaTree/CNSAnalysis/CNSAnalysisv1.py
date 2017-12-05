@@ -177,7 +177,7 @@ listMAFfiles = []
 listGFFFiles = []
 listGenomeFiles = []
 for file in listALLFiles:
-    if file.endswith('.maf'):
+    if file.endswith('.maf') and file.startswith('FastaOut'):
         listMAFfiles.append(file.strip('\n'))
     if file.endswith('.gff') or file.endswith('.gff3'):
         listGFFFiles.append(file.strip('\n'))
@@ -274,7 +274,6 @@ if pickleSkip == 0:
                             # writing to a bed file for a particular species, generate list to write for each species (chr,xi,xf,orientation)!!!!
                         else: # if dont meet reqs, skip analysis of this segment
                             skipSegment = 1
-
                         # using MAF header info, see if stripped MAF sequence is same as sequence grabbed from original Fasta to make sure backtracking works
                         if checkValidity:
                             for species in masterListSpecies:
