@@ -7,6 +7,7 @@ from Bio.Phylo import Consensus as CS
 import dill as pickle
 import numpy as np
 import sys
+import pandas as pd
 from collections import Counter
 
 def parseConfigFindList(stringFind,configFile):
@@ -89,10 +90,11 @@ def sort_vcf(vcf_in,vcf_out):
                 bcftools index {1}.gz""".format(vcf_in,vcf_out), shell=True)
 
 @begin.subcommand
-def maf2vcf(cns_config, reference_species, change_coordinates, out_all_species):
+def maf2vcf(cns_config, reference_species, change_coordinates, out_all_species, overlaps):
     change_coordinates = int(change_coordinates)
     out_all_species = int(out_all_species)
-    mafFiles = [file for file in os.listdir('.') if file.endswith('.maf') and file.startswith('out_maf') == 0]
+    overlaps = int(overlaps)
+    mafFiles = [file for file in os.listdir('.') if file.endswith('.maf') and file.startswith('FastaOut')]
     try:
         os.mkdir('vcfs')
     except:
@@ -146,7 +148,8 @@ def maf2vcf(cns_config, reference_species, change_coordinates, out_all_species):
             sort_vcf(change_file,'vcfs/Out%d_all.vcf'%i)
             #tabix -p vcf %s.gz
         # change the coordinate system and sort the file, also remove empty vcf files, fix merge/concat
-    subprocess.call('bcftools concat --allow-overlaps -O v -o vcfs/final_all.vcf %s'%(' '.join(finalOutVCFFiles)),shell=True)
+    # FIXME problem with overlaps, --allow overlaps works with some analyses but not others, may want to just throw in contig list!!! below
+    subprocess.call('bcftools concat%s -O v -o vcfs/final_all.vcf %s'%(' --allow-overlaps' if overlaps else '',' '.join(finalOutVCFFiles)),shell=True)
     #subprocess.call("sed 's/##source=Bio++/##INFO=<ID=AC>/g' vcfs/final_all.vcf > vcfs/final_all_edit.vcf && mv vcfs/final_all_edit.vcf vcfs/final_all.vcf && rm vcfs/final_all_edit.vcf",shell=True)
     sort_vcf('vcfs/final_all.vcf','vcfs/final_all_sorted.vcf')
     subprocess.call('rm vcfs/final_all_sorted.vcf && gzip -d vcfs/final_all_sorted.vcf.gz',shell=True)
@@ -189,6 +192,7 @@ def estimate_phylogeny(cns_config, consensus_algorithm, major_cutoff, min_block_
             MinBlockLength(min_length=%d), \
             Merge(species=(%s)),\
             Concatenate(minimum_size=%d),\
+            RemoveEmptySequences(),\
             DistanceEstimation(\
                     method=ml,\
                     model=GTR,\
@@ -263,7 +267,7 @@ def estimate_phylogeny(cns_config, consensus_algorithm, major_cutoff, min_block_
                     gap_option=no_gap,\
                     parameter_estimation=initial,\
                     gaps_as_unresolved=yes,\
-                    unresolved_as_gap=yes,\
+                    unresolved_as_gaps=yes,\
                     extended_names=no),\
             DistanceBasedPhylogeny(\
                     method=bionj,\
@@ -276,7 +280,7 @@ def estimate_phylogeny(cns_config, consensus_algorithm, major_cutoff, min_block_
                 """%(','.join(all_species),','.join(all_species),min_block_length,','.join(all_species)))
         subprocess.call('./maffilter param=maf_filter_config.bpp',shell=True)
 
-def maf_change_coordinates(segment):
+def maf_change_coordinates(segment,ref_species):
     aln_lines = segment.splitlines()
     for i,line in enumerate(aln_lines):
         if line.startswith('s'):
@@ -289,14 +293,15 @@ def maf_change_coordinates(segment):
                 lineList[2] = str(int(lineList3[-1])-int(lineList[2]))#-int(lineList[3]))
             else:
                 lineList[2] = str(int(lineList3[-2]) + int(lineList[2]))
-            lineList[1] = '.'.join(lineList2[1::2])
+            lineList[1] = '.'.join(lineList2[::2])
             aln_lines[i] = '\t'.join(lineList)
-    return '\n'.join(filter(None,aln_lines))
-
-
+            if lineList2[0] == ref_species:
+                chrom = lineList2[2]
+                position = int(lineList[2])
+    return chrom,position,'\n'.join(filter(None,aln_lines))+'\n\n',
 
 @begin.subcommand
-def selective_pressure_statistics(cns_config,reference_species, min_block_length, dist_max, window_size, root_species):
+def selective_pressure_statistics(cns_config,reference_species, min_block_length, dist_max, window_size, root_species): # FIXME add ingroup outgroup options
     min_block_length = int(min_block_length)
     window_size = int(window_size)
     dist_max = int(dist_max)
@@ -309,6 +314,8 @@ def selective_pressure_statistics(cns_config,reference_species, min_block_length
             master_species = parseConfigFindList("masterListSpecies",f)
     else:
         master_species = cns_config.split(',')
+    master_species = set([species.split('_')[0] for species in master_species])
+    print master_species
     mafFiles = [file for file in os.listdir('.') if file.startswith('FastaOut') and file.endswith('.maf')]
     subprocess.call('rm merged.maf',shell=True)
     for file in mafFiles:
@@ -317,6 +324,7 @@ def selective_pressure_statistics(cns_config,reference_species, min_block_length
         txt = f.read().replace('\n\n\n','\n\n')
     with open('merged.maf','w') as f:
         f.write(txt)
+    del txt
     with open('maf_filter_config.bpp','w') as f:
                 f.write("""
         input.file=./merged.maf
@@ -333,12 +341,20 @@ def selective_pressure_statistics(cns_config,reference_species, min_block_length
             Output(\
                     file=merged.filtered.maf,\
                     compression=none,\
-                    mask=no)
-                """%(master_species,master_species,min_block_length))
+                    mask=yes)
+                """%(','.join(master_species),','.join(master_species),min_block_length))
     subprocess.call('./maffilter param=maf_filter_config.bpp',shell=True)
-    with open('merged.filtered.maf','r') as f, open('merged.filtered.new_coords.maf','w') as f2:
-        for segment in f.split('\n\n')[1:]: # can turn this to generator in future
-            f2.write(maf_change_coordinates(segment)+'\n\n')
+    # FIXME sort them by coordinates then output, and keep order of species
+    maf_sort_structure = []
+    with open('merged.filtered.maf','r') as f:
+        for segment in f.read().split('\n\n'): # FIXME can turn this to generator in future, especially with large maf size
+            if segment:
+                maf_sort_structure.append(maf_change_coordinates(segment,reference_species))
+    maf_sort_structure = pd.DataFrame(maf_sort_structure).sort_values([0,1])
+    with open('merged.filtered.new_coords.maf','w') as f2:
+        for seg in maf_sort_structure.itertuples():
+            f2.write(seg[3])
+    del maf_sort_structure #FIXME may be bad when maf file is hundreds of gb large
     with open('maf_filter_config.bpp','w') as f:
         f.write("""
         input.file=./merged.filtered.new_coords.maf
@@ -350,18 +366,25 @@ def selective_pressure_statistics(cns_config,reference_species, min_block_length
                     dist_max=%d),\
             WindowSplit(\
                     preferred_size=%d,\
-                    align=adjust),\
+                    align=adjust,\
+                    keep_small_blocks=yes),\
+            RemoveEmptySequences(),\
             Output(\
                     file=merged.filtered.new_coords.syntenic.maf,\
                     compression=none,\
                     mask=no),
+            OutputCoordinates(\
+                    file=coordinates.txt,\
+                    compression=none,\
+                    species=(%s),\
+                    output_src_size=yes),\
             DistanceEstimation(\
                     method=ml,\
                     model=GTR,\
                     gap_option=no_gap,\
                     parameter_estimation=initial,\
                     gaps_as_unresolved=yes,\
-                    unresolved_as_gap=yes,\
+                    unresolved_as_gaps=yes,\
                     extended_names=no),\
             DistanceBasedPhylogeny(\
                     method=bionj,\
@@ -385,6 +408,7 @@ def selective_pressure_statistics(cns_config,reference_species, min_block_length
                     SiteStatistics(\
                         species=%s),\
                         ),\
+                    DiversityStatistics(ingroup=(%s)),\
                 ref_species=%s,\
                 file=data.statistics.csv),\
             OutputTrees(\
@@ -392,7 +416,8 @@ def selective_pressure_statistics(cns_config,reference_species, min_block_length
                     file=./maf_trees/output_trees.nwk,\
                     compression=none,\
                     strip_names=yes)
-                """%(reference_species,dist_max,window_size,root_species,master_species,root_species,reference_species,reference_species))
+                """%(reference_species,dist_max,window_size,reference_species,root_species,','.join(master_species),root_species,reference_species,','.join(master_species),reference_species))
+    # FIXME master species on 4th entry
     subprocess.call('./maffilter param=maf_filter_config.bpp',shell=True)
     # output will be trees and statistics, use pandas and grab tree lengths to pandas, encode array, then add polymorphism density from vcf possibly, and then pca the results and cluster the regions
     # neural network model???
