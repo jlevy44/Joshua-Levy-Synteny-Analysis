@@ -317,67 +317,82 @@ def selective_pressure_statistics(cns_config,reference_species, min_block_length
     master_species = set([species.split('_')[0] for species in master_species])
     print master_species
     mafFiles = [file for file in os.listdir('.') if file.startswith('FastaOut') and file.endswith('.maf')]
-    subprocess.call('rm merged.maf',shell=True)
-    for file in mafFiles:
-        subprocess.call("sed -e '/Anc/d;/#/d' %s >> merged.maf"%file,shell=True)
-    with open('merged.maf','r') as f: #FIXME
-        txt = f.read().replace('\n\n\n','\n\n')
-    with open('merged.maf','w') as f:
-        f.write(txt)
-    del txt
-    with open('maf_filter_config.bpp','w') as f:
-                f.write("""
-        input.file=./merged.maf
+    if 0: #FIXME tests
+        subprocess.call('rm merged.maf',shell=True)
+        for file in mafFiles:
+            subprocess.call("sed -e '/Anc/d;/#/d' %s >> merged.maf"%file,shell=True)
+        with open('merged.maf','r') as f: #FIXME
+            txt = f.read().replace('\n\n\n','\n\n')
+        with open('merged.maf','w') as f:
+            f.write(txt)
+        del txt
+        with open('maf_filter_config.bpp','w') as f:
+                    f.write("""
+            input.file=./merged.maf
+            input.format=Maf
+            output.log=out.log
+            maf.filter=\
+                Subset(\
+                        strict=yes,\
+                        keep=no,\
+                        species=(%s),\
+                        remove_duplicates=yes),\
+                MaskFilter(species=(%s)),\
+                MinBlockLength(min_length=%d),\
+                Output(\
+                        file=merged.filtered.maf,\
+                        compression=none,\
+                        mask=yes)
+                    """%(','.join(master_species),','.join(master_species),min_block_length))
+        subprocess.call('./maffilter param=maf_filter_config.bpp',shell=True)
+        # FIXME sort them by coordinates then output, and keep order of species
+        maf_sort_structure = []
+        with open('merged.filtered.maf','r') as f:
+            for segment in f.read().split('\n\n'): # FIXME can turn this to generator in future, especially with large maf size
+                if segment:
+                    maf_sort_structure.append(maf_change_coordinates(segment,reference_species))
+        maf_sort_structure = pd.DataFrame(maf_sort_structure).sort_values([0,1])
+        with open('merged.filtered.new_coords.maf','w') as f2:
+            for seg in maf_sort_structure.itertuples():
+                f2.write(seg[3])
+        del maf_sort_structure #FIXME may be bad when maf file is hundreds of gb large
+        with open('maf_filter_config.bpp','w') as f:
+            f.write("""
+            input.file=./merged.filtered.new_coords.maf
+            input.format=Maf
+            output.log=out.log
+            maf.filter=\
+                Merge(\
+                        species=(%s),\
+                        dist_max=%d),\
+                WindowSplit(\
+                        preferred_size=%d,\
+                        align=adjust,\
+                        keep_small_blocks=yes),\
+                RemoveEmptySequences(),\
+                Output(\
+                        file=merged.filtered.new_coords.syntenic.maf,\
+                        compression=none,\
+                        mask=no)
+                    """%(reference_species,dist_max,window_size))
+        subprocess.call('./maffilter param=maf_filter_config.bpp',shell=True)
+    maf_configs = []
+    maf_configs.append("""
+        input.file=./merged.filtered.new_coords.syntenic.maf
         input.format=Maf
         output.log=out.log
         maf.filter=\
-            Subset(\
-                    strict=yes,\
-                    keep=no,\
-                    species=(%s),\
-                    remove_duplicates=yes),\
-            MaskFilter(species=(%s)),\
-            MinBlockLength(min_length=%d),\
-            Output(\
-                    file=merged.filtered.maf,\
-                    compression=none,\
-                    mask=yes)
-                """%(','.join(master_species),','.join(master_species),min_block_length))
-    subprocess.call('./maffilter param=maf_filter_config.bpp',shell=True)
-    # FIXME sort them by coordinates then output, and keep order of species
-    maf_sort_structure = []
-    with open('merged.filtered.maf','r') as f:
-        for segment in f.read().split('\n\n'): # FIXME can turn this to generator in future, especially with large maf size
-            if segment:
-                maf_sort_structure.append(maf_change_coordinates(segment,reference_species))
-    maf_sort_structure = pd.DataFrame(maf_sort_structure).sort_values([0,1])
-    with open('merged.filtered.new_coords.maf','w') as f2:
-        for seg in maf_sort_structure.itertuples():
-            f2.write(seg[3])
-    del maf_sort_structure #FIXME may be bad when maf file is hundreds of gb large
-    with open('maf_filter_config.bpp','w') as f:
-        f.write("""
-        input.file=./merged.filtered.new_coords.maf
-        input.format=Maf
-        output.log=out.log
-        maf.filter=\
-            Merge(\
-                    species=(%s),\
-                    dist_max=%d),\
-            WindowSplit(\
-                    preferred_size=%d,\
-                    align=adjust,\
-                    keep_small_blocks=yes),\
-            RemoveEmptySequences(),\
-            Output(\
-                    file=merged.filtered.new_coords.syntenic.maf,\
-                    compression=none,\
-                    mask=no),
             OutputCoordinates(\
                     file=coordinates.txt,\
                     compression=none,\
                     species=(%s),\
-                    output_src_size=yes),\
+                    output_src_size=yes)
+            """%reference_species)
+    maf_configs.append("""
+        input.file=./merged.filtered.new_coords.syntenic.maf
+        input.format=Maf
+        output.log=out.log
+        maf.filter=\
             DistanceEstimation(\
                     method=ml,\
                     model=GTR,\
@@ -410,15 +425,37 @@ def selective_pressure_statistics(cns_config,reference_species, min_block_length
                         ),\
                     DiversityStatistics(ingroup=(%s)),\
                 ref_species=%s,\
-                file=data.statistics.csv),\
-            OutputTrees(\
+                file=data.statistics.csv)"""%(root_species,','.join(master_species),root_species,reference_species,','.join(master_species),reference_species))
+    maf_configs.append("""
+        input.file=./merged.filtered.new_coords.syntenic.maf
+        input.format=Maf
+        output.log=out.log
+        maf.filter=\
+            DistanceEstimation(\
+                    method=ml,\
+                    model=GTR,\
+                    gap_option=no_gap,\
+                    parameter_estimation=initial,\
+                    gaps_as_unresolved=yes,\
+                    unresolved_as_gaps=yes,\
+                    extended_names=no),\
+        DistanceBasedPhylogeny(\
+                    method=bionj,\
+                    dist_mat=MLDistance),\
+        NewOutgroup(\
+                    tree_input=BioNJ,\
+                    tree_output=BioNJ,\
+                    outgroup=%s),\
+        OutputTrees(\
                     tree=BioNJ,\
                     file=./maf_trees/output_trees.nwk,\
                     compression=none,\
-                    strip_names=yes)
-                """%(reference_species,dist_max,window_size,reference_species,root_species,','.join(master_species),root_species,reference_species,','.join(master_species),reference_species))
+                    strip_names=yes)"""%(root_species))
     # FIXME master species on 4th entry
-    subprocess.call('./maffilter param=maf_filter_config.bpp',shell=True)
+    for maf_config in maf_configs:
+        with open('maf_filter_config.bpp','w') as f:
+            f.write(maf_config)
+        subprocess.call('./maffilter param=maf_filter_config.bpp',shell=True)
     # output will be trees and statistics, use pandas and grab tree lengths to pandas, encode array, then add polymorphism density from vcf possibly, and then pca the results and cluster the regions
     # neural network model???
 
@@ -516,7 +553,8 @@ maf.filter=\
                 window.step=1,\
                 max.masked=3),\
         MinBlockLength(min_length=%d), \
-
+            XFullGap(species=(%s)),\
+            MinBlockLength(min_length=25),\
 
                 CAN ADD TO ABOVE with .gz extension included
                 compression=gzip,\
